@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space_app/pages/editprofilehuman.dart';
+import 'package:safe_space_app/pages/humanpages/patientpages/editprofilehuman.dart';
 import 'package:safe_space_app/models/patients_db.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/pages/chatpages/Home_page.dart';
 import 'package:safe_space_app/pages/humanpages/doctorpages/humandoctordetail.dart';
-import 'package:safe_space_app/pages/viewprofilehuman.dart';
+import 'package:safe_space_app/pages/humanpages/doctorpages/viewprofilehuman.dart';
 import 'package:safe_space_app/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

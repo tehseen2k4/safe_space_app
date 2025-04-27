@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/pages/petpages/petappointmentlistpage.dart';
-import 'package:safe_space_app/pages/viewprofile.dart';
+import 'package:safe_space_app/pages/petpages/viewprofile.dart';
 import 'package:safe_space_app/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

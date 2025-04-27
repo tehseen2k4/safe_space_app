@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space_app/services/auth_service.dart';
 import 'package:safe_space_app/models/users_db.dart';
-import 'package:safe_space_app/pages/patientlogin2.dart';
-import 'signuppagep.dart';
+//import 'package:safe_space/services/database_service.dart';
+import 'package:safe_space_app/services/database_service.dart';
+import 'doctorprofile.dart';
+import 'package:safe_space_app/services/auth_service.dart';
+import 'package:safe_space_app/pages/humanpages/doctorpages/signuppaged.dart';
 import 'dart:developer' as developer;
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+//MaterialPageRoute(builder: (context) => Doctorlogin()),
+//import 'patientlogin2.dart'; // Import the PatientLogin page
+
+class Doctorpagee extends StatefulWidget {
+  const Doctorpagee({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<Doctorpagee> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<Doctorpagee> {
   final _auth = AuthService();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _passwordController = TextEditingController();
@@ -28,7 +33,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Background color
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -87,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                 ElevatedButton(
                   onPressed: _login, // Call the login method here
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orangeAccent,
+                    backgroundColor: Colors.teal, // Button color
                     padding: const EdgeInsets.symmetric(
                         horizontal: 48, vertical: 16),
                   ),
@@ -109,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const SignupPagep()),
+                              builder: (context) => const SignupPage()),
                         );
                       },
                       child: const Text(
@@ -135,16 +139,19 @@ class _LoginPageState extends State<LoginPage> {
         final user = await _auth.loginUserWithEmailAndPassword(
             _mailController.text, _passwordController.text);
         if (user != null) {
+          developer.log("User logged in successfully: ${user.email}");
+          //developer.log("User logged in successfully: ${user.uid}");
           final userType = await UsersDb.getUserTypeByUid(user.uid);
-          if (userType == 'patient') {
+          if (userType == 'doctor') {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Patient Login Successful !')),
+              SnackBar(content: Text('Doctor Login Successful !')),
             );
-            _gotoPatient_Human_Pet(context);
+            _gotoDoctorProfile(context);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Login failed. Invalid UserType.')),
             );
+            //developer.log("User login failed. Invalid UserType.");
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -166,11 +173,10 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void _gotoPatient_Human_Pet(BuildContext context) {
+  void _gotoDoctorProfile(BuildContext context) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => PatientLogin()),
+      MaterialPageRoute(builder: (context) => const Doctorlogin()),
     );
   }
 }
-
