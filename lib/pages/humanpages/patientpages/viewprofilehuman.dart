@@ -21,7 +21,12 @@ class ViewProfileApp extends StatelessWidget {
   }
 }
 
-class ViewProfileHumanScreen extends StatelessWidget {
+class ViewProfileHumanScreen extends StatefulWidget {
+  @override
+  _ViewProfileHumanScreenState createState() => _ViewProfileHumanScreenState();
+}
+
+class _ViewProfileHumanScreenState extends State<ViewProfileHumanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,60 +39,71 @@ class ViewProfileHumanScreen extends StatelessWidget {
         backgroundColor: const Color.fromARGB(255, 2, 93, 98),
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: 20),
-              ProfilePhoto(),
-              SizedBox(height: 30),
-              ProfileInfoSection(),
-            ],
+      body: Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(height: 20),
+                ProfilePhoto(),
+                SizedBox(height: 30),
+                ProfileInfoSection(),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    setState(() {}); // This will trigger a rebuild of the widget tree
   }
 }
 
 class ProfilePhoto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          height: 120,
-          width: 120,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 10,
-                offset: Offset(0, 4),
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Container(
+            height: 120,
+            width: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+              image: DecorationImage(
+                image: AssetImage('assets/images/one.jpg'),
+                fit: BoxFit.cover,
               ),
-            ],
-            image: DecorationImage(
-              image: AssetImage('assets/images/one.jpg'),
-              fit: BoxFit.cover,
             ),
           ),
-        ),
-        SizedBox(height: 10),
-        TextButton.icon(
-          onPressed: () {},
-          icon: Icon(Icons.camera_alt,
-              color: const Color.fromARGB(255, 2, 93, 98)),
-          label: Text(
-            'Change Photo',
-            style: TextStyle(
-                color: const Color.fromARGB(255, 2, 93, 98),
-                fontWeight: FontWeight.bold),
+          SizedBox(height: 10),
+          TextButton.icon(
+            onPressed: () {},
+            icon: Icon(Icons.camera_alt,
+                color: const Color.fromARGB(255, 2, 93, 98)),
+            label: Text(
+              'Change Photo',
+              style: TextStyle(
+                  color: const Color.fromARGB(255, 2, 93, 98),
+                  fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -142,7 +158,7 @@ class ProfileInfoSection extends StatelessWidget {
               SizedBox(height: 30),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => EditPageHuman()),
                   );

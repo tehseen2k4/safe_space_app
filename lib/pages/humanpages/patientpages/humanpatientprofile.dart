@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/pages/chatpages/Home_page.dart';
 import 'package:safe_space_app/pages/humanpages/doctorpages/humandoctordetail.dart';
-import 'package:safe_space_app/pages/humanpages/doctorpages/viewprofilehuman.dart';
+import 'package:safe_space_app/pages/humanpages/patientpages/viewprofilehuman.dart';
 import 'package:safe_space_app/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,6 +29,15 @@ class _HumanPatientProfileState extends State<HumanPatientProfile> {
   @override
   void initState() {
     super.initState();
+    if (user != null) {
+      fetchProfileData(user!.uid);
+      fetchDoctors();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     if (user != null) {
       fetchProfileData(user!.uid);
       fetchDoctors();
@@ -276,7 +285,7 @@ class _HumanPatientProfileState extends State<HumanPatientProfile> {
         currentIndex: 0,
         onTap: (index) {
           if (index == 3) {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => ViewProfileHumanScreen()),
             );
