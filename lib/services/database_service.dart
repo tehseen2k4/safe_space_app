@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:safe_space/models/users_db.dart';
+import 'package:safe_space_app/models/users_db.dart';
 
 const String USERSDB_COLLECTION_REF = 'users';
 

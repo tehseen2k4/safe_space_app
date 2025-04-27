@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:safe_space/models/petappointment_db.dart';
-import 'package:safe_space/models/petpatient_db.dart';
+import 'package:safe_space_app/models/petappointment_db.dart';
+import 'package:safe_space_app/models/petpatient_db.dart';
 import 'dart:math';
 import '../../models/bookappointment.dart';
 

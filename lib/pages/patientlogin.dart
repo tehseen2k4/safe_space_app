@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space/auth_service.dart';
-import 'package:safe_space/models/users_db.dart';
-import 'package:safe_space/pages/patientlogin2.dart';
+import 'package:safe_space_app/services/auth_service.dart';
+import 'package:safe_space_app/models/users_db.dart';
+import 'package:safe_space_app/pages/patientlogin2.dart';
 import 'signuppagep.dart';
 import 'dart:developer' as developer;
 

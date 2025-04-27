@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space/models/humanappointment_db.dart'; // Import the model
+import 'package:safe_space_app/models/humanappointment_db.dart'; // Import the model
 
 class AppointmentDetailsPage extends StatelessWidget {
   final HumanAppointmentDb appointment;

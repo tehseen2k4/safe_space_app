@@ -1,10 +1,10 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:safe_space/auth_service.dart';
-import 'package:safe_space/pages/chatpages/chat_service.dart';
-import 'package:safe_space/pages/chatpages/user_tile.dart';
-import 'package:safe_space/pages/chatpages/chatpage.dart';
+import 'package:safe_space_app/services/auth_service.dart';
+import 'package:safe_space_app/services/chat_service.dart';
+import 'package:safe_space_app/pages/chatpages/user_tile.dart';
+import 'package:safe_space_app/pages/chatpages/chatpage.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});

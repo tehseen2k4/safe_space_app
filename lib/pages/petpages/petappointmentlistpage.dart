@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space/models/petappointment_db.dart';
+import 'package:safe_space_app/models/petappointment_db.dart';
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
-import 'package:safe_space/pages/patientpages/petappointmentbooking.dart';
+import 'package:safe_space_app/pages/petpages/petappointmentbooking.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:safe_space/pages/patientpages/petappointmentdetailpage.dart';
+import 'package:safe_space_app/pages/petpages/petappointmentdetailpage.dart';
 
 class PetAppointmentsListPage extends StatefulWidget {
   @override

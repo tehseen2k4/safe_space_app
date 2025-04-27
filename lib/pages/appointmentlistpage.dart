@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space/models/humanappointment_db.dart';
-import 'package:safe_space/pages/patientpages/appointmentdetailpage.dart';
+import 'package:safe_space_app/models/humanappointment_db.dart';
+import 'package:safe_space_app/pages/humanpages/patientpages/appointmentdetailpage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:safe_space/pages/patientpages/appointmentbooking.dart';
+import 'package:safe_space_app/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppointmentsPage extends StatefulWidget {

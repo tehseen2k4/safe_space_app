@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space/models/doctors_db.dart';
-import 'package:safe_space/pages/doctorpages/editprofiledoctor.dart';
+import 'package:safe_space_app/models/doctors_db.dart';
+import 'package:safe_space_app/pages/humanpages/doctorpages/editprofiledoctor.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 

@@ -7,19 +7,20 @@ plugins {
 }
 
 dependencies {
-  // Import the Firebase BoM
-  implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
+    // Import the Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
 
+    // Add Firestore dependency
+    implementation("com.google.firebase:firebase-firestore")
 
-  // TODO: Add the dependencies for Firebase products you want to use
-  // When using the BoM, don't specify versions in Firebase dependencies
-  // https://firebase.google.com/docs/android/setup#available-libraries
+    // TODO: Add the dependencies for Firebase products you want to use
+    // You're missing Firebase dependencies here
 }
 
 android {
     namespace = "com.example.safe_space_app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.2.12479018"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -35,8 +36,8 @@ android {
         applicationId = "com.example.safe_space_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 23
+        targetSdk = 23
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

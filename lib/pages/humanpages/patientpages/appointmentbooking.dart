@@ -4,9 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
-import '../../models/patients_db.dart';
-import '../../models/bookappointment.dart';
-import '../../models/humanappointment_db.dart';
+import 'package:safe_space_app/models/patients_db.dart';
+import 'package:safe_space_app/models/bookappointment.dart';
+import 'package:safe_space_app/models/humanappointment_db.dart';
 
 class BookAppointmentPage extends StatefulWidget {
   @override
