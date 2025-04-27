@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:safe_space_app/models/appoinment_db_service.dart';
 
 class EditPageDoctor extends StatefulWidget {
   @override
@@ -9,26 +12,38 @@ class _EditPageState extends State<EditPageDoctor> {
   final _formKey = GlobalKey<FormState>();
 
   // Controllers for TextFormFields
-  final TextEditingController _nameController =
-      TextEditingController(text: 'viny');
-  final TextEditingController _usernameController =
-      TextEditingController(text: 'urs_viny');
-  final TextEditingController _specializationController =
-      TextEditingController(text: 'Surgeon');
-  final TextEditingController _qualificationController =
-      TextEditingController(text: 'MBBS(Pb)');
-  final TextEditingController _bioController =
-      TextEditingController(text: 'I Like you');
-  final TextEditingController _ageController =
-      TextEditingController(text: '20');
-  final TextEditingController _sexController =
-      TextEditingController(text: 'Female');
-  final TextEditingController _emailController =
-      TextEditingController(text: 'urviny@gmail.com');
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _specializationController = TextEditingController();
+  final TextEditingController _qualificationController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _sexController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _clinicNameController = TextEditingController();
+  final TextEditingController _contactNumberClinicController = TextEditingController();
+  final TextEditingController _feesController = TextEditingController();
+  final TextEditingController _doctorTypeController = TextEditingController();
+  final TextEditingController _experienceController = TextEditingController();
+
+  TimeOfDay? _startTime;
+  TimeOfDay? _endTime;
+
+  final Map<String, bool> _selectedDays = {
+    'Monday': false,
+    'Tuesday': false,
+    'Wednesday': false,
+    'Thursday': false,
+    'Friday': false,
+    'Saturday': false,
+    'Sunday': false,
+  };
+
+  final User? user = FirebaseAuth.instance.currentUser;
 
   @override
   void dispose() {
-    // Clean up the controllers when the widget is disposed
     _nameController.dispose();
     _usernameController.dispose();
     _bioController.dispose();
@@ -37,6 +52,12 @@ class _EditPageState extends State<EditPageDoctor> {
     _sexController.dispose();
     _specializationController.dispose();
     _qualificationController.dispose();
+    _phoneNumberController.dispose();
+    _clinicNameController.dispose();
+    _contactNumberClinicController.dispose();
+    _feesController.dispose();
+    _doctorTypeController.dispose();
+    _experienceController.dispose();
     super.dispose();
   }
 
@@ -179,16 +200,7 @@ class _EditPageState extends State<EditPageDoctor> {
                 // Save Button
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        // Here you can handle saving data logic
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text('Profile Updated Successfully')),
-                        );
-                        Navigator.pop(context); // Go back to the previous page
-                      }
-                    },
+                    onPressed: _saveProfile,
                     style: ElevatedButton.styleFrom(
                       padding:
                           EdgeInsets.symmetric(horizontal: 50, vertical: 15),
@@ -234,5 +246,55 @@ class _EditPageState extends State<EditPageDoctor> {
   TextStyle _fieldLabelStyle() {
     return TextStyle(
         fontSize: 16, fontWeight: FontWeight.w500, color: Colors.grey[700]);
+  }
+
+  Future<void> _saveProfile() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      try {
+        // Save doctor profile
+        await FirebaseFirestore.instance.collection('doctors').doc(user!.uid).set({
+          'uid': user!.uid,
+          'name': _nameController.text,
+          'username': _usernameController.text,
+          'bio': _bioController.text,
+          'age': _ageController.text,
+          'sex': _sexController.text,
+          'specialization': _specializationController.text,
+          'qualification': _qualificationController.text,
+          'phoneNumber': _phoneNumberController.text,
+          'clinicName': _clinicNameController.text,
+          'contactNumberClinic': _contactNumberClinicController.text,
+          'fees': _feesController.text,
+          'doctorType': _doctorTypeController.text,
+          'experience': _experienceController.text,
+          'availableDays': _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList(),
+          'startTime': _startTime?.format(context) ?? '',
+          'endTime': _endTime?.format(context) ?? '',
+        });
+
+        // Generate and save slots if time and days are selected
+        if (_startTime != null && _endTime != null) {
+          final selectedDays = _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList();
+          if (selectedDays.isNotEmpty) {
+            final dbService = DatabaseService(
+              uid: user!.uid,
+              startTime: _startTime!.format(context),
+              endTime: _endTime!.format(context),
+              availableDays: selectedDays,
+            );
+            await dbService.saveSlotsToFirestore();
+          }
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile created successfully!')),
+        );
+        Navigator.pop(context, true);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create profile: $e')),
+        );
+      }
+    }
   }
 }

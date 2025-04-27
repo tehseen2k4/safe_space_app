@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class DatabaseService {
   final String uid;
@@ -13,40 +14,18 @@ class DatabaseService {
     required this.availableDays,
   });
 
-  /// Converts time string (e.g., "09:00") to a DateTime object.
-  /// Converts time string (e.g., "09:00 PM") to a DateTime object.
+  /// Converts time string (e.g., "09:00 AM") to a DateTime object
   DateTime _parseTime(String time, DateTime referenceDate) {
-    final RegExp timeFormat =
-        RegExp(r'^(\d+):(\d+)\s?(AM|PM)?$', caseSensitive: false);
-    final match = timeFormat.firstMatch(time);
-
-    if (match == null) {
-      throw FormatException("Invalid time format: $time");
+    try {
+      final timeFormat = DateFormat('hh:mm a');
+      return timeFormat.parse(time);
+    } catch (e) {
+      print('Error parsing time: $e');
+      return referenceDate;
     }
-
-    int hour = int.parse(match.group(1)!);
-    int minute = int.parse(match.group(2)!);
-    String? period = match.group(3);
-
-    // Convert 12-hour time format to 24-hour format
-    if (period != null) {
-      if (period.toUpperCase() == 'PM' && hour != 12) {
-        hour += 12;
-      } else if (period.toUpperCase() == 'AM' && hour == 12) {
-        hour = 0;
-      }
-    }
-
-    return DateTime(
-      referenceDate.year,
-      referenceDate.month,
-      referenceDate.day,
-      hour,
-      minute,
-    );
   }
 
-  /// Generates time slots of 30 minutes between startTime and endTime.
+  /// Generates time slots of 30 minutes between startTime and endTime
   List<Map<String, dynamic>> _generateSlotsForDay(String day) {
     final now = DateTime.now();
     final start = _parseTime(startTime, now);
@@ -58,7 +37,8 @@ class DatabaseService {
     while (current.isBefore(end)) {
       final slot = {
         'time': current.toIso8601String(),
-        'booked': false, // Default all slots to available
+        'booked': false,
+        'day': day,
       };
       slots.add(slot);
       current = current.add(Duration(minutes: 30));
@@ -67,15 +47,9 @@ class DatabaseService {
     return slots;
   }
 
-  /// Creates and saves slots in Firestore for the given UID.
+  /// Creates and saves slots in Firestore for the given UID
   Future<void> saveSlotsToFirestore() async {
     try {
-      // Logging input parameters for debugging
-      print("UID: $uid");
-      print("Start Time: $startTime");
-      print("End Time: $endTime");
-      print("Available Days: $availableDays");
-
       // Firestore reference
       final docRef = FirebaseFirestore.instance.collection('slots').doc(uid);
 
@@ -83,7 +57,6 @@ class DatabaseService {
       Map<String, List<Map<String, dynamic>>> slotsByDay = {};
       for (String day in availableDays) {
         slotsByDay[day] = _generateSlotsForDay(day);
-        print("Generated slots for $day: ${slotsByDay[day]}"); // Debug log
       }
 
       // Save to Firestore
@@ -93,19 +66,20 @@ class DatabaseService {
         'endTime': endTime,
         'availableDays': availableDays,
         'slots': slotsByDay,
+        'lastUpdated': FieldValue.serverTimestamp(),
       });
 
       print('Slots created and saved successfully for UID: $uid');
     } catch (e) {
       print('Error saving slots to Firestore: $e');
+      throw e;
     }
   }
 
   /// Fetch slots for a doctor
   Future<Map<String, dynamic>?> fetchSlotsForDoctor(String doctorId) async {
     try {
-      final docRef =
-          FirebaseFirestore.instance.collection('slots').doc(doctorId);
+      final docRef = FirebaseFirestore.instance.collection('slots').doc(doctorId);
       final docSnapshot = await docRef.get();
 
       if (docSnapshot.exists) {
@@ -117,6 +91,36 @@ class DatabaseService {
     } catch (e) {
       print('Error fetching slots: $e');
       return null;
+    }
+  }
+
+  /// Update a specific slot's booked status
+  Future<void> updateSlotStatus(String doctorId, String day, String time, bool isBooked) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('slots').doc(doctorId);
+      final docSnapshot = await docRef.get();
+
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data()!;
+        final slots = data['slots'] as Map<String, dynamic>;
+        
+        if (slots.containsKey(day)) {
+          final daySlots = slots[day] as List<dynamic>;
+          final updatedSlots = daySlots.map((slot) {
+            if (slot['time'] == time) {
+              return {...slot, 'booked': isBooked};
+            }
+            return slot;
+          }).toList();
+
+          await docRef.update({
+            'slots.$day': updatedSlots,
+          });
+        }
+      }
+    } catch (e) {
+      print('Error updating slot status: $e');
+      throw e;
     }
   }
 }

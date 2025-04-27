@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -305,9 +304,89 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
     }
   }
 
+  Future<void> _generateAndSaveSlots() async {
+    if (_startTime == null || _endTime == null) return;
+
+    final slotDuration = Duration(minutes: 30); // 30-minute slots
+    final selectedDays = _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList();
+
+    for (String day in selectedDays) {
+      TimeOfDay current = _startTime!;
+      while (_timeOfDayToDouble(current) < _timeOfDayToDouble(_endTime!)) {
+        final slotStart = current;
+        final slotEnd = _addMinutesToTimeOfDay(current, slotDuration.inMinutes);
+
+        // Save slot to Firestore
+        await FirebaseFirestore.instance.collection('appointmentSlots').add({
+          'doctorUid': user!.uid,
+          'day': day,
+          'startTime': slotStart.format(context),
+          'endTime': slotEnd.format(context),
+          'isBooked': false,
+        });
+
+        current = slotEnd;
+        if (_timeOfDayToDouble(current) > _timeOfDayToDouble(_endTime!)) break;
+      }
+    }
+  }
+
+  double _timeOfDayToDouble(TimeOfDay t) => t.hour + t.minute / 60.0;
+
+  TimeOfDay _addMinutesToTimeOfDay(TimeOfDay time, int minutesToAdd) {
+    final totalMinutes = time.hour * 60 + time.minute + minutesToAdd;
+    final newHour = totalMinutes ~/ 60;
+    final newMinute = totalMinutes % 60;
+    return TimeOfDay(hour: newHour, minute: newMinute);
+  }
+
   Future<void> _saveProfile() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Save data to Firebase or perform other actions
+      try {
+        // Save doctor profile
+        await FirebaseFirestore.instance.collection('doctors').doc(user!.uid).set({
+          'uid': user!.uid,
+          'name': _nameController.text,
+          'username': _usernameController.text,
+          'bio': _bioController.text,
+          'age': _ageController.text,
+          'sex': _sexController.text,
+          'specialization': _specializationController.text,
+          'qualification': _qualificationController.text,
+          'phoneNumber': _phoneNumberController.text,
+          'clinicName': _clinicNameController.text,
+          'contactNumberClinic': _contactNumberClinicController.text,
+          'fees': _feesController.text,
+          'doctorType': _doctorTypeController.text,
+          'experience': _experienceController.text,
+          'availableDays': _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList(),
+          'startTime': _startTime?.format(context) ?? '',
+          'endTime': _endTime?.format(context) ?? '',
+        });
+
+        // Generate and save slots if time and days are selected
+        if (_startTime != null && _endTime != null) {
+          final selectedDays = _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList();
+          if (selectedDays.isNotEmpty) {
+            final dbService = DatabaseService(
+              uid: user!.uid,
+              startTime: _startTime!.format(context),
+              endTime: _endTime!.format(context),
+              availableDays: selectedDays,
+            );
+            await dbService.saveSlotsToFirestore();
+          }
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Profile saved successfully!')),
+        );
+        Navigator.pop(context, true);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save profile: $e')),
+        );
+      }
     }
   }
 

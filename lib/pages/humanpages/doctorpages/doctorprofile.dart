@@ -24,6 +24,7 @@ class _DoctorloginState extends State<Doctorlogin> {
   String specialization = "**";
   String qualification = "***";
   String doctorType = '';
+  Future<List>? _appointmentsFuture;
 
   @override
   void initState() {
@@ -47,6 +48,9 @@ class _DoctorloginState extends State<Doctorlogin> {
           specialization = data['specialization'] ?? "**";
           qualification = data['qualification'] ?? "***";
           doctorType = data['doctorType'] ?? "";
+          _appointmentsFuture = doctorType == "Human"
+              ? _fetchHumanAppointments()
+              : _fetchPetAppointments();
         });
       }
     } catch (e) {
@@ -54,34 +58,44 @@ class _DoctorloginState extends State<Doctorlogin> {
     }
   }
 
-  void _onBottomNavTap(int index) {
+  void _onBottomNavTap(int index) async {
     setState(() {
       _currentIndex = index;
     });
 
     if (index == 3) {
-      // Navigate to the "More" screen when tapped
-      Navigator.push(
+      // "More" screen
+      await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ViewProfileDoctorScreen(),
         ),
       );
+      // Refresh profile data after returning
+      if (user != null) {
+        fetchProfileData(user!.uid);
+      }
     } else if (index == 1) {
       if (doctorType == "Human") {
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => Humandoctorappointmentlistpage(),
           ),
         );
+        if (user != null) {
+          fetchProfileData(user!.uid);
+        }
       } else if (doctorType == "Veterinary") {
-        Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => PetDoctorAppointmentsListPage(),
           ),
         );
+        if (user != null) {
+          fetchProfileData(user!.uid);
+        }
       }
     }
   }
@@ -134,356 +148,430 @@ class _DoctorloginState extends State<Doctorlogin> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white, // Background color
-      appBar: AppBar(
-        title: const Text(
-          'SAFE-SPACE',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ), // Make title bold
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.teal,
-        foregroundColor: const Color.fromARGB(255, 255, 255, 255),
-        toolbarHeight: 70,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: Colors.black,
-            height: 1,
+    return WillPopScope(
+      onWillPop: () async {
+        bool? shouldLogout = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            titlePadding: const EdgeInsets.only(top: 24),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            actionsPadding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
+            title: Column(
+              children: [
+                CircleAvatar(
+                  backgroundColor: Colors.teal.withOpacity(0.1),
+                  radius: 28,
+                  child: Icon(Icons.logout, color: Colors.teal, size: 32),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Logout Confirmation',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: Colors.teal,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            content: const Text(
+              'Are you sure you want to log out?',
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.teal,
+                        side: const BorderSide(color: Colors.teal),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () async {
+                        await _auth.signOut();
+                        Navigator.of(context).pop(true);
+                      },
+                      child: const Text('Logout'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+        return shouldLogout ?? false;
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white, // Background color
+        appBar: AppBar(
+          title: const Text(
+            'SAFE-SPACE',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ), // Make title bold
+          ),
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: Colors.teal,
+          foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+          toolbarHeight: 70,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(
+              color: Colors.black,
+              height: 1,
+            ),
           ),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Doctor's Profile Section
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // CircleAvatar(
-                  //   radius: 50,
-                  //   backgroundColor: Colors.grey.shade200,
-                  //   child: IconButton(
-                  //     icon: const Icon(Icons.add,
-                  //         size: 30, color: Color.fromARGB(255, 0, 0, 0)),
-                  //     onPressed: () {},
-                  //   ),
-                  // ),
-                  Column(
-                    children: [
-                      Container(
-                        height: 100,
-                        width: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          image: DecorationImage(
-                            image: AssetImage('assets/images/one.jpg'),
-                            fit: BoxFit.cover,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.3),
-                              blurRadius: 10,
-                              spreadRadius: 2,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Doctor's Profile Section
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // CircleAvatar(
+                    //   radius: 50,
+                    //   backgroundColor: Colors.grey.shade200,
+                    //   child: IconButton(
+                    //     icon: const Icon(Icons.add,
+                    //         size: 30, color: Color.fromARGB(255, 0, 0, 0)),
+                    //     onPressed: () {},
+                    //   ),
+                    // ),
+                    Column(
+                      children: [
+                        Container(
+                          height: 100,
+                          width: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              image: AssetImage('assets/images/one.jpg'),
+                              fit: BoxFit.cover,
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(width: 19),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Dr. ${doctorName}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        specialization,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.grey),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        qualification,
-                        style: TextStyle(
-                          color: Colors.teal,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // Stars for Rating
-              const Row(
-                children: [
-                  Icon(Icons.star, color: Colors.amber, size: 20),
-                  Icon(Icons.star, color: Colors.amber, size: 20),
-                  Icon(Icons.star, color: Colors.amber, size: 20),
-                  Icon(Icons.star, color: Colors.amber, size: 20),
-                  Icon(Icons.star_border, color: Colors.amber, size: 20),
-                ],
-              ),
-              const SizedBox(height: 18),
-              const Divider(color: Colors.teal, thickness: 1),
-
-              // // Appointments Section
-              // const Text(
-              //   'Appointments',
-              //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              // ),
-              // const SizedBox(height: 10),
-              // SizedBox(
-              //   height: 180, // Adjust height to make containers bigger
-              //   child: ListView.builder(
-              //     scrollDirection: Axis.horizontal,
-              //     itemCount: 4,
-              //     itemBuilder: (context, index) {
-              //       return Container(
-              //         width: 180, // Adjust width for bigger containers
-              //         margin: const EdgeInsets.only(right: 10),
-              //         decoration: BoxDecoration(
-              //           color: Colors.grey.shade200,
-              //           borderRadius: BorderRadius.circular(8),
-              //         ),
-              //         child: Center(child: Text('Appointment ${index + 1}')),
-              //       );
-              //     },
-              //   ),
-              // ),
-
-              // Inside the Appointments Section
-              const Text(
-                'Pending Appointments',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 220, // Adjust height for the cards
-                child: FutureBuilder<List>(
-                  future: doctorType == "Human"
-                      ? _fetchHumanAppointments()
-                      : _fetchPetAppointments(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child:
-                            CircularProgressIndicator(), // Show loading indicator
-                      );
-                    } else if (snapshot.hasError) {
-                      return const Center(
-                        child: Text('Error fetching appointments'),
-                      );
-                    } else if (snapshot.data == null ||
-                        snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text('No appointments found'),
-                      );
-                    }
-
-                    final appointments = snapshot.data!; // Use the fetched list
-
-                    return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: appointments.length,
-                      itemBuilder: (context, index) {
-                        final appointment = appointments[index];
-                        return _buildCard(appointment, context);
-                      },
-                    );
-                  },
-                ),
-              ),
-
-              // Reviews Section
-              const SizedBox(height: 20),
-              const Text(
-                'Reviews',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height:
-                    200, // Adjust height to accommodate ratings and better layout
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5, // Number of reviews
-                  itemBuilder: (context, index) {
-                    // Hardcoded fake reviews and ratings
-                    final fakeReviews = [
-                      {
-                        "review":
-                            "He is fantastic! He truly cares and helped me manage my pain effectively.",
-                        "rating": 5
-                      },
-                      {
-                        "review":
-                            "Fantastic! He truly cares and helped me manage my pain effectively.",
-                        "rating": 4
-                      },
-                      {
-                        "review":
-                            "This Doc. is the best! listens carefully and explains everything clearly.",
-                        "rating": 5
-                      },
-                      {
-                        "review":
-                            "He is a great doctor. His expertise and care are unmatched!",
-                        "rating": 4
-                      },
-                      {
-                        "review":
-                            "He is very welcoming, and his care is excellent. Highly recommend!",
-                        "rating": 5
-                      },
-                    ];
-
-                    // Safely fetch the review and cast fields
-                    final review = fakeReviews[index];
-                    final String reviewText = review["review"] as String;
-                    final int rating = review["rating"] as int;
-
-                    return Container(
-                      width: 220, // Adjust width for better content spacing
-                      margin: const EdgeInsets.only(right: 10),
-                      padding: const EdgeInsets.all(
-                          12), // Add padding inside the box
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            blurRadius: 6,
-                            offset: const Offset(2, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Reviewer Name Placeholder
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 15,
-                                backgroundColor: Colors.grey.shade200,
-                                child: const Icon(Icons.person,
-                                    size: 18, color: Colors.teal),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Patient ${index + 1}',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: Colors.teal),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.3),
+                                blurRadius: 10,
+                                spreadRadius: 2,
                               ),
                             ],
                           ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(width: 19),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dr. ${doctorName}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          specialization,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Colors.grey),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          qualification,
+                          style: TextStyle(
+                            color: Colors.teal,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
 
-                          const SizedBox(height: 10),
+                // Stars for Rating
+                const Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.amber, size: 20),
+                    Icon(Icons.star, color: Colors.amber, size: 20),
+                    Icon(Icons.star, color: Colors.amber, size: 20),
+                    Icon(Icons.star, color: Colors.amber, size: 20),
+                    Icon(Icons.star_border, color: Colors.amber, size: 20),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                const Divider(color: Colors.teal, thickness: 1),
 
-                          // Star Ratings
-                          Row(
-                            children: List.generate(
-                              rating,
-                              (starIndex) => const Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                                size: 16,
-                              ),
-                            )..addAll(
-                                List.generate(
-                                  5 - rating,
-                                  (emptyStarIndex) => const Icon(
-                                    Icons.star_border,
-                                    color: Colors.amber,
-                                    size: 16,
+                // // Appointments Section
+                // const Text(
+                //   'Appointments',
+                //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                // ),
+                // const SizedBox(height: 10),
+                // SizedBox(
+                //   height: 180, // Adjust height to make containers bigger
+                //   child: ListView.builder(
+                //     scrollDirection: Axis.horizontal,
+                //     itemCount: 4,
+                //     itemBuilder: (context, index) {
+                //       return Container(
+                //         width: 180, // Adjust width for bigger containers
+                //         margin: const EdgeInsets.only(right: 10),
+                //         decoration: BoxDecoration(
+                //           color: Colors.grey.shade200,
+                //           borderRadius: BorderRadius.circular(8),
+                //         ),
+                //         child: Center(child: Text('Appointment ${index + 1}')),
+                //       );
+                //     },
+                //   ),
+                // ),
+
+                // Inside the Appointments Section
+                const Text(
+                  'Pending Appointments',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 220, // Adjust height for the cards
+                  child: FutureBuilder<List>(
+                    future: _appointmentsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child:
+                              CircularProgressIndicator(), // Show loading indicator
+                        );
+                      } else if (snapshot.hasError) {
+                        return const Center(
+                          child: Text('Error fetching appointments'),
+                        );
+                      } else if (snapshot.data == null ||
+                          snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: Text('No appointments found'),
+                        );
+                      }
+
+                      final appointments = snapshot.data!; // Use the fetched list
+
+                      return ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: appointments.length,
+                        itemBuilder: (context, index) {
+                          final appointment = appointments[index];
+                          return _buildCard(appointment, context);
+                        },
+                      );
+                    },
+                  ),
+                ),
+
+                // Reviews Section
+                const SizedBox(height: 20),
+                const Text(
+                  'Reviews',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height:
+                      200, // Adjust height to accommodate ratings and better layout
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 5, // Number of reviews
+                    itemBuilder: (context, index) {
+                      // Hardcoded fake reviews and ratings
+                      final fakeReviews = [
+                        {
+                          "review":
+                              "He is fantastic! He truly cares and helped me manage my pain effectively.",
+                          "rating": 5
+                        },
+                        {
+                          "review":
+                              "Fantastic! He truly cares and helped me manage my pain effectively.",
+                          "rating": 4
+                        },
+                        {
+                          "review":
+                              "This Doc. is the best! listens carefully and explains everything clearly.",
+                          "rating": 5
+                        },
+                        {
+                          "review":
+                              "He is a great doctor. His expertise and care are unmatched!",
+                          "rating": 4
+                        },
+                        {
+                          "review":
+                              "He is very welcoming, and his care is excellent. Highly recommend!",
+                          "rating": 5
+                        },
+                      ];
+
+                      // Safely fetch the review and cast fields
+                      final review = fakeReviews[index];
+                      final String reviewText = review["review"] as String;
+                      final int rating = review["rating"] as int;
+
+                      return Container(
+                        width: 220, // Adjust width for better content spacing
+                        margin: const EdgeInsets.only(right: 10),
+                        padding: const EdgeInsets.all(
+                            12), // Add padding inside the box
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.shade300,
+                              blurRadius: 6,
+                              offset: const Offset(2, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Reviewer Name Placeholder
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 15,
+                                  backgroundColor: Colors.grey.shade200,
+                                  child: const Icon(Icons.person,
+                                      size: 18, color: Colors.teal),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Patient ${index + 1}',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Colors.teal),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            // Star Ratings
+                            Row(
+                              children: List.generate(
+                                rating,
+                                (starIndex) => const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 16,
+                                ),
+                              )..addAll(
+                                  List.generate(
+                                    5 - rating,
+                                    (emptyStarIndex) => const Icon(
+                                      Icons.star_border,
+                                      color: Colors.amber,
+                                      size: 16,
+                                    ),
                                   ),
                                 ),
-                              ),
-                          ),
-                          Divider(
-                              thickness: 1,
-                              color: Colors.teal.shade200,
-                              height: 8),
-                          const SizedBox(height: 10),
+                            ),
+                            Divider(
+                                thickness: 1,
+                                color: Colors.teal.shade200,
+                                height: 8),
+                            const SizedBox(height: 10),
 
-                          // Review Text
-                          Expanded(
-                            child: Text(
-                              reviewText,
+                            // Review Text
+                            Expanded(
+                              child: Text(
+                                reviewText,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
+
+                            // Date Placeholder (Optional)
+                            const SizedBox(height: 10),
+                            Text(
+                              "Posted on ${DateTime.now().subtract(Duration(days: index * 2)).toLocal().toString().split(' ')[0]}",
                               style: const TextStyle(
-                                fontSize: 13,
-                                color: Colors.black87,
+                                fontSize: 10,
+                                color: Colors.teal,
                               ),
                             ),
-                          ),
-
-                          // Date Placeholder (Optional)
-                          const SizedBox(height: 10),
-                          Text(
-                            "Posted on ${DateTime.now().subtract(Duration(days: index * 2)).toLocal().toString().split(' ')[0]}",
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.teal,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                          ],
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 20),
-            ],
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
-      ),
 
-      // Bottom Navigation Bar
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.teal,
-        currentIndex: _currentIndex, // Highlight the current tab
-        onTap: _onBottomNavTap,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Calendar',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: 'More',
-          ),
-        ],
+        // Bottom Navigation Bar
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: Colors.teal,
+          currentIndex: _currentIndex, // Highlight the current tab
+          onTap: _onBottomNavTap,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today),
+              label: 'Calendar',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.mail),
+              label: 'Messages',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.menu),
+              label: 'More',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -644,219 +732,3 @@ class ProfilePhoto extends StatelessWidget {
     );
   }
 }
-
-
-
-              // // Reviews Section
-              // const Text(
-              //   'Reviews',
-              //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              // ),
-              // const SizedBox(height: 10),
-              // SizedBox(
-              //   height: 180, // Adjust height to make containers bigger
-              //   child: ListView.builder(
-              //     scrollDirection: Axis.horizontal,
-              //     itemCount: 4,
-              //     itemBuilder: (context, index) {
-              //       return Container(
-              //         width: 180, // Adjust width for bigger containers
-              //         margin: const EdgeInsets.only(right: 10),
-              //         decoration: BoxDecoration(
-              //           color: Colors.grey.shade200,
-              //           borderRadius: BorderRadius.circular(8),
-              //         ),
-              //         child: Center(child: Text('Review ${index + 1}')),
-              //       );
-              //     },
-              //   ),
-              // ),
-              // const SizedBox(height: 20),
-
-
-
-
-// import 'package:flutter/material.dart';
-// import 'package:safe_space/pages/doctorpages/viewprofiledoctor.dart';
-
-// class Doctorlogin extends StatelessWidget {
-//   const Doctorlogin({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.white, // Background color
-//       appBar: AppBar(
-//         title: const Text(
-//           'SAFE-SPACE',
-//           style: TextStyle(fontWeight: FontWeight.bold), // Make title bold
-//         ),
-//         centerTitle: true,
-//         elevation: 0,
-//         backgroundColor: Colors.white,
-//         foregroundColor: Colors.black,
-//         toolbarHeight: 70,
-//         bottom: PreferredSize(
-//           preferredSize: const Size.fromHeight(1),
-//           child: Container(
-//             color: Colors.black,
-//             height: 1,
-//           ),
-//         ),
-//       ),
-//       body: SingleChildScrollView(
-//         // Wrap the body with SingleChildScrollView
-//         child: Padding(
-//           padding: const EdgeInsets.all(16.0),
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               // Doctor's Profile Section
-//               Row(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   CircleAvatar(
-//                     radius: 50,
-//                     backgroundColor: Colors.grey.shade200,
-//                     child: IconButton(
-//                       icon:
-//                           const Icon(Icons.add, size: 30, color: Colors.black),
-//                       onPressed: () {},
-//                     ),
-//                   ),
-//                   const SizedBox(width: 19),
-//                   Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: const [
-//                       Text(
-//                         'Dr. Professor Vaneeza',
-//                         style: TextStyle(
-//                           fontWeight: FontWeight.bold,
-//                           fontSize: 20,
-//                           decoration: TextDecoration.underline,
-//                         ),
-//                       ),
-//                       SizedBox(height: 6),
-//                       Text(
-//                         'Surgeon',
-//                         style: TextStyle(
-//                             fontWeight: FontWeight.bold, fontSize: 18),
-//                       ),
-//                       SizedBox(height: 6),
-//                       Text(
-//                         'Mbbs(Pb), Phd(AFPGM)',
-//                         style: TextStyle(
-//                             fontWeight: FontWeight.bold, fontSize: 17),
-//                       ),
-//                     ],
-//                   ),
-//                 ],
-//               ),
-//               const SizedBox(height: 10),
-
-//               // Stars for Rating
-//               const Row(
-//                 children: [
-//                   Icon(Icons.star, color: Colors.yellow, size: 20),
-//                   Icon(Icons.star, color: Colors.yellow, size: 20),
-//                   Icon(Icons.star, color: Colors.yellow, size: 20),
-//                   Icon(Icons.star, color: Colors.yellow, size: 20),
-//                   Icon(Icons.star_border, color: Colors.yellow, size: 20),
-//                 ],
-//               ),
-//               const SizedBox(height: 18),
-//               const Divider(color: Colors.black, thickness: 1),
-
-//               // Reviews Section
-//               const Text(
-//                 'Reviews',
-//                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-//               ),
-//               const SizedBox(height: 10),
-//               SizedBox(
-//                 height: 180, // Adjust height to make containers bigger
-//                 child: ListView.builder(
-//                   scrollDirection: Axis.horizontal,
-//                   itemCount: 4,
-//                   itemBuilder: (context, index) {
-//                     return Container(
-//                       width: 180, // Adjust width for bigger containers
-//                       margin: const EdgeInsets.only(right: 10),
-//                       decoration: BoxDecoration(
-//                         color: Colors.grey.shade200,
-//                         borderRadius: BorderRadius.circular(8),
-//                       ),
-//                       child: Center(child: Text('Review ${index + 1}')),
-//                     );
-//                   },
-//                 ),
-//               ),
-//               const SizedBox(height: 20),
-
-//               // Appointments Section
-//               const Text(
-//                 'Appointments',
-//                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-//               ),
-//               const SizedBox(height: 10),
-//               SizedBox(
-//                 height: 180, // Adjust height to make containers bigger
-//                 child: ListView.builder(
-//                   scrollDirection: Axis.horizontal,
-//                   itemCount: 4,
-//                   itemBuilder: (context, index) {
-//                     return Container(
-//                       width: 180, // Adjust width for bigger containers
-//                       margin: const EdgeInsets.only(right: 10),
-//                       decoration: BoxDecoration(
-//                         color: Colors.grey.shade200,
-//                         borderRadius: BorderRadius.circular(8),
-//                       ),
-//                       child: Center(child: Text('Appointment ${index + 1}')),
-//                     );
-//                   },
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-//       ),
-
-//       // Bottom Navigation Bar
-//       bottomNavigationBar: BottomNavigationBar(
-//         backgroundColor: Color.fromARGB(255, 255, 255, 255),
-//         type: BottomNavigationBarType.fixed,
-//         selectedItemColor: Colors.black,
-//         currentIndex: 0, // Highlight the current tab (Home as default)
-//         onTap: (index) {
-//           if (index == 3) {
-//             // Check if the Menu icon is tapped
-//             Navigator.push(
-//               context,
-//               MaterialPageRoute(
-//                   builder: (context) => ViewProfileDoctorScreen()),
-//             );
-//           }
-//         },
-//         items: const [
-//           BottomNavigationBarItem(
-//             icon: Icon(Icons.home),
-//             label: 'Home',
-//           ),
-//           BottomNavigationBarItem(
-//             icon: Icon(Icons.calendar_today),
-//             label: 'Calendar',
-//           ),
-//           BottomNavigationBarItem(
-//             icon: Icon(Icons.mail),
-//             label: 'Messages',
-//           ),
-//           BottomNavigationBarItem(
-//             icon: Icon(Icons.menu),
-//             label: 'More',
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
