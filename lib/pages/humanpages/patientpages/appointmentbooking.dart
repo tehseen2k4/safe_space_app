@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -419,6 +418,9 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Appointment Booked!')),
                             );
+                            
+                            // Navigate back to previous page
+                            Navigator.pop(context);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

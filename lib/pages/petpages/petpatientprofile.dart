@@ -29,6 +29,12 @@ class _PetpatientprofileState extends State<Petpatientprofile> {
     }
   }
 
+  Future<void> refreshProfile() async {
+    if (user != null) {
+      await fetchProfileData(user!.uid);
+    }
+  }
+
   Future<void> fetchProfileData(String uid) async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
@@ -182,7 +188,7 @@ class _PetpatientprofileState extends State<Petpatientprofile> {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => ViewProfileScreen()),
-            );
+            ).then((_) => refreshProfile());
           } else if (index == 1) {
             Navigator.push(
               context,

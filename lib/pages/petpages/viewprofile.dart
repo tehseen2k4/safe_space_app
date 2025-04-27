@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/models/petpatient_db.dart';
 import 'package:safe_space_app/pages/petpages/editprofile.dart';
@@ -19,7 +18,12 @@ class ViewProfileApp extends StatelessWidget {
   }
 }
 
-class ViewProfileScreen extends StatelessWidget {
+class ViewProfileScreen extends StatefulWidget {
+  @override
+  _ViewProfileScreenState createState() => _ViewProfileScreenState();
+}
+
+class _ViewProfileScreenState extends State<ViewProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,7 +113,12 @@ class ProfilePhoto extends StatelessWidget {
   }
 }
 
-class ProfileInfoSection extends StatelessWidget {
+class ProfileInfoSection extends StatefulWidget {
+  @override
+  _ProfileInfoSectionState createState() => _ProfileInfoSectionState();
+}
+
+class _ProfileInfoSectionState extends State<ProfileInfoSection> {
   Future<PetpatientDb> fetchProfile(String uid) async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
@@ -126,6 +135,10 @@ class ProfileInfoSection extends StatelessWidget {
     } catch (e) {
       throw Exception('Error fetching profile: $e');
     }
+  }
+
+  Future<void> refreshProfile() async {
+    setState(() {});
   }
 
   @override
@@ -157,7 +170,7 @@ class ProfileInfoSection extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => EditPagePet()),
-                    );
+                    ).then((_) => refreshProfile());
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
@@ -209,7 +222,7 @@ class ProfileInfoSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => EditPagePet()),
-                  );
+                  ).then((_) => refreshProfile());
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
