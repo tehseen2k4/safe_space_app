@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:safe_space_app/models/humanappointment_db.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:safe_space_app/pages/humanpages/patientpages/appointmentdetailpage.dart';
+import 'package:safe_space_app/pages/humanpages/doctorpages/appointmentdetailpage.dart';
 
 class Humandoctorappointmentlistpage extends StatefulWidget {
   @override

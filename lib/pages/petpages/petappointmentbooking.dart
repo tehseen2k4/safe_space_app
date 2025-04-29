@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:safe_space_app/models/petappointment_db.dart';
 import 'package:safe_space_app/models/petpatient_db.dart';
 import 'dart:math';
-import '../../models/bookappointment.dart';
+import '../bookappointment.dart';
 
 class BookAppointmentPetPage extends StatefulWidget {
   @override

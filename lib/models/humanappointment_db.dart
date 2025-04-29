@@ -14,8 +14,13 @@ class HumanAppointmentDb {
   String urgencylevel;
   String uid;
   String age;
-  String timeslot; // New field for selected timeslot
+  String timeslot;
   bool? status;
+  String? doctorResponse;
+  String? responseStatus;
+  DateTime? responseTimestamp;
+  String? doctorNotes;
+  String? suggestedTimeslot;
 
   HumanAppointmentDb({
     required this.appointmentId,
@@ -33,6 +38,11 @@ class HumanAppointmentDb {
     required this.timeslot,
     required this.age,
     required this.status,
+    this.doctorResponse,
+    this.responseStatus,
+    this.responseTimestamp,
+    this.doctorNotes,
+    this.suggestedTimeslot,
   });
 
   factory HumanAppointmentDb.fromJson(Map<String, Object?> json) {
@@ -51,7 +61,14 @@ class HumanAppointmentDb {
         uid: json['uid'] as String,
         age: json['age'] as String,
         timeslot: (json['timeslot'] as String),
-        status: json['status'] == null ? false : json['status'] as bool);
+        status: json['status'] == null ? false : json['status'] as bool,
+        doctorResponse: json['doctorResponse'] as String? ?? '',
+        responseStatus: json['responseStatus'] as String? ?? 'pending',
+        responseTimestamp: json['responseTimestamp'] != null 
+            ? (json['responseTimestamp'] as Timestamp).toDate()
+            : null,
+        doctorNotes: json['doctorNotes'] as String? ?? '',
+        suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '');
   }
 
   Map<String, Object?> toJson() {
@@ -70,7 +87,14 @@ class HumanAppointmentDb {
       'uid': uid,
       'age': age,
       'timeslot': timeslot,
-      'status': status
+      'status': status,
+      'doctorResponse': doctorResponse,
+      'responseStatus': responseStatus,
+      'responseTimestamp': responseTimestamp != null 
+          ? Timestamp.fromDate(responseTimestamp!)
+          : null,
+      'doctorNotes': doctorNotes,
+      'suggestedTimeslot': suggestedTimeslot,
     };
   }
 

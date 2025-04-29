@@ -16,23 +16,34 @@ class PetAppointmentDb {
   String age;
   String timeslot; // New field for selected timeslot
   bool status;
+  String? doctorResponse;
+  String? responseStatus;
+  DateTime? responseTimestamp;
+  String? doctorNotes;
+  String? suggestedTimeslot;
 
-  PetAppointmentDb(
-      {required this.appointmentId,
-      required this.doctorUid,
-      required this.patientUid,
-      required this.username,
-      required this.email,
-      required this.gender,
-      required this.phonenumber,
-      required this.reasonforvisit,
-      required this.typeofappointment,
-      required this.doctorpreference,
-      required this.urgencylevel,
-      required this.uid,
-      required this.timeslot,
-      required this.age,
-      required this.status});
+  PetAppointmentDb({
+    required this.appointmentId,
+    required this.doctorUid,
+    required this.patientUid,
+    required this.username,
+    required this.email,
+    required this.gender,
+    required this.phonenumber,
+    required this.reasonforvisit,
+    required this.typeofappointment,
+    required this.doctorpreference,
+    required this.urgencylevel,
+    required this.uid,
+    required this.timeslot,
+    required this.age,
+    required this.status,
+    this.doctorResponse,
+    this.responseStatus,
+    this.responseTimestamp,
+    this.doctorNotes,
+    this.suggestedTimeslot,
+  });
 
   factory PetAppointmentDb.fromJson(Map<String, Object?> json) {
     return PetAppointmentDb(
@@ -50,7 +61,14 @@ class PetAppointmentDb {
         uid: json['uid'] as String,
         age: json['age'] as String,
         timeslot: (json['timeslot'] as String),
-        status: json['status'] as bool);
+        status: json['status'] as bool,
+        doctorResponse: json['doctorResponse'] as String? ?? '',
+        responseStatus: json['responseStatus'] as String? ?? 'pending',
+        responseTimestamp: json['responseTimestamp'] != null 
+            ? (json['responseTimestamp'] as Timestamp).toDate()
+            : null,
+        doctorNotes: json['doctorNotes'] as String? ?? '',
+        suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '');
   }
 
   Map<String, Object?> toJson() {
@@ -69,7 +87,14 @@ class PetAppointmentDb {
       'uid': uid,
       'age': age,
       'timeslot': timeslot,
-      'status': status
+      'status': status,
+      'doctorResponse': doctorResponse,
+      'responseStatus': responseStatus,
+      'responseTimestamp': responseTimestamp != null 
+          ? Timestamp.fromDate(responseTimestamp!)
+          : null,
+      'doctorNotes': doctorNotes,
+      'suggestedTimeslot': suggestedTimeslot,
     };
   }
 

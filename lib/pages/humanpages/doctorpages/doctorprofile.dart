@@ -6,7 +6,7 @@ import 'package:safe_space_app/pages/humanpages/doctorpages/petdoctorappointment
 import 'package:safe_space_app/pages/humanpages/doctorpages/viewprofiledoctor.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:safe_space_app/pages/humanpages/patientpages/appointmentdetailpage.dart';
+import 'package:safe_space_app/pages/humanpages/doctorpages/appointmentdetailpage.dart';
 
 class Doctorlogin extends StatefulWidget {
   const Doctorlogin({super.key});
