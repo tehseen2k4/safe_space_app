@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'humandoctorfulldetailpage.dart';
+import 'petdoctorfulldetailpage.dart';
 
-class HumanDoctorDetail extends StatefulWidget {
+class PetDoctorDetail extends StatefulWidget {
   @override
-  _HumanDoctorDetailState createState() => _HumanDoctorDetailState();
+  _PetDoctorDetailState createState() => _PetDoctorDetailState();
 }
 
-class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
+class _PetDoctorDetailState extends State<PetDoctorDetail> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String selectedCategory = 'All'; // Initially show all doctors
+  String selectedCategory = 'All';
 
-  // Function to fetch doctors from Firestore
   Future<List<Map<String, dynamic>>> fetchDoctors() async {
     try {
-      QuerySnapshot snapshot = await _firestore.collection('doctors').get();
+      QuerySnapshot snapshot = await _firestore
+          .collection('doctors')
+          .where('doctorType', isEqualTo: 'Veterinary')
+          .get();
       return snapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)
           .toList();
@@ -24,7 +26,6 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
     }
   }
 
-  // Function to build a doctor card
   Widget buildDoctorCard(Map<String, dynamic> doctor) {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
@@ -39,13 +40,13 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
           children: [
             CircleAvatar(
               radius: 40,
-              backgroundColor: const Color.fromARGB(255, 172, 209, 200),
+              backgroundColor: const Color.fromARGB(255, 225, 118, 82),
               child: Text(
-                doctor['name'] != null ? doctor['name'][0].toUpperCase() : 'D',
+                doctor['name'] != null ? doctor['name'][0].toUpperCase() : 'V',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: const Color.fromARGB(255, 2, 93, 98),
+                  color: Colors.white,
                 ),
               ),
             ),
@@ -65,7 +66,7 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
                   Row(
                     children: [
                       Icon(Icons.medical_services,
-                          color: const Color.fromARGB(255, 2, 93, 98)),
+                          color: const Color.fromARGB(255, 225, 118, 82)),
                       SizedBox(width: 8.0),
                       Text(
                         doctor['specialization'] ?? 'Specialization',
@@ -77,15 +78,38 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
                   Row(
                     children: [
                       Icon(Icons.location_on,
-                          color: const Color.fromARGB(255, 2, 93, 98)),
+                          color: const Color.fromARGB(255, 225, 118, 82)),
                       SizedBox(width: 8.0),
                       Flexible(
                         child: Text(
                           doctor['clinicName'] ?? 'Clinic Name',
-                          style:
-                              TextStyle(fontSize: 16, color: Colors.grey[700]),
+                          style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                           overflow: TextOverflow.ellipsis,
                         ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.0),
+                  Row(
+                    children: [
+                      Icon(Icons.phone,
+                          color: const Color.fromARGB(255, 225, 118, 82)),
+                      SizedBox(width: 8.0),
+                      Text(
+                        doctor['contactNumberClinic'] ?? 'Contact Not Available',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.0),
+                  Row(
+                    children: [
+                      Icon(Icons.attach_money,
+                          color: const Color.fromARGB(255, 225, 118, 82)),
+                      SizedBox(width: 8.0),
+                      Text(
+                        'Fees: \$${doctor['fees']?.toString() ?? 'Not specified'}',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                       ),
                     ],
                   ),
@@ -94,11 +118,10 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
                     alignment: Alignment.centerRight,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Navigate to DoctorDetailPage
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DoctorDetailPage(
+                            builder: (context) => PetDoctorFullDetailPage(
                               doctor: doctor,
                             ),
                           ),
@@ -110,7 +133,7 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
                         style: TextStyle(color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 2, 93, 98),
+                        backgroundColor: const Color.fromARGB(255, 225, 118, 82),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10.0),
                         ),
@@ -126,22 +149,18 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
     );
   }
 
-  // Function to build the category selection
   Widget buildCategorySelection() {
     List<String> categories = [
       'All',
-      'Psychiatrist',
-      'Cardiologist',
-      'Dermatologist',
-      'Neurologist',
-      'Pediatrician',
-      'Orthopedic',
-      'Gynecologist',
-      'Radiologist',
+      'General Veterinary',
+      'Surgery',
+      'Dermatology',
+      'Internal Medicine',
+      'Emergency Care',
     ];
 
     return Container(
-      height: 50, // Adjust height to make it more visible
+      height: 50,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
@@ -158,7 +177,7 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
               margin: EdgeInsets.only(right: 10),
               decoration: BoxDecoration(
                 color: selectedCategory == category
-                    ? const Color.fromARGB(255, 2, 93, 98)
+                    ? const Color.fromARGB(255, 225, 118, 82)
                     : Colors.grey[300],
                 borderRadius: BorderRadius.circular(30),
               ),
@@ -186,17 +205,17 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Doctor Details',
+          'Veterinary Doctors',
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 2, 93, 98),
+        backgroundColor: const Color.fromARGB(255, 225, 118, 82),
         foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
           SizedBox(height: 16.0),
-          buildCategorySelection(), // Display category selection
+          buildCategorySelection(),
           SizedBox(height: 16.0),
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -209,13 +228,12 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return Center(
                     child: Text(
-                      'No doctors available.',
+                      'No veterinary doctors available.',
                       style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
                   );
                 } else {
                   final doctors = snapshot.data!.where((doctor) {
-                    // Ensure specialization field is not null or empty
                     final specialization = doctor['specialization'];
                     return selectedCategory == 'All' ||
                         (specialization != null &&
@@ -236,4 +254,4 @@ class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
       ),
     );
   }
-}
+} 
