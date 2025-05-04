@@ -52,11 +52,19 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Appointment $status successfully')),
+        SnackBar(
+          content: Text('Appointment $status successfully'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: status == 'accepted' ? Colors.green : Colors.red,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating appointment: $e')),
+        SnackBar(
+          content: Text('Error updating appointment: $e'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -70,6 +78,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
           controller: _suggestedTimeController,
           decoration: InputDecoration(
             hintText: 'Enter suggested time (e.g., Monday 2:00 PM)',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
         actions: [
@@ -77,12 +88,15 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
             onPressed: () => Navigator.pop(context),
             child: Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _updateAppointmentStatus('rejected');
             },
             child: Text('Submit'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.teal,
+            ),
           ),
         ],
       ),
@@ -95,150 +109,255 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       appBar: AppBar(
         title: Text('Appointment Details'),
         backgroundColor: Colors.teal,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            // Status Card
-            Card(
-              color: _getStatusColor(),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Status: ${(_appointment.responseStatus ?? 'pending').toUpperCase()}',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.teal.withOpacity(0.1),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Status Card
+              _buildStatusCard(),
+              SizedBox(height: 24),
+              
+              // Patient Information Section
+              _buildSectionTitle('Patient Information'),
+              _buildInfoCard(
+                [
+                  _buildInfoRow('Name', _appointment.username, Icons.person),
+                  _buildInfoRow('Email', _appointment.email, Icons.email),
+                  _buildInfoRow('Phone', _appointment.phonenumber, Icons.phone),
+                  _buildInfoRow('Gender', _appointment.gender, Icons.accessibility),
+                  _buildInfoRow('Age', _appointment.age, Icons.calendar_today),
+                ],
+              ),
+              SizedBox(height: 16),
+
+              // Appointment Details Section
+              _buildSectionTitle('Appointment Details'),
+              _buildInfoCard(
+                [
+                  _buildInfoRow('Reason', _appointment.reasonforvisit, Icons.medical_services),
+                  _buildInfoRow('Type', _appointment.typeofappointment, Icons.access_alarm),
+                  _buildInfoRow('Doctor Preference', _appointment.doctorpreference, Icons.favorite),
+                  _buildInfoRow('Urgency', _appointment.urgencylevel, Icons.warning_amber_rounded),
+                  _buildInfoRow('Timeslot', _appointment.timeslot, Icons.access_time),
+                ],
+              ),
+              SizedBox(height: 16),
+
+              // Doctor's Notes Section
+              _buildSectionTitle('Doctor\'s Notes'),
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: _notesController,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          hintText: 'Enter your notes here...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[50],
+                        ),
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-            SizedBox(height: 16),
-            // Existing details
-            _buildDetailCard(
-              'Appointment ID:',
-              _appointment.appointmentId,
-              Icons.assignment,
-            ),
-            _buildDetailCard(
-              'Patient Name:',
-              _appointment.username,
-              Icons.person,
-            ),
-            _buildDetailCard(
-              'Email:',
-              _appointment.email,
-              Icons.email,
-            ),
-            _buildDetailCard(
-              'Phone Number:',
-              _appointment.phonenumber,
-              Icons.phone,
-            ),
-            _buildDetailCard(
-              'Gender:',
-              _appointment.gender,
-              Icons.accessibility,
-            ),
-            _buildDetailCard(
-              'Age:',
-              _appointment.age,
-              Icons.calendar_today,
-            ),
-            _buildDetailCard(
-              'Reason for Visit:',
-              _appointment.reasonforvisit,
-              Icons.medical_services,
-            ),
-            _buildDetailCard(
-              'Type of Appointment:',
-              _appointment.typeofappointment,
-              Icons.access_alarm,
-            ),
-            _buildDetailCard(
-              'Doctor Preference:',
-              _appointment.doctorpreference,
-              Icons.favorite,
-            ),
-            _buildDetailCard(
-              'Urgency Level:',
-              _appointment.urgencylevel,
-              Icons.warning_amber_rounded,
-            ),
-            _buildDetailCard(
-              'Timeslot:',
-              _appointment.timeslot,
-              Icons.access_time,
-            ),
-            // Doctor's Notes
-            Card(
-              elevation: 5,
-              margin: const EdgeInsets.symmetric(vertical: 8.0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
+
+              // Suggested Time (if rejected)
+              if ((_appointment.responseStatus ?? 'pending') == 'rejected' && 
+                  (_appointment.suggestedTimeslot ?? '').isNotEmpty)
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Doctor\'s Notes:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                    SizedBox(height: 16),
+                    _buildSectionTitle('Suggested Alternative Time'),
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    TextField(
-                      controller: _notesController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: 'Enter your notes here...',
-                        border: OutlineInputBorder(),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Icon(Icons.access_time, color: Colors.teal),
+                            SizedBox(width: 12),
+                            Text(
+                              _appointment.suggestedTimeslot ?? '',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ),
-            // Response Buttons
-            if ((_appointment.responseStatus ?? 'pending') == 'pending')
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () => _updateAppointmentStatus('accepted'),
-                    icon: Icon(Icons.check),
-                    label: Text('Accept'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    ),
+
+              // Response Buttons
+              if ((_appointment.responseStatus ?? 'pending') == 'pending')
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildResponseButton(
+                        'Accept',
+                        Icons.check,
+                        Colors.green,
+                        () => _updateAppointmentStatus('accepted'),
+                      ),
+                      _buildResponseButton(
+                        'Reject',
+                        Icons.close,
+                        Colors.red,
+                        _showSuggestTimeDialog,
+                      ),
+                    ],
                   ),
-                  ElevatedButton.icon(
-                    onPressed: _showSuggestTimeDialog,
-                    icon: Icon(Icons.close),
-                    label: Text('Reject'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    ),
-                  ),
-                ],
-              ),
-            // Show suggested time if rejected
-            if ((_appointment.responseStatus ?? 'pending') == 'rejected' && (_appointment.suggestedTimeslot ?? '').isNotEmpty)
-              _buildDetailCard(
-                'Suggested Alternative Time:',
-                _appointment.suggestedTimeslot ?? '',
-                Icons.access_time,
-              ),
-          ],
+                ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      decoration: BoxDecoration(
+        color: _getStatusColor(),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: _getStatusColor().withOpacity(0.3),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(
+            _getStatusIcon(),
+            color: Colors.white,
+            size: 32,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Status: ${(_appointment.responseStatus ?? 'pending').toUpperCase()}',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.teal[800],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(List<Widget> children) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: children,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.teal, size: 20),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResponseButton(
+      String label, IconData icon, Color color, VoidCallback onPressed) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 2,
       ),
     );
   }
@@ -254,26 +373,14 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     }
   }
 
-  Widget _buildDetailCard(String label, String value, IconData icon) {
-    return Card(
-      elevation: 5,
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.0),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16.0),
-        leading: Icon(icon, color: Colors.teal),
-        title: Text(
-          label,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Text(
-          value,
-          style: TextStyle(fontSize: 14, color: Colors.black87),
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
+  IconData _getStatusIcon() {
+    switch ((_appointment.responseStatus ?? 'pending').toLowerCase()) {
+      case 'accepted':
+        return Icons.check_circle;
+      case 'rejected':
+        return Icons.cancel;
+      default:
+        return Icons.pending;
+    }
   }
 }

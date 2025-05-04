@@ -23,13 +23,14 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _sexController = TextEditingController();
-  final TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _phonenumberController = TextEditingController();
   final TextEditingController _clinicNameController = TextEditingController();
   final TextEditingController _contactNumberClinicController =
       TextEditingController();
   final TextEditingController _feesController = TextEditingController();
   final TextEditingController _doctorTypeController = TextEditingController();
   final TextEditingController _experienceController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
   final Map<String, bool> _selectedDays = {
     'Monday': false,
@@ -44,6 +45,137 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
 
+  // Data structures for cascading dropdowns
+  final Map<String, List<String>> _humanQualifications = {
+    'MBBS': [
+      'General Physician',
+      'Pediatrician (Child Specialist)',
+      'ENT Specialist',
+      'Dermatologist',
+      'Gynecologist / Obstetrician',
+      'Medical Officer',
+      'General Surgeon',
+      'Family Physician',
+      'Emergency Medicine',
+      'Public Health Specialist',
+      'Internal Medicine (basic level)',
+      'House Officer (entry-level)'
+    ],
+    'MD': [
+      'Cardiologist',
+      'Pulmonologist',
+      'Neurologist',
+      'Psychiatrist',
+      'Gastroenterologist',
+      'Endocrinologist',
+      'Nephrologist',
+      'Rheumatologist',
+      'Internal Medicine Specialist',
+      'Oncologist',
+      'Hematologist',
+      'Infectious Disease Specialist',
+      'Geriatric Medicine',
+      'Critical Care Specialist'
+    ],
+    'FCPS': [
+      'Orthopedic Surgeon',
+      'Urologist',
+      'Cardiothoracic Surgeon',
+      'General Surgeon',
+      'Neurosurgeon',
+      'Gynecologist / Obstetrician (Specialist level)',
+      'ENT Surgeon',
+      'Pediatric Surgeon',
+      'Ophthalmologist (Eye Surgeon)',
+      'Plastic & Reconstructive Surgeon',
+      'Anesthesiologist',
+      'Radiologist',
+      'Pathologist',
+      'Dermatologist (Specialist level)',
+      'Oncology (Clinical or Surgical)'
+    ],
+    'MS': [
+      'General Surgeon',
+      'Neurosurgeon',
+      'Orthopedic Surgeon',
+      'Cardiothoracic Surgeon',
+      'ENT Surgeon',
+      'Plastic Surgeon',
+      'Urologist',
+      'Ophthalmic Surgeon'
+    ],
+    'DPT': [
+      'Physiotherapist',
+      'Rehabilitation Therapist',
+      'Sports Injury Specialist',
+      'Neuromuscular Therapy',
+      'Orthopedic Physiotherapy'
+    ],
+    'BDS': [
+      'General Dentist',
+      'Oral & Maxillofacial Surgeon',
+      'Orthodontist',
+      'Periodontist',
+      'Prosthodontist',
+      'Endodontist',
+      'Pediatric Dentist',
+      'Cosmetic Dentist',
+      'Dental Radiologist'
+    ],
+    'PhD': [
+      'Medical Researcher',
+      'Public Health Expert',
+      'Biomedical Scientist',
+      'Clinical Trials Specialist',
+      'Geneticist',
+      'Health Informatics Specialist',
+      'Pharmacologist'
+    ]
+  };
+
+  final Map<String, List<String>> _veterinaryQualifications = {
+    'DVM': [
+      'General Veterinary Practitioner',
+      'Small Animal Veterinarian (Dogs, Cats)',
+      'Large Animal Veterinarian (Cattle, Horses, Goats)',
+      'Exotic Animal Veterinarian (Rabbits, Reptiles)',
+      'Pet Emergency Care',
+      'Preventive Medicine',
+      'Zoonotic Disease Management',
+      'Animal Welfare Advisor'
+    ],
+    'BVSc': [
+      'General Vet Practitioner',
+      'Animal Husbandry Specialist',
+      'Livestock Health Advisor',
+      'Poultry Veterinarian'
+    ],
+    'MVSc': [
+      'Veterinary Surgeon',
+      'Veterinary Internal Medicine',
+      'Veterinary Pathologist',
+      'Veterinary Parasitologist',
+      'Veterinary Microbiologist',
+      'Veterinary Radiologist',
+      'Veterinary Gynecologist',
+      'Veterinary Nutritionist',
+      'Animal Reproduction Specialist',
+      'Livestock Production Specialist',
+      'Veterinary Pharmacologist'
+    ],
+    'PhD': [
+      'Research Scientist',
+      'Wildlife Disease Expert',
+      'Animal Genetics Researcher',
+      'Veterinary Public Health Specialist',
+      'Epidemiologist (Animal Health)',
+      'University Professor (Vet Schools)'
+    ]
+  };
+
+  List<String> _availableQualifications = [];
+  List<String> _availableSpecializations = [];
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -53,12 +185,13 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
     _sexController.dispose();
     _specializationController.dispose();
     _qualificationController.dispose();
-    _phoneNumberController.dispose();
+    _phonenumberController.dispose();
     _clinicNameController.dispose();
     _contactNumberClinicController.dispose();
     _feesController.dispose();
     _experienceController.dispose();
     _doctorTypeController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -66,6 +199,7 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
   void initState() {
     super.initState();
     if (user != null) {
+      _emailController.text = user!.email ?? '';
       fetchProfile(user!.uid).then((data) {
         setState(() {
           _nameController.text = data['name'] ?? '';
@@ -75,18 +209,45 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
           _bioController.text = data['bio'] ?? '';
           _specializationController.text = data['specialization'] ?? '';
           _qualificationController.text = data['qualification'] ?? '';
-          _phoneNumberController.text = data['phoneNumber'] ?? '';
+          _phonenumberController.text = data['phonenumber'] ?? '';
           _clinicNameController.text = data['clinicName'] ?? '';
           _contactNumberClinicController.text =
               data['contactNumberClinic'] ?? '';
           _feesController.text = data['fees']?.toString() ?? '';
           _doctorTypeController.text = data['doctorType'] ?? 'Human';
           _experienceController.text = data['experience'] ?? '';
+          
+          // Initialize dropdowns based on saved doctor type
+          _updateQualifications();
+          _updateSpecializations();
         });
       }).catchError((error) {
         print('Error fetching profile: $error');
       });
     }
+  }
+
+  void _updateQualifications() {
+    setState(() {
+      if (_doctorTypeController.text == 'Human') {
+        _availableQualifications = _humanQualifications.keys.toList();
+      } else if (_doctorTypeController.text == 'Veterinary') {
+        _availableQualifications = _veterinaryQualifications.keys.toList();
+      }
+      // Reset specialization when qualification changes
+      _specializationController.text = '';
+      _updateSpecializations();
+    });
+  }
+
+  void _updateSpecializations() {
+    setState(() {
+      if (_doctorTypeController.text == 'Human') {
+        _availableSpecializations = _humanQualifications[_qualificationController.text] ?? [];
+      } else if (_doctorTypeController.text == 'Veterinary') {
+        _availableSpecializations = _veterinaryQualifications[_qualificationController.text] ?? [];
+      }
+    });
   }
 
   Future<Map<String, dynamic>> fetchProfile(String uid) async {
@@ -128,40 +289,28 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
                   _buildTextField(
                       'Username', _usernameController, 'Enter your username'),
                   _buildTextField(
+                      'Email', _emailController, 'Enter your email',
+                      isMultiline: false),
+                  _buildTextField(
                       'Bio', _bioController, 'Tell something about yourself',
                       isMultiline: true),
                   _buildTextField('Age', _ageController, 'Enter your age'),
                   _buildDropdown('Sex', _sexController, ['Male', 'Female']),
+                  _buildTextField('Phone Number', _phonenumberController, 'Enter your phone number'),
                 ]),
                 _buildSectionHeader('Professional Details'),
                 _buildCard([
-                  _buildDropdown('Specialization', _specializationController, [
-                    'Psychiatrist',
-                    'Cardiologist',
-                    'Dermatologist',
-                    'Neurologist',
-                    'Pediatrician',
-                    'Orthopedic',
-                    'Gynecologist',
-                    'Radiologist'
-                  ]),
-                  _buildDropdown('Qualification', _qualificationController, [
-                    'MBBS',
-                    'MD',
-                    'MS',
-                    'DNB',
-                    'MCh',
-                    'DM',
-                    'Fellowship in Cardiology',
-                    'Fellowship in Dermatology',
-                    'Fellowship in Neurology'
-                  ]),
                   _buildDropdown('Doctor Type', _doctorTypeController,
                       ['Human', 'Veterinary']),
+                  _buildDropdown('Qualification', _qualificationController,
+                      _availableQualifications),
+                  _buildDropdown('Specialization', _specializationController,
+                      _availableSpecializations),
                   _buildTextField('Experience', _experienceController,
                       'Years of experience'),
                   _buildTextField('Clinic Name', _clinicNameController,
                       'Enter clinic name'),
+                  _buildTextField('Clinic Contact Number', _contactNumberClinicController, 'Enter clinic contact number'),
                   _buildTextField('Consultation Fees', _feesController,
                       'Enter consultation fees'),
                 ]),
@@ -237,11 +386,36 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
 
   Widget _buildDropdown(
       String label, TextEditingController controller, List<String> items) {
+    // Special case for Doctor Type - use read-only TextFormField
+    if (label == 'Doctor Type') {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 15.0),
+        child: TextFormField(
+          controller: controller,
+          readOnly: true,
+          decoration: InputDecoration(
+            labelText: label,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            filled: true,
+            fillColor: Colors.grey[200],
+          ),
+        ),
+      );
+    }
+
+    // Normal dropdown for other fields
     return Padding(
       padding: const EdgeInsets.only(bottom: 15.0),
       child: DropdownButtonFormField<String>(
         value: controller.text.isNotEmpty ? controller.text : null,
-        onChanged: (value) => setState(() => controller.text = value ?? ''),
+        onChanged: (value) {
+          setState(() {
+            controller.text = value ?? '';
+            if (label == 'Qualification') {
+              _updateSpecializations();
+            }
+          });
+        },
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -252,23 +426,6 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
       ),
     );
   }
-
-  // Widget _buildAvailableDaysField() {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: _selectedDays.keys.map((day) {
-  //       return CheckboxListTile(
-  //         title: Text(day),
-  //         value: _selectedDays[day],
-  //         onChanged: (bool? value) {
-  //           setState(() {
-  //             _selectedDays[day] = value ?? false;
-  //           });
-  //         },
-  //       );
-  //     }).toList(),
-  //   );
-  // }
 
   Widget _buildTimeSelector(String label, TimeOfDay? time) {
     return Padding(
@@ -343,20 +500,20 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
   Future<void> _saveProfile() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        // Save doctor profile
         await FirebaseFirestore.instance.collection('doctors').doc(user!.uid).set({
           'uid': user!.uid,
           'name': _nameController.text,
           'username': _usernameController.text,
           'bio': _bioController.text,
-          'age': _ageController.text,
+          'email': _emailController.text,
+          'age': int.tryParse(_ageController.text) ?? 0,
           'sex': _sexController.text,
           'specialization': _specializationController.text,
           'qualification': _qualificationController.text,
-          'phoneNumber': _phoneNumberController.text,
+          'phonenumber': _phonenumberController.text,
           'clinicName': _clinicNameController.text,
           'contactNumberClinic': _contactNumberClinicController.text,
-          'fees': _feesController.text,
+          'fees': double.tryParse(_feesController.text) ?? 0.0,
           'doctorType': _doctorTypeController.text,
           'experience': _experienceController.text,
           'availableDays': _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList(),
@@ -364,7 +521,6 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
           'endTime': _endTime?.format(context) ?? '',
         });
 
-        // Generate and save slots if time and days are selected
         if (_startTime != null && _endTime != null) {
           final selectedDays = _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList();
           if (selectedDays.isNotEmpty) {
@@ -397,19 +553,18 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
         Text('Available Days', style: _fieldLabelStyle()),
         GestureDetector(
           onTap: () async {
-            // Open a dialog to select multiple days
             await showDialog(
               context: context,
               builder: (BuildContext context) {
                 Map<String, bool> tempSelectedDays = Map.from(_selectedDays);
 
-                return AlertDialog(
-                  title: Text('Select Available Days'),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      children: tempSelectedDays.entries.map((entry) {
-                        return StatefulBuilder(
-                          builder: (context, setStateDialog) {
+                return StatefulBuilder(
+                  builder: (context, setStateDialog) {
+                    return AlertDialog(
+                      title: Text('Select Available Days'),
+                      content: SingleChildScrollView(
+                        child: Column(
+                          children: tempSelectedDays.entries.map((entry) {
                             return CheckboxListTile(
                               title: Text(entry.key),
                               value: entry.value,
@@ -419,29 +574,29 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
                                 });
                               },
                             );
+                          }).toList(),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          child: Text('Cancel'),
+                          onPressed: () {
+                            Navigator.pop(context);
                           },
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      child: Text('Cancel'),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    TextButton(
-                      child: Text('Save'),
-                      onPressed: () {
-                        setState(() {
-                          _selectedDays.clear();
-                          _selectedDays.addAll(tempSelectedDays);
-                        });
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ],
+                        ),
+                        TextButton(
+                          child: Text('Save'),
+                          onPressed: () {
+                            setState(() {
+                              _selectedDays.clear();
+                              _selectedDays.addAll(tempSelectedDays);
+                            });
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
             );

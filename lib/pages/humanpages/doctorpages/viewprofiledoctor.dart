@@ -3,7 +3,6 @@ import 'package:safe_space_app/models/doctors_db.dart';
 import 'package:safe_space_app/pages/humanpages/doctorpages/editprofiledoctor.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 
 class ViewProfileApp extends StatelessWidget {
   @override
@@ -123,23 +122,6 @@ class ProfileInfoSection extends StatelessWidget {
     }
   }
 
-  Future<Map<String, dynamic>?> fetchSlots(String uid) async {
-    try {
-      final docSnapshot = await FirebaseFirestore.instance
-          .collection('slots')
-          .doc(uid)
-          .get();
-
-      if (docSnapshot.exists) {
-        return docSnapshot.data();
-      }
-      return null;
-    } catch (e) {
-      print('Error fetching slots: $e');
-      return null;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
@@ -191,16 +173,96 @@ class ProfileInfoSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProfileInfoRow(title: 'Name', value: doctor['name'] ?? ''),
-                ProfileInfoRow(title: 'Username', value: doctor['username'] ?? ''),
-                ProfileInfoRow(title: 'Specialization', value: doctor['specialization'] ?? ''),
-                ProfileInfoRow(title: 'Qualification', value: doctor['qualification'] ?? ''),
-                ProfileInfoRow(title: 'Bio', value: doctor['bio'] ?? ''),
-                ProfileInfoRow(title: 'Email', value: doctor['email'] ?? '', isGreyed: true),
-                ProfileInfoRow(title: 'Age', value: doctor['age']?.toString() ?? ''),
-                ProfileInfoRow(title: 'Sex', value: doctor['sex'] ?? ''),
-                SizedBox(height: 20),
-                _buildAvailabilitySection(user.uid),
+                // Personal Information Section
+                _buildSectionHeader('Personal Information'),
+                Card(
+                  margin: EdgeInsets.only(bottom: 20),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        ProfileInfoRow(title: 'Name', value: doctor['name'] ?? ''),
+                        ProfileInfoRow(title: 'Username', value: doctor['username'] ?? ''),
+                        ProfileInfoRow(title: 'Email', value: doctor['email'] ?? '', isGreyed: true),
+                        ProfileInfoRow(title: 'Age', value: doctor['age']?.toString() ?? ''),
+                        ProfileInfoRow(title: 'Sex', value: doctor['sex'] ?? ''),
+                        ProfileInfoRow(title: 'Phone Number', value: doctor['phonenumber'] ?? ''),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Professional Information Section
+                _buildSectionHeader('Professional Information'),
+                Card(
+                  margin: EdgeInsets.only(bottom: 20),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        ProfileInfoRow(title: 'Specialization', value: doctor['specialization'] ?? ''),
+                        ProfileInfoRow(title: 'Qualification', value: doctor['qualification'] ?? ''),
+                        ProfileInfoRow(title: 'Experience', value: doctor['experience'] ?? ''),
+                        ProfileInfoRow(title: 'Doctor Type', value: doctor['doctorType'] ?? ''),
+                        ProfileInfoRow(title: 'Fees', value: doctor['fees']?.toString() ?? ''),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Clinic Information Section
+                _buildSectionHeader('Clinic Information'),
+                Card(
+                  margin: EdgeInsets.only(bottom: 20),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        ProfileInfoRow(title: 'Clinic Name', value: doctor['clinicName'] ?? ''),
+                        ProfileInfoRow(title: 'Clinic Contact', value: doctor['contactNumberClinic'] ?? ''),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Bio Section
+                _buildSectionHeader('About'),
+                Card(
+                  margin: EdgeInsets.only(bottom: 20),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Bio',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          doctor['bio'] ?? '',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
@@ -239,98 +301,17 @@ class ProfileInfoSection extends StatelessWidget {
     );
   }
 
-  Widget _buildAvailabilitySection(String uid) {
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: fetchSlots(uid),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
-        
-        if (!snapshot.hasData || snapshot.data == null) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'No availability slots set yet',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ),
-          );
-        }
-
-        final slots = snapshot.data!['slots'] as Map<String, dynamic>;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Availability',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.teal,
-              ),
-            ),
-            SizedBox(height: 10),
-            ...slots.entries.map((entry) {
-              final day = entry.key;
-              final slotList = entry.value as List<dynamic>;
-              
-              return Card(
-                margin: EdgeInsets.only(bottom: 10),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        day,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      ...slotList.map((slot) {
-                        final time = DateTime.parse(slot['time']);
-                        final isBooked = slot['booked'] ?? false;
-                        
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                DateFormat('hh:mm a').format(time),
-                                style: TextStyle(fontSize: 14),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: isBooked ? Colors.red[100] : Colors.green[100],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  isBooked ? 'Booked' : 'Available',
-                                  style: TextStyle(
-                                    color: isBooked ? Colors.red : Colors.green,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ],
-        );
-      },
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.teal,
+        ),
+      ),
     );
   }
 }
