@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class DoctorsDb {
   String name;
@@ -140,6 +141,11 @@ class DoctorsDb {
       }
     } catch (e) {
       print('Error saving/updating profile: $e');
+      if (e is FirebaseException) {
+        print("Firebase Error Code: ${e.code}");
+        print("Firebase Error Message: ${e.message}");
+      }
+      rethrow;
     }
   }
 }

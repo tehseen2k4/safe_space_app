@@ -23,8 +23,7 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
 
   Future<Map<String, dynamic>?> fetchDoctorSlots(String doctorId) async {
     try {
-      final docSnapshot =
-          await _firestore.collection('slots').doc(doctorId).get();
+      final docSnapshot = await _firestore.collection('slots').doc(doctorId).get();
       if (docSnapshot.exists) {
         return docSnapshot.data();
       } else {
@@ -37,14 +36,24 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
   }
 
   Widget buildSlotList(Map<String, dynamic> slots) {
-    return ListView(
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
+    return GridView.builder(
       padding: const EdgeInsets.all(16.0),
-      children: slots.entries.map((entry) {
-        final day = entry.key;
-        final slotList = entry.value as List<dynamic>;
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isDesktop ? 3 : (isTablet ? 2 : 1),
+        childAspectRatio: isDesktop ? 2.5 : 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: slots.length,
+      itemBuilder: (context, index) {
+        final day = slots.keys.elementAt(index);
+        final slotList = slots[day] as List<dynamic>;
 
         return Card(
-          margin: const EdgeInsets.symmetric(vertical: 10),
           elevation: 3,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
@@ -56,43 +65,48 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
               children: [
                 Text(
                   day,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 2, 93, 98),
+                    color: Color.fromARGB(255, 2, 93, 98),
                   ),
                 ),
-                SizedBox(height: 12),
-                ...slotList.map((slot) {
-                  final isBooked = slot['booked'] as bool;
-                  return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      isBooked ? Icons.lock : Icons.check_circle,
-                      color: isBooked ? Colors.red : Colors.green,
-                    ),
-                    title: Text(
-                      DateFormat('hh:mm a')
-                          .format(DateTime.parse(slot['time'])),
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    trailing: Text(
-                      isBooked ? 'Booked' : 'Free',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: isBooked ? Colors.red : Colors.green,
-                      ),
-                    ),
-                  );
-                }),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: slotList.length,
+                    itemBuilder: (context, slotIndex) {
+                      final slot = slotList[slotIndex];
+                      final isBooked = slot['booked'] as bool;
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          isBooked ? Icons.lock : Icons.check_circle,
+                          color: isBooked ? Colors.red : Colors.green,
+                        ),
+                        title: Text(
+                          DateFormat('hh:mm a').format(DateTime.parse(slot['time'])),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        trailing: Text(
+                          isBooked ? 'Booked' : 'Free',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isBooked ? Colors.red : Colors.green,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             ),
           ),
         );
-      }).toList(),
+      },
     );
   }
 
@@ -146,9 +160,13 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Doctor Availability',
           style: TextStyle(color: Colors.white),
         ),
@@ -157,71 +175,85 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
         centerTitle: true,
         elevation: 0,
       ),
-      body: FutureBuilder<Map<String, dynamic>?>(
-        future: doctorSlots,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.error, color: Colors.red, size: 60),
-                  SizedBox(height: 10),
-                  Text(
-                    'Error fetching doctor slots',
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.event_busy, color: Colors.grey, size: 60),
-                  SizedBox(height: 10),
-                  Text(
-                    'No slots available.',
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          final slots = snapshot.data!['slots'] ?? {};
-          return Column(
-            children: [
-              Expanded(child: buildSlotList(slots)),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: ElevatedButton(
-                    onPressed: _showDaySelectionDialog,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, 60),
-                      backgroundColor: const Color.fromARGB(255, 2, 93, 98),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+      body: Container(
+        constraints: BoxConstraints(
+          maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+        ),
+        margin: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 40 : (isTablet ? 20 : 0),
+        ),
+        child: FutureBuilder<Map<String, dynamic>?>(
+          future: doctorSlots,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error, color: Colors.red, size: 60),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Error fetching doctor slots',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black54,
                       ),
                     ),
-                    child: Text(
-                      'Select Time',
-                      style: TextStyle(color: Colors.white),
+                  ],
+                ),
+              );
+            }
+
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.event_busy, color: Colors.grey, size: 60),
+                    const SizedBox(height: 10),
+                    Text(
+                      'No slots available.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final slots = snapshot.data!['slots'] ?? {};
+            return Column(
+              children: [
+                Expanded(child: buildSlotList(slots)),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: ElevatedButton(
+                      onPressed: _showDaySelectionDialog,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(double.infinity, 60),
+                        backgroundColor: const Color.fromARGB(255, 2, 93, 98),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Select Time',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
-                ),
-              )
-            ],
-          );
-        },
+                )
+              ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -68,26 +68,39 @@ class _EditPagePetState extends State<EditPagePet> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Edit',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isDesktop ? 24 : 20,
+          ),
         ),
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 225, 118, 82),
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
+      body: Container(
+        constraints: BoxConstraints(
+          maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+        ),
+        margin: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 40 : (isTablet ? 20 : 0),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(isDesktop ? 24 : 16),
+          child: Form(
+            key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(isDesktop ? 24 : 16),
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 255, 255, 255),
                     borderRadius: BorderRadius.circular(16.0),
@@ -103,25 +116,27 @@ class _EditPagePetState extends State<EditPagePet> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        radius: 40,
-                        backgroundColor:
-                            const Color.fromARGB(255, 255, 255, 255),
-                        child: Icon(Icons.person,
-                            size: 50,
-                            color: const Color.fromARGB(255, 149, 147, 147)),
+                        radius: isDesktop ? 50 : 40,
+                        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+                        child: Icon(
+                          Icons.person,
+                          size: isDesktop ? 60 : 50,
+                          color: const Color.fromARGB(255, 149, 147, 147),
+                        ),
                       ),
-                      SizedBox(width: 16),
+                      SizedBox(width: isDesktop ? 24 : 16),
                       Text(
                         "Welcome, ${_nameController.text.isEmpty ? 'User' : _nameController.text}",
                         style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          fontSize: isDesktop ? 24 : 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: isDesktop ? 32 : 20),
 
                 _buildFieldCard(
                   title: 'Name',
@@ -132,6 +147,7 @@ class _EditPagePetState extends State<EditPagePet> {
                         ? 'Please enter your name'
                         : null,
                   ),
+                  isDesktop: isDesktop,
                 ),
                 _buildFieldCard(
                   title: 'Username',
@@ -142,6 +158,7 @@ class _EditPagePetState extends State<EditPagePet> {
                         ? 'Please enter a username'
                         : null,
                   ),
+                  isDesktop: isDesktop,
                 ),
                 _buildFieldCard(
                   title: 'Age',
@@ -153,6 +170,7 @@ class _EditPagePetState extends State<EditPagePet> {
                         ? 'Please enter your age'
                         : null,
                   ),
+                  isDesktop: isDesktop,
                 ),
                 _buildFieldCard(
                   title: 'Gender',
@@ -172,8 +190,9 @@ class _EditPagePetState extends State<EditPagePet> {
                         ? 'Please select your Gender'
                         : null,
                   ),
+                  isDesktop: isDesktop,
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: isDesktop ? 40 : 30),
                 Center(
                   child: ElevatedButton(
                     onPressed: () async {
@@ -189,11 +208,9 @@ class _EditPagePetState extends State<EditPagePet> {
                             uid: user.uid,
                           );
 
-                          // Save or update the profile in Firestore
                           await patientProfile.checkAndSaveProfile();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Profile Updated Successfully')),
+                            SnackBar(content: Text('Profile Updated Successfully')),
                           );
                           Navigator.pop(context, true);
                         }
@@ -201,9 +218,9 @@ class _EditPagePetState extends State<EditPagePet> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 225, 118, 82),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 50,
-                        vertical: 15,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isDesktop ? 64 : 50,
+                        vertical: isDesktop ? 20 : 15,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -213,7 +230,7 @@ class _EditPagePetState extends State<EditPagePet> {
                       'Save',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: isDesktop ? 18 : 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -227,28 +244,29 @@ class _EditPagePetState extends State<EditPagePet> {
     );
   }
 
-  // Helper function for field labels
-  TextStyle _fieldLabelStyle() {
-    return TextStyle(
-        fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87);
-  }
-
-  Widget _buildFieldCard({required String title, required Widget child}) {
+  Widget _buildFieldCard({
+    required String title,
+    required Widget child,
+    required bool isDesktop,
+  }) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10),
+      margin: EdgeInsets.symmetric(vertical: isDesktop ? 16 : 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(isDesktop ? 24 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black)),
-            SizedBox(height: 10),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: isDesktop ? 20 : 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: isDesktop ? 16 : 10),
             child,
           ],
         ),

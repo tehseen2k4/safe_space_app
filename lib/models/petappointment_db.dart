@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class PetAppointmentDb {
   String appointmentId;
@@ -6,16 +7,18 @@ class PetAppointmentDb {
   String patientUid;
   String username;
   String email;
-  String gender;
-  String phonenumber;
+  String petname;
+  String pettype;
+  String petbreed;
+  String petage;
   String reasonforvisit;
   String typeofappointment;
   String doctorpreference;
   String urgencylevel;
   String uid;
-  String age;
-  String timeslot; // New field for selected timeslot
-  bool status;
+  String timeslot;
+  String phonenumber;
+  bool? status;
   String? doctorResponse;
   String? responseStatus;
   DateTime? responseTimestamp;
@@ -28,15 +31,17 @@ class PetAppointmentDb {
     required this.patientUid,
     required this.username,
     required this.email,
-    required this.gender,
-    required this.phonenumber,
+    required this.petname,
+    required this.pettype,
+    required this.petbreed,
+    required this.petage,
     required this.reasonforvisit,
     required this.typeofappointment,
     required this.doctorpreference,
     required this.urgencylevel,
     required this.uid,
     required this.timeslot,
-    required this.age,
+    required this.phonenumber,
     required this.status,
     this.doctorResponse,
     this.responseStatus,
@@ -47,28 +52,31 @@ class PetAppointmentDb {
 
   factory PetAppointmentDb.fromJson(Map<String, Object?> json) {
     return PetAppointmentDb(
-        appointmentId: json['appointmentId'] as String,
-        doctorUid: json['doctorUid'] as String,
-        patientUid: json['patientUid'] as String,
-        username: json['username'] as String,
-        email: json['email'] as String,
-        gender: json['gender'] as String,
-        phonenumber: json['phonenumber'] as String,
-        reasonforvisit: json['reasonforvisit'] as String,
-        typeofappointment: json['typeofappointment'] as String,
-        doctorpreference: json['doctorpreference'] as String,
-        urgencylevel: json['urgencylevel'] as String,
-        uid: json['uid'] as String,
-        age: json['age'] as String,
-        timeslot: (json['timeslot'] as String),
-        status: json['status'] as bool,
-        doctorResponse: json['doctorResponse'] as String? ?? '',
-        responseStatus: json['responseStatus'] as String? ?? 'pending',
-        responseTimestamp: json['responseTimestamp'] != null 
-            ? (json['responseTimestamp'] as Timestamp).toDate()
-            : null,
-        doctorNotes: json['doctorNotes'] as String? ?? '',
-        suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '');
+      appointmentId: json['appointmentId'] as String,
+      doctorUid: json['doctorUid'] as String,
+      patientUid: json['patientUid'] as String,
+      username: json['username'] as String,
+      email: json['email'] as String,
+      petname: json['petname'] as String,
+      pettype: json['pettype'] as String,
+      petbreed: json['petbreed'] as String,
+      petage: json['petage'] as String,
+      reasonforvisit: json['reasonforvisit'] as String,
+      typeofappointment: json['typeofappointment'] as String,
+      doctorpreference: json['doctorpreference'] as String,
+      urgencylevel: json['urgencylevel'] as String,
+      uid: json['uid'] as String,
+      timeslot: json['timeslot'] as String,
+      phonenumber: json['phonenumber'] as String,
+      status: json['status'] == null ? false : json['status'] as bool,
+      doctorResponse: json['doctorResponse'] as String? ?? '',
+      responseStatus: json['responseStatus'] as String? ?? 'pending',
+      responseTimestamp: json['responseTimestamp'] != null 
+          ? (json['responseTimestamp'] as Timestamp).toDate()
+          : null,
+      doctorNotes: json['doctorNotes'] as String? ?? '',
+      suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '',
+    );
   }
 
   Map<String, Object?> toJson() {
@@ -78,15 +86,17 @@ class PetAppointmentDb {
       'patientUid': patientUid,
       'username': username,
       'email': email,
-      'gender': gender,
-      'phonenumber': phonenumber,
+      'petname': petname,
+      'pettype': pettype,
+      'petbreed': petbreed,
+      'petage': petage,
       'reasonforvisit': reasonforvisit,
       'typeofappointment': typeofappointment,
       'doctorpreference': doctorpreference,
       'urgencylevel': urgencylevel,
       'uid': uid,
-      'age': age,
       'timeslot': timeslot,
+      'phonenumber': phonenumber,
       'status': status,
       'doctorResponse': doctorResponse,
       'responseStatus': responseStatus,
@@ -98,15 +108,18 @@ class PetAppointmentDb {
     };
   }
 
-  /// Function to save the appointment to Firestore
   Future<void> saveToFirestore() async {
-    final collection = FirebaseFirestore.instance.collection('petappointments');
-
     try {
+      final collection = FirebaseFirestore.instance.collection('petappointments');
       await collection.doc(appointmentId).set(toJson());
-      print("Appointment saved successfully to Firestore.");
+      print("Pet appointment saved successfully to Firestore.");
     } catch (e) {
-      print("Failed to save appointment: $e");
+      print("Failed to save pet appointment: $e");
+      if (e is FirebaseException) {
+        print("Firebase Error Code: ${e.code}");
+        print("Firebase Error Message: ${e.message}");
+      }
+      rethrow;
     }
   }
 }

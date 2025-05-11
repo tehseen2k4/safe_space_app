@@ -53,6 +53,9 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
 
     if (user == null) {
       return Center(child: CircularProgressIndicator());
@@ -68,40 +71,48 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: isDesktop ? 24 : 20,
           ),
         ),
         centerTitle: true,
         elevation: 0,
+        toolbarHeight: isDesktop ? 80 : 60,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, size: isDesktop ? 28 : 24),
             onPressed: _refreshData,
             tooltip: 'Refresh',
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeaderSection(),
-              SizedBox(height: 20),
-              _buildStatsSection(),
-              SizedBox(height: 30),
-              _buildScheduleSection(user.uid),
-            ],
+      body: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(isDesktop ? 40 : 20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderSection(isDesktop),
+                  SizedBox(height: isDesktop ? 30 : 20),
+                  _buildStatsSection(isDesktop),
+                  SizedBox(height: isDesktop ? 40 : 30),
+                  _buildScheduleSection(user.uid, isDesktop),
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildHeaderSection(bool isDesktop) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(isDesktop ? 30 : 20),
       decoration: BoxDecoration(
         color: Colors.teal,
         borderRadius: BorderRadius.circular(15),
@@ -115,8 +126,8 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.calendar_today, color: Colors.white, size: 30),
-          SizedBox(width: 15),
+          Icon(Icons.calendar_today, color: Colors.white, size: isDesktop ? 40 : 30),
+          SizedBox(width: isDesktop ? 20 : 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,16 +136,16 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                   'Manage Your Schedule',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: isDesktop ? 24 : 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 5),
+                SizedBox(height: isDesktop ? 8 : 5),
                 Text(
                   'View and manage your availability slots',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.8),
-                    fontSize: 14,
+                    fontSize: isDesktop ? 18 : 14,
                   ),
                 ),
               ],
@@ -145,18 +156,18 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
     );
   }
 
-  Widget _buildStatsSection() {
+  Widget _buildStatsSection(bool isDesktop) {
     return FutureBuilder<Map<String, dynamic>?>(
       future: fetchSlots(FirebaseAuth.instance.currentUser!.uid),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Row(
             children: [
-              Expanded(child: _buildStatCard('Total Slots', '...', Icons.access_time, Colors.blue)),
-              SizedBox(width: 15),
-              Expanded(child: _buildStatCard('Booked', '...', Icons.event_busy, Colors.red)),
-              SizedBox(width: 15),
-              Expanded(child: _buildStatCard('Available', '...', Icons.event_available, Colors.green)),
+              Expanded(child: _buildStatCard('Total Slots', '...', Icons.access_time, Colors.blue, isDesktop)),
+              SizedBox(width: isDesktop ? 20 : 15),
+              Expanded(child: _buildStatCard('Booked', '...', Icons.event_busy, Colors.red, isDesktop)),
+              SizedBox(width: isDesktop ? 20 : 15),
+              Expanded(child: _buildStatCard('Available', '...', Icons.event_available, Colors.green, isDesktop)),
             ],
           );
         }
@@ -164,11 +175,11 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
         if (!snapshot.hasData || snapshot.data == null) {
           return Row(
             children: [
-              Expanded(child: _buildStatCard('Total Slots', '0', Icons.access_time, Colors.blue)),
-              SizedBox(width: 15),
-              Expanded(child: _buildStatCard('Booked', '0', Icons.event_busy, Colors.red)),
-              SizedBox(width: 15),
-              Expanded(child: _buildStatCard('Available', '0', Icons.event_available, Colors.green)),
+              Expanded(child: _buildStatCard('Total Slots', '0', Icons.access_time, Colors.blue, isDesktop)),
+              SizedBox(width: isDesktop ? 20 : 15),
+              Expanded(child: _buildStatCard('Booked', '0', Icons.event_busy, Colors.red, isDesktop)),
+              SizedBox(width: isDesktop ? 20 : 15),
+              Expanded(child: _buildStatCard('Available', '0', Icons.event_available, Colors.green, isDesktop)),
             ],
           );
         }
@@ -193,24 +204,27 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                 totalSlots.toString(),
                 Icons.access_time,
                 Colors.blue,
+                isDesktop,
               ),
             ),
-            SizedBox(width: 15),
+            SizedBox(width: isDesktop ? 20 : 15),
             Expanded(
               child: _buildStatCard(
                 'Booked',
                 bookedSlots.toString(),
                 Icons.event_busy,
                 Colors.red,
+                isDesktop,
               ),
             ),
-            SizedBox(width: 15),
+            SizedBox(width: isDesktop ? 20 : 15),
             Expanded(
               child: _buildStatCard(
                 'Available',
                 availableSlots.toString(),
                 Icons.event_available,
                 Colors.green,
+                isDesktop,
               ),
             ),
           ],
@@ -219,9 +233,9 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(String title, String value, IconData icon, Color color, bool isDesktop) {
     return Container(
-      padding: EdgeInsets.all(15),
+      padding: EdgeInsets.all(isDesktop ? 20 : 15),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -235,12 +249,12 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 30),
-          SizedBox(height: 10),
+          Icon(icon, color: color, size: isDesktop ? 40 : 30),
+          SizedBox(height: isDesktop ? 15 : 10),
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: isDesktop ? 32 : 24,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -248,7 +262,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           Text(
             title,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: isDesktop ? 16 : 12,
               color: Colors.grey[600],
             ),
           ),
@@ -257,7 +271,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
     );
   }
 
-  Widget _buildScheduleSection(String uid) {
+  Widget _buildScheduleSection(String uid, bool isDesktop) {
     return FutureBuilder<Map<String, dynamic>?>(
       future: fetchSlots(uid),
       builder: (context, snapshot) {
@@ -266,7 +280,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
         }
         
         if (!snapshot.hasData || snapshot.data == null) {
-          return _buildEmptyState();
+          return _buildEmptyState(isDesktop);
         }
 
         final slots = snapshot.data!['slots'] as Map<String, dynamic>;
@@ -276,18 +290,18 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
             Text(
               'Weekly Schedule',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: isDesktop ? 28 : 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.teal,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: isDesktop ? 30 : 20),
             ...slots.entries.map((entry) {
               final day = entry.key;
               final slotList = entry.value as List<dynamic>;
               
               return Container(
-                margin: EdgeInsets.only(bottom: 15),
+                margin: EdgeInsets.only(bottom: isDesktop ? 20 : 15),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
@@ -303,22 +317,22 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                   title: Text(
                     day,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isDesktop ? 20 : 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  leading: Icon(Icons.calendar_today, color: Colors.teal),
+                  leading: Icon(Icons.calendar_today, color: Colors.teal, size: isDesktop ? 28 : 24),
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.all(isDesktop ? 24 : 16),
                       child: Column(
                         children: slotList.map((slot) {
                           final time = DateTime.parse(slot['time']);
                           final isBooked = slot['booked'] ?? false;
                           
                           return Container(
-                            margin: EdgeInsets.only(bottom: 10),
-                            padding: EdgeInsets.all(12),
+                            margin: EdgeInsets.only(bottom: isDesktop ? 15 : 10),
+                            padding: EdgeInsets.all(isDesktop ? 16 : 12),
                             decoration: BoxDecoration(
                               color: isBooked ? Colors.red[50] : Colors.green[50],
                               borderRadius: BorderRadius.circular(10),
@@ -334,20 +348,23 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                                     Icon(
                                       isBooked ? Icons.event_busy : Icons.event_available,
                                       color: isBooked ? Colors.red : Colors.green,
-                                      size: 20,
+                                      size: isDesktop ? 24 : 20,
                                     ),
-                                    SizedBox(width: 10),
+                                    SizedBox(width: isDesktop ? 15 : 10),
                                     Text(
                                       DateFormat('hh:mm a').format(time),
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: isDesktop ? 18 : 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ],
                                 ),
                                 Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isDesktop ? 16 : 12,
+                                    vertical: isDesktop ? 8 : 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: isBooked ? Colors.red[100] : Colors.green[100],
                                     borderRadius: BorderRadius.circular(20),
@@ -356,7 +373,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                                     isBooked ? 'Booked' : 'Available',
                                     style: TextStyle(
                                       color: isBooked ? Colors.red : Colors.green,
-                                      fontSize: 12,
+                                      fontSize: isDesktop ? 14 : 12,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -377,42 +394,45 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(bool isDesktop) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.calendar_today,
-            size: 80,
+            size: isDesktop ? 100 : 80,
             color: Colors.grey[300],
           ),
-          SizedBox(height: 20),
+          SizedBox(height: isDesktop ? 30 : 20),
           Text(
             'No Availability Slots',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: isDesktop ? 28 : 20,
               fontWeight: FontWeight.bold,
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: 10),
+          SizedBox(height: isDesktop ? 15 : 10),
           Text(
             'Add your availability slots to start accepting appointments',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: isDesktop ? 18 : 14,
               color: Colors.grey[500],
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: isDesktop ? 30 : 20),
           ElevatedButton(
             onPressed: () {
               // TODO: Implement add new slot functionality
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 40 : 30,
+                vertical: isDesktop ? 16 : 12,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -420,7 +440,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
             child: Text(
               'Add New Slot',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: isDesktop ? 18 : 16,
                 fontWeight: FontWeight.bold,
               ),
             ),

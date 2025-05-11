@@ -82,90 +82,130 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
         title: Text(
-          widget.doctor['name'] ?? 'Doctor Details',
-          style: TextStyle(color: Colors.white),
+          'Doctor Profile',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: isDesktop ? 28 : 24,
+          ),
         ),
-        backgroundColor: const Color.fromARGB(255, 2, 93, 98),
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF1976D2),
+        elevation: 0,
         centerTitle: true,
+        toolbarHeight: isDesktop ? 80 : 70,
       ),
-      body: FutureBuilder<Map<String, dynamic>?>(
-        future: doctorSlots,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error fetching doctor slots'));
-          }
+      body: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+          ),
+          child: StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('doctors')
+                .doc(widget.doctor['uid'])
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1976D2)),
+                  ),
+                );
+              }
 
-          if (!snapshot.hasData) {
-            return Center(child: Text('No slots available.'));
-          }
+              if (!snapshot.hasData) {
+                return Center(
+                  child: Text(
+                    'No slots available.',
+                    style: TextStyle(
+                      fontSize: isDesktop ? 20 : 16,
+                      color: const Color(0xFF666666),
+                    ),
+                  ),
+                );
+              }
 
-          final slots = snapshot.data!['slots'] ?? {};
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderSection(),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Personal Details'),
-                _buildDetailCard([
-                  _buildDetailRow('Username', widget.doctor['username']),
-                  _buildDetailRow(
-                      'Specialization', widget.doctor['specialization']),
-                  _buildDetailRow(
-                      'Qualification', widget.doctor['qualification']),
-                  _buildDetailRow('Bio', widget.doctor['bio']),
-                  _buildDetailRow('Email', widget.doctor['email']),
-                  _buildDetailRow('Age', widget.doctor['age']?.toString()),
-                  _buildDetailRow('Sex', widget.doctor['sex']),
-                ]),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Availability'),
-                _buildDetailCard([
-                  _buildDetailRow('Available Days',
-                      widget.doctor['availableDays']?.join(', ')),
-                  _buildDetailRow('Start Time', widget.doctor['startTime']),
-                  _buildDetailRow('End Time', widget.doctor['endTime']),
-                ]),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Contact Information'),
-                _buildDetailCard([
-                  _buildDetailRow('Phone Number', widget.doctor['phonenumber']),
-                  _buildDetailRow('Clinic Name', widget.doctor['clinicName']),
-                  _buildDetailRow('Clinic Contact Number',
-                      widget.doctor['contactNumberClinic']),
-                ]),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Professional Details'),
-                _buildDetailCard([
-                  _buildDetailRow('Fees', widget.doctor['fees']?.toString()),
-                  _buildDetailRow('Doctor Type', widget.doctor['doctorType']),
-                  _buildDetailRow('Experience', widget.doctor['experience']),
-                ]),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Available Slots'),
-                buildSlotList(slots),
-              ],
-            ),
-          );
-        },
+              final slots = snapshot.data!['slots'] ?? {};
+              return SingleChildScrollView(
+                padding: EdgeInsets.all(isDesktop ? 24 : 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeaderSection(isDesktop),
+                    SizedBox(height: isDesktop ? 24 : 16.0),
+                    _buildSectionTitle('Personal Details', isDesktop),
+                    _buildDetailCard([
+                      _buildDetailRow('Username', widget.doctor['username'], isDesktop),
+                      _buildDetailRow('Specialization', widget.doctor['specialization'], isDesktop),
+                      _buildDetailRow('Qualification', widget.doctor['qualification'], isDesktop),
+                      _buildDetailRow('Bio', widget.doctor['bio'], isDesktop),
+                      _buildDetailRow('Email', widget.doctor['email'], isDesktop),
+                      _buildDetailRow('Age', widget.doctor['age']?.toString(), isDesktop),
+                      _buildDetailRow('Sex', widget.doctor['sex'], isDesktop),
+                    ], isDesktop),
+                    SizedBox(height: isDesktop ? 24 : 16.0),
+                    _buildSectionTitle('Availability', isDesktop),
+                    _buildDetailCard([
+                      _buildDetailRow('Available Days', widget.doctor['availableDays']?.join(', '), isDesktop),
+                      _buildDetailRow('Start Time', widget.doctor['startTime'], isDesktop),
+                      _buildDetailRow('End Time', widget.doctor['endTime'], isDesktop),
+                    ], isDesktop),
+                    SizedBox(height: isDesktop ? 24 : 16.0),
+                    _buildSectionTitle('Contact Information', isDesktop),
+                    _buildDetailCard([
+                      _buildDetailRow('Phone', widget.doctor['phone'], isDesktop),
+                      _buildDetailRow('Address', widget.doctor['address'], isDesktop),
+                    ], isDesktop),
+                    SizedBox(height: isDesktop ? 32 : 24.0),
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // TODO: Implement booking functionality
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1976D2),
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isDesktop ? 48 : 32,
+                            vertical: isDesktop ? 20 : 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          'Book Appointment',
+                          style: TextStyle(
+                            fontSize: isDesktop ? 20 : 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildDetailCard(List<Widget> children) {
+  Widget _buildDetailCard(List<Widget> children, bool isDesktop) {
     return Card(
       elevation: 2.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(isDesktop ? 12 : 8.0)),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: EdgeInsets.all(isDesktop ? 20 : 12.0),
         child: Column(
           children: children,
         ),
@@ -173,7 +213,7 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
     );
   }
 
-  Widget _buildDetailRow(String label, String? value) {
+  Widget _buildDetailRow(String label, String? value, bool isDesktop) {
     return Column(
       children: [
         Row(
@@ -182,14 +222,17 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
             Text(
               label,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: isDesktop ? 18 : 16,
                 fontWeight: FontWeight.w600,
               ),
             ),
             Flexible(
               child: Text(
                 value ?? 'Not Available',
-                style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                style: TextStyle(
+                  fontSize: isDesktop ? 18 : 16,
+                  color: Colors.grey[700],
+                ),
                 textAlign: TextAlign.end,
               ),
             ),
@@ -200,26 +243,26 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildHeaderSection(bool isDesktop) {
     return Card(
       elevation: 4.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(isDesktop ? 16 : 10.0)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(isDesktop ? 24 : 16.0),
         child: Row(
           children: [
             CircleAvatar(
-              radius: 40.0,
-              backgroundColor: const Color.fromARGB(255, 172, 209, 200),
+              radius: isDesktop ? 50.0 : 40.0,
+              backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
               child: Text(
                 widget.doctor['name']?.substring(0, 1).toUpperCase() ?? 'D',
                 style: TextStyle(
-                  fontSize: 32.0,
-                  color: const Color.fromARGB(255, 2, 93, 98),
+                  fontSize: isDesktop ? 40.0 : 32.0,
+                  color: const Color(0xFF1976D2),
                 ),
               ),
             ),
-            SizedBox(width: 16.0),
+            SizedBox(width: isDesktop ? 24 : 16.0),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,14 +270,18 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
                   Text(
                     widget.doctor['name'] ?? 'Doctor Name',
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: isDesktop ? 28 : 24,
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1976D2),
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  SizedBox(height: isDesktop ? 12 : 8.0),
                   Text(
                     widget.doctor['specialization'] ?? 'Specialization',
-                    style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                    style: TextStyle(
+                      fontSize: isDesktop ? 20 : 18,
+                      color: const Color(0xFF666666),
+                    ),
                   ),
                 ],
               ),
@@ -245,13 +292,13 @@ class _DoctorDetailPageState extends State<DoctorDetailPage> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, bool isDesktop) {
     return Text(
       title,
       style: TextStyle(
-        fontSize: 20,
+        fontSize: isDesktop ? 24 : 20,
         fontWeight: FontWeight.bold,
-        color: Colors.teal,
+        color: const Color(0xFF1976D2),
       ),
     );
   }

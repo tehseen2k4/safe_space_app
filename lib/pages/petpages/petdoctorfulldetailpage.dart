@@ -23,8 +23,7 @@ class _PetDoctorFullDetailPageState extends State<PetDoctorFullDetailPage> {
 
   Future<Map<String, dynamic>?> fetchDoctorSlots(String doctorId) async {
     try {
-      final docSnapshot =
-          await _firestore.collection('slots').doc(doctorId).get();
+      final docSnapshot = await _firestore.collection('slots').doc(doctorId).get();
       if (docSnapshot.exists) {
         return docSnapshot.data();
       } else {
@@ -36,126 +35,206 @@ class _PetDoctorFullDetailPageState extends State<PetDoctorFullDetailPage> {
     }
   }
 
-  // Display doctor slots with booking status
   Widget buildSlotList(Map<String, dynamic> slots) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: slots.entries.map((entry) {
-        final day = entry.key;
-        final slotList = entry.value as List<dynamic>;
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              day,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isDesktop ? 3 : (isTablet ? 2 : 1),
+        childAspectRatio: isDesktop ? 2.5 : 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: slots.length,
+      itemBuilder: (context, index) {
+        final day = slots.keys.elementAt(index);
+        final slotList = slots[day] as List<dynamic>;
+
+        return Card(
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  day,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 2, 93, 98),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: slotList.length,
+                    itemBuilder: (context, slotIndex) {
+                      final slot = slotList[slotIndex];
+                      final isBooked = slot['booked'] as bool;
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          isBooked ? Icons.lock : Icons.check_circle,
+                          color: isBooked ? Colors.red : Colors.green,
+                        ),
+                        title: Text(
+                          DateFormat('hh:mm a').format(DateTime.parse(slot['time'])),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        trailing: Text(
+                          isBooked ? 'Booked' : 'Free',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isBooked ? Colors.red : Colors.green,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 8),
-            ...slotList.map((slot) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    DateFormat('hh:mm a').format(DateTime.parse(slot['time'])),
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  Text(
-                    slot['booked'] ? 'Booked' : 'Free',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: slot['booked']
-                          ? Colors.red
-                          : const Color.fromARGB(255, 12, 133, 30),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              );
-            }).toList(),
-            SizedBox(height: 16),
-          ],
+          ),
         );
-      }).toList(),
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           widget.doctor['name'] ?? 'Doctor Details',
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 225, 118, 82),
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: FutureBuilder<Map<String, dynamic>?>(
-        future: doctorSlots,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error fetching doctor slots'));
-          }
+      body: Container(
+        constraints: BoxConstraints(
+          maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+        ),
+        margin: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 40 : (isTablet ? 20 : 0),
+        ),
+        child: FutureBuilder<Map<String, dynamic>?>(
+          future: doctorSlots,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return const Center(child: Text('Error fetching doctor slots'));
+            }
 
-          if (!snapshot.hasData) {
-            return Center(child: Text('No slots available.'));
-          }
+            if (!snapshot.hasData) {
+              return const Center(child: Text('No slots available.'));
+            }
 
-          final slots = snapshot.data!['slots'] ?? {};
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderSection(),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Personal Details'),
-                _buildDetailCard([
-                  _buildDetailRow('Username', widget.doctor['username']),
-                  _buildDetailRow(
-                      'Specialization', widget.doctor['specialization']),
-                  _buildDetailRow(
-                      'Qualification', widget.doctor['qualification']),
-                  _buildDetailRow('Bio', widget.doctor['bio']),
-                  _buildDetailRow('Email', widget.doctor['email']),
-                  _buildDetailRow('Age', widget.doctor['age']?.toString()),
-                  _buildDetailRow('Sex', widget.doctor['sex']),
-                ]),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Availability'),
-                _buildDetailCard([
-                  _buildDetailRow('Available Days',
-                      widget.doctor['availableDays']?.join(', ')),
-                  _buildDetailRow('Start Time', widget.doctor['startTime']),
-                  _buildDetailRow('End Time', widget.doctor['endTime']),
-                ]),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Contact Information'),
-                _buildDetailCard([
-                  _buildDetailRow('Phone Number', widget.doctor['phonenumber']),
-                  _buildDetailRow('Clinic Name', widget.doctor['clinicName']),
-                  _buildDetailRow('Clinic Contact Number',
-                      widget.doctor['contactNumberClinic']),
-                ]),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Professional Details'),
-                _buildDetailCard([
-                  _buildDetailRow('Fees', widget.doctor['fees']?.toString()),
-                  _buildDetailRow('Doctor Type', widget.doctor['doctorType']),
-                  _buildDetailRow('Experience', widget.doctor['experience']),
-                ]),
-                SizedBox(height: 16.0),
-                _buildSectionTitle('Available Slots'),
-                buildSlotList(slots),
-              ],
-            ),
-          );
-        },
+            final slots = snapshot.data!['slots'] ?? {};
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderSection(),
+                  const SizedBox(height: 16.0),
+                  if (isDesktop)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _buildSectionTitle('Personal Details'),
+                              _buildDetailCard([
+                                _buildDetailRow('Username', widget.doctor['username']),
+                                _buildDetailRow('Specialization', widget.doctor['specialization']),
+                                _buildDetailRow('Qualification', widget.doctor['qualification']),
+                                _buildDetailRow('Bio', widget.doctor['bio']),
+                                _buildDetailRow('Email', widget.doctor['email']),
+                                _buildDetailRow('Age', widget.doctor['age']?.toString()),
+                                _buildDetailRow('Sex', widget.doctor['sex']),
+                              ]),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              _buildSectionTitle('Availability'),
+                              _buildDetailCard([
+                                _buildDetailRow('Available Days', widget.doctor['availableDays']?.join(', ')),
+                                _buildDetailRow('Start Time', widget.doctor['startTime']),
+                                _buildDetailRow('End Time', widget.doctor['endTime']),
+                              ]),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Column(
+                      children: [
+                        _buildSectionTitle('Personal Details'),
+                        _buildDetailCard([
+                          _buildDetailRow('Username', widget.doctor['username']),
+                          _buildDetailRow('Specialization', widget.doctor['specialization']),
+                          _buildDetailRow('Qualification', widget.doctor['qualification']),
+                          _buildDetailRow('Bio', widget.doctor['bio']),
+                          _buildDetailRow('Email', widget.doctor['email']),
+                          _buildDetailRow('Age', widget.doctor['age']?.toString()),
+                          _buildDetailRow('Sex', widget.doctor['sex']),
+                        ]),
+                        const SizedBox(height: 16.0),
+                        _buildSectionTitle('Availability'),
+                        _buildDetailCard([
+                          _buildDetailRow('Available Days', widget.doctor['availableDays']?.join(', ')),
+                          _buildDetailRow('Start Time', widget.doctor['startTime']),
+                          _buildDetailRow('End Time', widget.doctor['endTime']),
+                        ]),
+                      ],
+                    ),
+                  const SizedBox(height: 16.0),
+                  _buildSectionTitle('Contact Information'),
+                  _buildDetailCard([
+                    _buildDetailRow('Phone Number', widget.doctor['phonenumber']),
+                    _buildDetailRow('Clinic Name', widget.doctor['clinicName']),
+                    _buildDetailRow('Clinic Contact Number', widget.doctor['contactNumberClinic']),
+                  ]),
+                  const SizedBox(height: 16.0),
+                  _buildSectionTitle('Professional Details'),
+                  _buildDetailCard([
+                    _buildDetailRow('Fees', widget.doctor['fees']?.toString()),
+                    _buildDetailRow('Doctor Type', widget.doctor['doctorType']),
+                    _buildDetailRow('Experience', widget.doctor['experience']),
+                  ]),
+                  const SizedBox(height: 16.0),
+                  _buildSectionTitle('Available Slots'),
+                  buildSlotList(slots),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

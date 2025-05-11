@@ -70,32 +70,51 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   }
 
   void _showSuggestTimeDialog() {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Suggest Alternative Time'),
+        title: Text(
+          'Suggest Alternative Time',
+          style: TextStyle(fontSize: isDesktop ? 20 : 18),
+        ),
         content: TextField(
           controller: _suggestedTimeController,
+          style: TextStyle(fontSize: isDesktop ? 16 : 14),
           decoration: InputDecoration(
             hintText: 'Enter suggested time (e.g., Monday 2:00 PM)',
+            hintStyle: TextStyle(fontSize: isDesktop ? 14 : 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            contentPadding: EdgeInsets.all(isDesktop ? 20 : 16),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(fontSize: isDesktop ? 16 : 14),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _updateAppointmentStatus('rejected');
             },
-            child: Text('Submit'),
+            child: Text(
+              'Submit',
+              style: TextStyle(fontSize: isDesktop ? 16 : 14),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 24 : 16,
+                vertical: isDesktop ? 16 : 12,
+              ),
             ),
           ),
         ],
@@ -105,150 +124,176 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Appointment Details'),
-        backgroundColor: Colors.teal,
-        elevation: 0,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.teal.withOpacity(0.1),
-              Colors.white,
-            ],
+        title: Text(
+          'Appointment Details',
+          style: TextStyle(
+            fontSize: isDesktop ? 24 : 20,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Status Card
-              _buildStatusCard(),
-              SizedBox(height: 24),
-              
-              // Patient Information Section
-              _buildSectionTitle('Patient Information'),
-              _buildInfoCard(
-                [
-                  _buildInfoRow('Name', _appointment.username, Icons.person),
-                  _buildInfoRow('Email', _appointment.email, Icons.email),
-                  _buildInfoRow('Phone', _appointment.phonenumber, Icons.phone),
-                  _buildInfoRow('Gender', _appointment.gender, Icons.accessibility),
-                  _buildInfoRow('Age', _appointment.age, Icons.calendar_today),
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Appointment Details Section
-              _buildSectionTitle('Appointment Details'),
-              _buildInfoCard(
-                [
-                  _buildInfoRow('Reason', _appointment.reasonforvisit, Icons.medical_services),
-                  _buildInfoRow('Type', _appointment.typeofappointment, Icons.access_alarm),
-                  _buildInfoRow('Doctor Preference', _appointment.doctorpreference, Icons.favorite),
-                  _buildInfoRow('Urgency', _appointment.urgencylevel, Icons.warning_amber_rounded),
-                  _buildInfoRow('Timeslot', _appointment.timeslot, Icons.access_time),
-                ],
-              ),
-              SizedBox(height: 16),
-
-              // Doctor's Notes Section
-              _buildSectionTitle('Doctor\'s Notes'),
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+        backgroundColor: Colors.teal,
+        elevation: 0,
+        toolbarHeight: isDesktop ? 80 : 60,
+      ),
+      body: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+          ),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.teal.withOpacity(0.1),
+                Colors.white,
+              ],
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(isDesktop ? 40 : 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStatusCard(isDesktop),
+                SizedBox(height: isDesktop ? 32 : 24),
+                
+                _buildSectionTitle('Patient Information', isDesktop),
+                _buildInfoCard(
+                  [
+                    _buildInfoRow('Name', _appointment.username, Icons.person, isDesktop),
+                    _buildInfoRow('Email', _appointment.email, Icons.email, isDesktop),
+                    _buildInfoRow('Phone', _appointment.phonenumber, Icons.phone, isDesktop),
+                    _buildInfoRow('Gender', _appointment.gender, Icons.accessibility, isDesktop),
+                    _buildInfoRow('Age', _appointment.age, Icons.calendar_today, isDesktop),
+                  ],
+                  isDesktop,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
+                SizedBox(height: isDesktop ? 24 : 16),
+
+                _buildSectionTitle('Appointment Details', isDesktop),
+                _buildInfoCard(
+                  [
+                    _buildInfoRow('Reason', _appointment.reasonforvisit, Icons.medical_services, isDesktop),
+                    _buildInfoRow('Type', _appointment.typeofappointment, Icons.access_alarm, isDesktop),
+                    _buildInfoRow('Doctor Preference', _appointment.doctorpreference, Icons.favorite, isDesktop),
+                    _buildInfoRow('Urgency', _appointment.urgencylevel, Icons.warning_amber_rounded, isDesktop),
+                    _buildInfoRow('Timeslot', _appointment.timeslot, Icons.access_time, isDesktop),
+                  ],
+                  isDesktop,
+                ),
+                SizedBox(height: isDesktop ? 24 : 16),
+
+                _buildSectionTitle('Doctor\'s Notes', isDesktop),
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(isDesktop ? 24 : 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _notesController,
+                          maxLines: 4,
+                          style: TextStyle(fontSize: isDesktop ? 16 : 14),
+                          decoration: InputDecoration(
+                            hintText: 'Enter your notes here...',
+                            hintStyle: TextStyle(fontSize: isDesktop ? 14 : 12),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                            contentPadding: EdgeInsets.all(isDesktop ? 20 : 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                if ((_appointment.responseStatus ?? 'pending') == 'rejected' && 
+                    (_appointment.suggestedTimeslot ?? '').isNotEmpty)
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextField(
-                        controller: _notesController,
-                        maxLines: 4,
-                        decoration: InputDecoration(
-                          hintText: 'Enter your notes here...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      SizedBox(height: isDesktop ? 24 : 16),
+                      _buildSectionTitle('Suggested Alternative Time', isDesktop),
+                      Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(isDesktop ? 24 : 16.0),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                color: Colors.teal,
+                                size: isDesktop ? 28 : 24,
+                              ),
+                              SizedBox(width: isDesktop ? 16 : 12),
+                              Text(
+                                _appointment.suggestedTimeslot ?? '',
+                                style: TextStyle(
+                                  fontSize: isDesktop ? 18 : 16,
+                                ),
+                              ),
+                            ],
                           ),
-                          filled: true,
-                          fillColor: Colors.grey[50],
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
 
-              // Suggested Time (if rejected)
-              if ((_appointment.responseStatus ?? 'pending') == 'rejected' && 
-                  (_appointment.suggestedTimeslot ?? '').isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 16),
-                    _buildSectionTitle('Suggested Alternative Time'),
-                    Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Icon(Icons.access_time, color: Colors.teal),
-                            SizedBox(width: 12),
-                            Text(
-                              _appointment.suggestedTimeslot ?? '',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                          ],
+                if ((_appointment.responseStatus ?? 'pending') == 'pending')
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: isDesktop ? 32 : 24.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildResponseButton(
+                          'Accept',
+                          Icons.check,
+                          Colors.green,
+                          () => _updateAppointmentStatus('accepted'),
+                          isDesktop,
                         ),
-                      ),
+                        _buildResponseButton(
+                          'Reject',
+                          Icons.close,
+                          Colors.red,
+                          _showSuggestTimeDialog,
+                          isDesktop,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-
-              // Response Buttons
-              if ((_appointment.responseStatus ?? 'pending') == 'pending')
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildResponseButton(
-                        'Accept',
-                        Icons.check,
-                        Colors.green,
-                        () => _updateAppointmentStatus('accepted'),
-                      ),
-                      _buildResponseButton(
-                        'Reject',
-                        Icons.close,
-                        Colors.red,
-                        _showSuggestTimeDialog,
-                      ),
-                    ],
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStatusCard() {
+  Widget _buildStatusCard(bool isDesktop) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      padding: EdgeInsets.symmetric(
+        vertical: isDesktop ? 24 : 16,
+        horizontal: isDesktop ? 32 : 24,
+      ),
       decoration: BoxDecoration(
         color: _getStatusColor(),
         borderRadius: BorderRadius.circular(15),
@@ -265,13 +310,13 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
           Icon(
             _getStatusIcon(),
             color: Colors.white,
-            size: 32,
+            size: isDesktop ? 40 : 32,
           ),
-          SizedBox(height: 8),
+          SizedBox(height: isDesktop ? 12 : 8),
           Text(
             'Status: ${(_appointment.responseStatus ?? 'pending').toUpperCase()}',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: isDesktop ? 24 : 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),
@@ -281,13 +326,13 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, bool isDesktop) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: EdgeInsets.symmetric(vertical: isDesktop ? 12 : 8.0),
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 18,
+          fontSize: isDesktop ? 22 : 18,
           fontWeight: FontWeight.bold,
           color: Colors.teal[800],
         ),
@@ -295,14 +340,14 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     );
   }
 
-  Widget _buildInfoCard(List<Widget> children) {
+  Widget _buildInfoCard(List<Widget> children, bool isDesktop) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(isDesktop ? 24 : 16.0),
         child: Column(
           children: children,
         ),
@@ -310,14 +355,18 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, IconData icon) {
+  Widget _buildInfoRow(String label, String value, IconData icon, bool isDesktop) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: EdgeInsets.symmetric(vertical: isDesktop ? 12 : 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.teal, size: 20),
-          SizedBox(width: 12),
+          Icon(
+            icon,
+            color: Colors.teal,
+            size: isDesktop ? 24 : 20,
+          ),
+          SizedBox(width: isDesktop ? 16 : 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,15 +374,15 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: isDesktop ? 16 : 14,
                     color: Colors.grey[600],
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: isDesktop ? 6 : 4),
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: isDesktop ? 18 : 16,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -346,14 +395,31 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   }
 
   Widget _buildResponseButton(
-      String label, IconData icon, Color color, VoidCallback onPressed) {
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onPressed,
+    bool isDesktop,
+  ) {
     return ElevatedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon),
-      label: Text(label),
+      icon: Icon(
+        icon,
+        size: isDesktop ? 24 : 20,
+      ),
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: isDesktop ? 18 : 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
-        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        padding: EdgeInsets.symmetric(
+          horizontal: isDesktop ? 40 : 32,
+          vertical: isDesktop ? 20 : 16,
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),

@@ -69,33 +69,25 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
     }
   }
 
-  Widget buildDropdown<T>({
-    required String hint,
-    required T? value,
-    required List<T> items,
-    required void Function(T?) onChanged,
-  }) {
-    return DropdownButton<T>(
-      hint: Text(hint),
-      value: value,
-      onChanged: onChanged,
-      isExpanded: true,
-      items: items.map((item) {
-        return DropdownMenuItem<T>(
-          value: item,
-          child: Text(item.toString()),
-        );
-      }).toList(),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Book Appointment')),
+        appBar: AppBar(
+          title: Text(
+            'Book Appointment',
+            style: TextStyle(
+              fontSize: isDesktop ? 28 : 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          toolbarHeight: isDesktop ? 80 : 70,
+        ),
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -105,16 +97,37 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: Text('Book Appointment')),
+            appBar: AppBar(
+              title: Text(
+                'Book Appointment',
+                style: TextStyle(
+                  fontSize: isDesktop ? 28 : 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              toolbarHeight: isDesktop ? 80 : 70,
+            ),
             body: Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasError) {
           return Scaffold(
-            appBar: AppBar(title: Text('Error')),
+            appBar: AppBar(
+              title: Text(
+                'Error',
+                style: TextStyle(
+                  fontSize: isDesktop ? 28 : 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              toolbarHeight: isDesktop ? 80 : 70,
+            ),
             body: Center(
               child: Text(
                 'Error fetching profile: ${snapshot.error}',
-                style: TextStyle(color: Colors.red, fontSize: 18),
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: isDesktop ? 20 : 18,
+                ),
               ),
             ),
           );
@@ -123,337 +136,459 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
 
           return Scaffold(
             appBar: AppBar(
-              title: Text('Book Appointment'),
-              backgroundColor: const Color.fromARGB(255, 2, 93, 98),
+              title: Text(
+                'Book Appointment',
+                style: TextStyle(
+                  fontSize: isDesktop ? 28 : 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: const Color(0xFF1976D2),
               foregroundColor: Colors.white,
               centerTitle: true,
+              toolbarHeight: isDesktop ? 80 : 70,
               actions: [
                 IconButton(
-                  icon: Icon(Icons.help_outline),
+                  icon: Icon(
+                    Icons.help_outline,
+                    size: isDesktop ? 32 : 24,
+                  ),
                   onPressed: () {
                     // Show help dialog or FAQs
                   },
                 ),
               ],
             ),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
+            body: Center(
               child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Patient Details
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Patient Details',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.teal,
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Text('Name: ${patient.username}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Email: ${patient.email}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Age: ${patient.age}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Gender: ${patient.sex}',
-                                  style: TextStyle(fontSize: 16)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Appointment Details
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Appointment Details',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.teal,
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              FutureBuilder<List<Map<String, dynamic>>>(
-                                future: fetchDoctors(),
-                                builder: (context, doctorSnapshot) {
-                                  if (doctorSnapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return CircularProgressIndicator();
-                                  } else if (doctorSnapshot.hasError) {
-                                    return Text('Error fetching doctors');
-                                  } else if (doctorSnapshot.hasData) {
-                                    final doctorList = doctorSnapshot.data!;
-                                    return DropdownButton<String>(
-                                      hint: Text('Select Doctor'),
-                                      value: selectedDoctorUid,
-                                      isExpanded: true,
-                                      icon: Icon(Icons.person,
-                                          color:
-                                              Color.fromARGB(255, 2, 93, 98)),
-                                      onChanged: (newValue) {
-                                        setState(() {
-                                          selectedDoctorUid = newValue;
-                                        });
-                                      },
-                                      items: doctorList.map((doctor) {
-                                        return DropdownMenuItem<String>(
-                                          value: doctor['uid'],
-                                          child: Text(doctor['username']),
-                                        );
-                                      }).toList(),
-                                    );
-                                  } else {
-                                    return Text('No doctors available');
-                                  }
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              TextField(
-                                controller: _reasonForVisitController,
-                                decoration: InputDecoration(
-                                  labelText: 'Reason for Visit',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              TextField(
-                                controller: _phoneNumberController,
-                                decoration: InputDecoration(
-                                  labelText: 'Phone Number',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              buildDropdown<String>(
-                                hint: 'Select Appointment Type',
-                                value: appointmentType,
-                                items: appointmentTypes,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    appointmentType = newValue;
-                                  });
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              buildDropdown<String>(
-                                hint: 'Select Urgency Level',
-                                value: urgencyLevel,
-                                items: urgencyLevels,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    urgencyLevel = newValue;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Time Slot and Actions
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Available Slots',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.teal,
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Selected Slot:',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Text(
-                                      selectedDateAndTime,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.blueGrey,
-                                      ),
-                                    ),
-                                    SizedBox(height: 20),
-                                    Center(
-                                      child: ElevatedButton.icon(
-                                        onPressed: () async {
-                                          if (selectedDoctorUid != null) {
-                                            final result =
-                                                await navigateToDoctorSlots(
-                                                    selectedDoctorUid!);
-
-                                            if (result != null) {
-                                              setState(() {
-                                                selectedDateAndTime =
-                                                    '${result['day']} at ${result['time']}';
-                                              });
-                                            }
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                    'Please select a doctor first.'),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        icon: Icon(Icons.calendar_today),
-                                        label: Text('Select Time Slot'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                    Center(
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          if (selectedDoctorUid != null &&
-                              appointmentType != null &&
-                              urgencyLevel != null &&
-                              _reasonForVisitController.text.isNotEmpty &&
-                              _phoneNumberController.text.isNotEmpty) {
-                            String? doctorName;
-                            try {
-                              final doctorDoc = await _firestore
-                                  .collection('doctors')
-                                  .doc(selectedDoctorUid)
-                                  .get();
-                              if (doctorDoc.exists) {
-                                doctorName = doctorDoc['username'];
-                              } else {
-                                throw Exception('Doctor not found');
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: isDesktop ? 1000 : (isTablet ? 800 : screenSize.width),
+                  ),
+                  margin: EdgeInsets.symmetric(
+                    horizontal: isDesktop ? 40 : (isTablet ? 20 : 16),
+                    vertical: isDesktop ? 40 : 16,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPatientDetailsCard(patient, isDesktop),
+                      SizedBox(height: isDesktop ? 32 : 20),
+                      _buildAppointmentDetailsCard(isDesktop),
+                      SizedBox(height: isDesktop ? 32 : 20),
+                      _buildTimeSlotCard(isDesktop),
+                      SizedBox(height: isDesktop ? 32 : 20),
+                      Center(
+                        child: ElevatedButton.icon(
+                          onPressed: () async {
+                            if (selectedDoctorUid != null &&
+                                appointmentType != null &&
+                                urgencyLevel != null &&
+                                _reasonForVisitController.text.isNotEmpty &&
+                                _phoneNumberController.text.isNotEmpty) {
+                              String? doctorName;
+                              try {
+                                final doctorDoc = await _firestore
+                                    .collection('doctors')
+                                    .doc(selectedDoctorUid)
+                                    .get();
+                                if (doctorDoc.exists) {
+                                  doctorName = doctorDoc['username'];
+                                } else {
+                                  throw Exception('Doctor not found');
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error fetching doctor details: $e'),
+                                  ),
+                                );
+                                return;
                               }
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        'Error fetching doctor details: $e')),
+
+                              final appointmentData = HumanAppointmentDb(
+                                username: patient.username,
+                                age: patient.age.toString(),
+                                gender: patient.sex,
+                                email: patient.email,
+                                patientUid: user.uid,
+                                doctorUid: selectedDoctorUid!,
+                                reasonforvisit: _reasonForVisitController.text,
+                                typeofappointment: appointmentType!,
+                                urgencylevel: urgencyLevel!,
+                                phonenumber: _phoneNumberController.text,
+                                timeslot: selectedDateAndTime,
+                                uid: user.uid,
+                                appointmentId: generateAppointmentId(),
+                                doctorpreference: doctorName!,
+                                status: false,
                               );
-                              return;
+
+                              await _firestore
+                                  .collection('appointments')
+                                  .add(appointmentData.toJson());
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Appointment Booked!')),
+                              );
+                              
+                              Navigator.pop(context);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Please fill in all fields')),
+                              );
                             }
-
-                            final appointmentData = HumanAppointmentDb(
-                              username: patient.username,
-                              age: patient.age.toString(),
-                              gender: patient.sex,
-                              email: patient.email,
-                              patientUid: user.uid,
-                              doctorUid: selectedDoctorUid!,
-                              reasonforvisit: _reasonForVisitController.text,
-                              typeofappointment: appointmentType!,
-                              urgencylevel: urgencyLevel!,
-                              phonenumber: _phoneNumberController.text,
-                              timeslot: selectedDateAndTime,
-                              uid: user.uid,
-                              appointmentId: generateAppointmentId(),
-                              doctorpreference: doctorName!,
-                              status: false,
-                            );
-
-                            await _firestore
-                                .collection('appointments')
-                                .add(appointmentData.toJson());
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Appointment Booked!')),
-                            );
-                            
-                            // Navigate back to previous page
-                            Navigator.pop(context);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('Please fill in all fields')),
-                            );
-                          }
-                        },
-                        icon: Icon(
-                          Icons.check_circle_outline,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          'Book Appointment',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 2, 93, 98),
-                          textStyle: TextStyle(fontSize: 18),
+                          },
+                          icon: Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.white,
+                            size: isDesktop ? 32 : 24,
+                          ),
+                          label: Text(
+                            'Book Appointment',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isDesktop ? 20 : 18,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1976D2),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isDesktop ? 40 : 32,
+                              vertical: isDesktop ? 20 : 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           );
         } else {
           return Scaffold(
-            appBar: AppBar(title: Text('Error')),
+            appBar: AppBar(
+              title: Text(
+                'Error',
+                style: TextStyle(
+                  fontSize: isDesktop ? 28 : 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              toolbarHeight: isDesktop ? 80 : 70,
+            ),
             body: Center(child: Text('Unexpected error occurred')),
           );
         }
       },
+    );
+  }
+
+  Widget _buildPatientDetailsCard(PatientsDb patient, bool isDesktop) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 5,
+      child: Container(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.all(isDesktop ? 24 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Patient Details',
+                style: TextStyle(
+                  fontSize: isDesktop ? 24 : 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1976D2),
+                ),
+              ),
+              SizedBox(height: isDesktop ? 16 : 10),
+              Text(
+                'Name: ${patient.username}',
+                style: TextStyle(fontSize: isDesktop ? 18 : 16),
+              ),
+              Text(
+                'Email: ${patient.email}',
+                style: TextStyle(fontSize: isDesktop ? 18 : 16),
+              ),
+              Text(
+                'Age: ${patient.age}',
+                style: TextStyle(fontSize: isDesktop ? 18 : 16),
+              ),
+              Text(
+                'Gender: ${patient.sex}',
+                style: TextStyle(fontSize: isDesktop ? 18 : 16),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppointmentDetailsCard(bool isDesktop) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 5,
+      child: Container(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.all(isDesktop ? 24 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Appointment Details',
+                style: TextStyle(
+                  fontSize: isDesktop ? 24 : 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1976D2),
+                ),
+              ),
+              SizedBox(height: isDesktop ? 16 : 10),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: fetchDoctors(),
+                builder: (context, doctorSnapshot) {
+                  if (doctorSnapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (doctorSnapshot.hasError) {
+                    return Text('Error fetching doctors');
+                  } else if (doctorSnapshot.hasData) {
+                    final doctorList = doctorSnapshot.data!;
+                    return DropdownButton<String>(
+                      hint: Text(
+                        'Select Doctor',
+                        style: TextStyle(
+                          fontSize: isDesktop ? 18 : 16,
+                        ),
+                      ),
+                      value: selectedDoctorUid,
+                      isExpanded: true,
+                      icon: Icon(
+                        Icons.person,
+                        color: Color(0xFF1976D2),
+                        size: isDesktop ? 32 : 24,
+                      ),
+                      onChanged: (newValue) {
+                        setState(() {
+                          selectedDoctorUid = newValue;
+                        });
+                      },
+                      items: doctorList.map((doctor) {
+                        return DropdownMenuItem<String>(
+                          value: doctor['uid'],
+                          child: Text(
+                            doctor['username'],
+                            style: TextStyle(
+                              fontSize: isDesktop ? 18 : 16,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  } else {
+                    return Text('No doctors available');
+                  }
+                },
+              ),
+              SizedBox(height: isDesktop ? 24 : 20),
+              TextField(
+                controller: _reasonForVisitController,
+                decoration: InputDecoration(
+                  labelText: 'Reason for Visit',
+                  labelStyle: TextStyle(
+                    fontSize: isDesktop ? 18 : 16,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                style: TextStyle(
+                  fontSize: isDesktop ? 18 : 16,
+                ),
+              ),
+              SizedBox(height: isDesktop ? 24 : 20),
+              TextField(
+                controller: _phoneNumberController,
+                decoration: InputDecoration(
+                  labelText: 'Phone Number',
+                  labelStyle: TextStyle(
+                    fontSize: isDesktop ? 18 : 16,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                style: TextStyle(
+                  fontSize: isDesktop ? 18 : 16,
+                ),
+              ),
+              SizedBox(height: isDesktop ? 24 : 20),
+              buildDropdown<String>(
+                hint: 'Select Appointment Type',
+                value: appointmentType,
+                items: appointmentTypes,
+                onChanged: (newValue) {
+                  setState(() {
+                    appointmentType = newValue;
+                  });
+                },
+                isDesktop: isDesktop,
+              ),
+              SizedBox(height: isDesktop ? 24 : 20),
+              buildDropdown<String>(
+                hint: 'Select Urgency Level',
+                value: urgencyLevel,
+                items: urgencyLevels,
+                onChanged: (newValue) {
+                  setState(() {
+                    urgencyLevel = newValue;
+                  });
+                },
+                isDesktop: isDesktop,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeSlotCard(bool isDesktop) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 5,
+      child: Container(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.all(isDesktop ? 24 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Available Slots',
+                style: TextStyle(
+                  fontSize: isDesktop ? 24 : 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1976D2),
+                ),
+              ),
+              SizedBox(height: isDesktop ? 16 : 10),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(isDesktop ? 24 : 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Selected Slot:',
+                      style: TextStyle(
+                        fontSize: isDesktop ? 20 : 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: isDesktop ? 16 : 10),
+                    Text(
+                      selectedDateAndTime,
+                      style: TextStyle(
+                        fontSize: isDesktop ? 18 : 16,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                    SizedBox(height: isDesktop ? 24 : 20),
+                    Center(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          if (selectedDoctorUid != null) {
+                            final result = await navigateToDoctorSlots(selectedDoctorUid!);
+
+                            if (result != null) {
+                              setState(() {
+                                selectedDateAndTime = '${result['day']} at ${result['time']}';
+                              });
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Please select a doctor first.'),
+                              ),
+                            );
+                          }
+                        },
+                        icon: Icon(
+                          Icons.calendar_today,
+                          size: isDesktop ? 24 : 20,
+                        ),
+                        label: Text(
+                          'Select Time Slot',
+                          style: TextStyle(
+                            fontSize: isDesktop ? 18 : 16,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isDesktop ? 32 : 24,
+                            vertical: isDesktop ? 16 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildDropdown<T>({
+    required String hint,
+    required T? value,
+    required List<T> items,
+    required void Function(T?) onChanged,
+    required bool isDesktop,
+  }) {
+    return DropdownButton<T>(
+      hint: Text(
+        hint,
+        style: TextStyle(
+          fontSize: isDesktop ? 18 : 16,
+        ),
+      ),
+      value: value,
+      onChanged: onChanged,
+      isExpanded: true,
+      items: items.map((item) {
+        return DropdownMenuItem<T>(
+          value: item,
+          child: Text(
+            item.toString(),
+            style: TextStyle(
+              fontSize: isDesktop ? 18 : 16,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 

@@ -40,146 +40,164 @@
 
 //   @override
 //   Widget build(BuildContext context) {
+//     final screenSize = MediaQuery.of(context).size;
+//     final isDesktop = screenSize.width > 1200;
+//     final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
 //     return Scaffold(
 //       appBar: AppBar(
-//         title: Text('Create Profile'),
+//         title: Text(
+//           'Create Profile',
+//           style: TextStyle(
+//             fontSize: isDesktop ? 28 : 24,
+//             fontWeight: FontWeight.bold,
+//           ),
+//         ),
 //         centerTitle: true,
 //         backgroundColor: Colors.black,
 //         foregroundColor: Colors.white,
+//         toolbarHeight: isDesktop ? 80 : 70,
 //       ),
-//       body: Padding(
-//         padding: const EdgeInsets.all(20.0),
-//         child: Form(
-//           key: _formKey,
-//           child: SingleChildScrollView(
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 // Name Field
-//                 Text('Name', style: _fieldLabelStyle()),
-//                 SizedBox(height: 5),
-//                 TextFormField(
-//                   controller: _nameController,
-//                   decoration: _inputDecoration('Enter your name'),
-//                   validator: (value) {
-//                     if (value == null || value.isEmpty) {
-//                       return 'Please enter your name';
-//                     }
-//                     return null;
-//                   },
-//                 ),
-//                 SizedBox(height: 20),
-
-//                 // Username Field
-//                 Text('Username', style: _fieldLabelStyle()),
-//                 SizedBox(height: 5),
-//                 TextFormField(
-//                   controller: _usernameController,
-//                   decoration: _inputDecoration('Enter your username'),
-//                   validator: (value) {
-//                     if (value == null || value.isEmpty) {
-//                       return 'Please enter a username';
-//                     }
-//                     return null;
-//                   },
-//                 ),
-//                 SizedBox(height: 20),
-
-//                 // Bio Field
-//                 Text('Bio', style: _fieldLabelStyle()),
-//                 SizedBox(height: 5),
-//                 TextFormField(
-//                   controller: _bioController,
-//                   maxLines: 2,
-//                   decoration: _inputDecoration('Tell something about yourself'),
-//                 ),
-//                 SizedBox(height: 20),
-
-//                 // Email Field
-//                 Text('Email', style: _fieldLabelStyle()),
-//                 SizedBox(height: 5),
-//                 TextFormField(
-//                   controller: _emailController,
-//                   decoration: _inputDecoration('Enter your email'),
-//                   keyboardType: TextInputType.emailAddress,
-//                   validator: (value) {
-//                     if (value == null || value.isEmpty) {
-//                       return 'Please enter your email';
-//                     }
-//                     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-//                       return 'Please enter a valid email';
-//                     }
-//                     return null;
-//                   },
-//                 ),
-//                 SizedBox(height: 20),
-
-// // Age Field
-//                 Text('Age', style: _fieldLabelStyle()),
-//                 SizedBox(height: 5),
-//                 TextFormField(
-//                   controller: _ageController,
-//                   decoration: _inputDecoration('Enter your age'),
-//                   validator: (value) {
-//                     if (value == null || value.isEmpty) {
-//                       return 'Please enter your age';
-//                     }
-//                     return null;
-//                   },
-//                 ),
-//                 SizedBox(height: 20),
-
-//                 // Sex Field
-//                 Text('Sex', style: _fieldLabelStyle()),
-//                 SizedBox(height: 5),
-//                 TextFormField(
-//                   controller: _sexController,
-//                   decoration: _inputDecoration('Enter your Sex'),
-//                   validator: (value) {
-//                     if (value == null || value.isEmpty) {
-//                       return 'Please enter your Sex';
-//                     }
-//                     return null;
-//                   },
-//                 ),
-//                 SizedBox(height: 40),
-
-//                 // Save Button
-//                 Center(
-//                   child: ElevatedButton(
-//                     onPressed: () {
-//                       if (_formKey.currentState?.validate() ?? false) {
-//                         // Here you can handle saving data logic
-//                         ScaffoldMessenger.of(context).showSnackBar(
-//                           SnackBar(
-//                               content: Text('Profile created Successfully')),
-//                         );
-//                         Navigator.push(
-//                           context,
-//                           MaterialPageRoute(
-//                               builder: (context) => HumanPatientProfile()),
-//                         );
-//                         //Navigator.pop(context); // Go back to the previous page
+//       body: Center(
+//         child: SingleChildScrollView(
+//           child: Container(
+//             constraints: BoxConstraints(
+//               maxWidth: isDesktop ? 800 : (isTablet ? 600 : screenSize.width),
+//             ),
+//             margin: EdgeInsets.symmetric(
+//               horizontal: isDesktop ? 40 : (isTablet ? 20 : 16),
+//               vertical: isDesktop ? 40 : 16,
+//             ),
+//             child: Form(
+//               key: _formKey,
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   // Name Field
+//                   Text('Name', style: _fieldLabelStyle(isDesktop)),
+//                   SizedBox(height: isDesktop ? 8 : 5),
+//                   TextFormField(
+//                     controller: _nameController,
+//                     decoration: _inputDecoration('Enter your name', isDesktop),
+//                     validator: (value) {
+//                       if (value == null || value.isEmpty) {
+//                         return 'Please enter your name';
 //                       }
+//                       return null;
 //                     },
-//                     style: ElevatedButton.styleFrom(
-//                       padding:
-//                           EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-//                       backgroundColor: Colors.black, // Button color
-//                       shape: RoundedRectangleBorder(
-//                         borderRadius: BorderRadius.circular(8),
+//                   ),
+//                   SizedBox(height: isDesktop ? 24 : 20),
+
+//                   // Username Field
+//                   Text('Username', style: _fieldLabelStyle(isDesktop)),
+//                   SizedBox(height: isDesktop ? 8 : 5),
+//                   TextFormField(
+//                     controller: _usernameController,
+//                     decoration: _inputDecoration('Enter your username', isDesktop),
+//                     validator: (value) {
+//                       if (value == null || value.isEmpty) {
+//                         return 'Please enter a username';
+//                       }
+//                       return null;
+//                     },
+//                   ),
+//                   SizedBox(height: isDesktop ? 24 : 20),
+
+//                   // Bio Field
+//                   Text('Bio', style: _fieldLabelStyle(isDesktop)),
+//                   SizedBox(height: isDesktop ? 8 : 5),
+//                   TextFormField(
+//                     controller: _bioController,
+//                     maxLines: 2,
+//                     decoration: _inputDecoration('Tell something about yourself', isDesktop),
+//                   ),
+//                   SizedBox(height: isDesktop ? 24 : 20),
+
+//                   // Email Field
+//                   Text('Email', style: _fieldLabelStyle(isDesktop)),
+//                   SizedBox(height: isDesktop ? 8 : 5),
+//                   TextFormField(
+//                     controller: _emailController,
+//                     decoration: _inputDecoration('Enter your email', isDesktop),
+//                     keyboardType: TextInputType.emailAddress,
+//                     validator: (value) {
+//                       if (value == null || value.isEmpty) {
+//                         return 'Please enter your email';
+//                       }
+//                       if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+//                         return 'Please enter a valid email';
+//                       }
+//                       return null;
+//                     },
+//                   ),
+//                   SizedBox(height: isDesktop ? 24 : 20),
+
+//                   // Age Field
+//                   Text('Age', style: _fieldLabelStyle(isDesktop)),
+//                   SizedBox(height: isDesktop ? 8 : 5),
+//                   TextFormField(
+//                     controller: _ageController,
+//                     decoration: _inputDecoration('Enter your age', isDesktop),
+//                     validator: (value) {
+//                       if (value == null || value.isEmpty) {
+//                         return 'Please enter your age';
+//                       }
+//                       return null;
+//                     },
+//                   ),
+//                   SizedBox(height: isDesktop ? 24 : 20),
+
+//                   // Sex Field
+//                   Text('Sex', style: _fieldLabelStyle(isDesktop)),
+//                   SizedBox(height: isDesktop ? 8 : 5),
+//                   TextFormField(
+//                     controller: _sexController,
+//                     decoration: _inputDecoration('Enter your Sex', isDesktop),
+//                     validator: (value) {
+//                       if (value == null || value.isEmpty) {
+//                         return 'Please enter your Sex';
+//                       }
+//                       return null;
+//                     },
+//                   ),
+//                   SizedBox(height: isDesktop ? 40 : 32),
+
+//                   // Save Button
+//                   Center(
+//                     child: ElevatedButton(
+//                       onPressed: () {
+//                         if (_formKey.currentState?.validate() ?? false) {
+//                           ScaffoldMessenger.of(context).showSnackBar(
+//                             SnackBar(content: Text('Profile created Successfully')),
+//                           );
+//                           Navigator.push(
+//                             context,
+//                             MaterialPageRoute(builder: (context) => HumanPatientProfile()),
+//                           );
+//                         }
+//                       },
+//                       style: ElevatedButton.styleFrom(
+//                         padding: EdgeInsets.symmetric(
+//                           horizontal: isDesktop ? 60 : 50,
+//                           vertical: isDesktop ? 20 : 15,
+//                         ),
+//                         backgroundColor: Colors.black,
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(12),
+//                         ),
+//                       ),
+//                       child: Text(
+//                         'Save',
+//                         style: TextStyle(
+//                           fontSize: isDesktop ? 18 : 16,
+//                           color: Colors.white,
+//                           fontWeight: FontWeight.bold,
+//                         ),
 //                       ),
 //                     ),
-//                     child: Text(
-//                       'Save',
-//                       style: TextStyle(
-//                           fontSize: 16,
-//                           color: Colors.white,
-//                           fontWeight: FontWeight.bold),
-//                     ),
 //                   ),
-//                 ),
-//               ],
+//                 ],
+//               ),
 //             ),
 //           ),
 //         ),
@@ -188,24 +206,30 @@
 //   }
 
 //   // Helper function for input decoration
-//   InputDecoration _inputDecoration(String hintText) {
+//   InputDecoration _inputDecoration(String hintText, bool isDesktop) {
 //     return InputDecoration(
 //       hintText: hintText,
 //       border: OutlineInputBorder(
-//         borderRadius: BorderRadius.circular(8),
+//         borderRadius: BorderRadius.circular(12),
 //         borderSide: BorderSide(color: Colors.grey),
 //       ),
 //       focusedBorder: OutlineInputBorder(
-//         borderRadius: BorderRadius.circular(8),
+//         borderRadius: BorderRadius.circular(12),
 //         borderSide: BorderSide(color: Colors.black),
 //       ),
-//       contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+//       contentPadding: EdgeInsets.symmetric(
+//         horizontal: isDesktop ? 20 : 15,
+//         vertical: isDesktop ? 16 : 10,
+//       ),
 //     );
 //   }
 
 //   // Helper function for field labels
-//   TextStyle _fieldLabelStyle() {
+//   TextStyle _fieldLabelStyle(bool isDesktop) {
 //     return TextStyle(
-//         fontSize: 16, fontWeight: FontWeight.w500, color: Colors.grey[700]);
+//       fontSize: isDesktop ? 18 : 16,
+//       fontWeight: FontWeight.w500,
+//       color: Colors.grey[700],
+//     );
 //   }
 // }

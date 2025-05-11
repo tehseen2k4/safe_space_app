@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class HumanAppointmentDb {
   String appointmentId;
@@ -47,28 +48,29 @@ class HumanAppointmentDb {
 
   factory HumanAppointmentDb.fromJson(Map<String, Object?> json) {
     return HumanAppointmentDb(
-        appointmentId: json['appointmentId'] as String,
-        doctorUid: json['doctorUid'] as String,
-        patientUid: json['patientUid'] as String,
-        username: json['username'] as String,
-        email: json['email'] as String,
-        gender: json['gender'] as String,
-        phonenumber: json['phonenumber'] as String,
-        reasonforvisit: json['reasonforvisit'] as String,
-        typeofappointment: json['typeofappointment'] as String,
-        doctorpreference: json['doctorpreference'] as String,
-        urgencylevel: json['urgencylevel'] as String,
-        uid: json['uid'] as String,
-        age: json['age'] as String,
-        timeslot: (json['timeslot'] as String),
-        status: json['status'] == null ? false : json['status'] as bool,
-        doctorResponse: json['doctorResponse'] as String? ?? '',
-        responseStatus: json['responseStatus'] as String? ?? 'pending',
-        responseTimestamp: json['responseTimestamp'] != null 
-            ? (json['responseTimestamp'] as Timestamp).toDate()
-            : null,
-        doctorNotes: json['doctorNotes'] as String? ?? '',
-        suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '');
+      appointmentId: json['appointmentId'] as String,
+      doctorUid: json['doctorUid'] as String,
+      patientUid: json['patientUid'] as String,
+      username: json['username'] as String,
+      email: json['email'] as String,
+      gender: json['gender'] as String,
+      phonenumber: json['phonenumber'] as String,
+      reasonforvisit: json['reasonforvisit'] as String,
+      typeofappointment: json['typeofappointment'] as String,
+      doctorpreference: json['doctorpreference'] as String,
+      urgencylevel: json['urgencylevel'] as String,
+      uid: json['uid'] as String,
+      age: json['age'] as String,
+      timeslot: json['timeslot'] as String,
+      status: json['status'] == null ? false : json['status'] as bool,
+      doctorResponse: json['doctorResponse'] as String? ?? '',
+      responseStatus: json['responseStatus'] as String? ?? 'pending',
+      responseTimestamp: json['responseTimestamp'] != null 
+          ? (json['responseTimestamp'] as Timestamp).toDate()
+          : null,
+      doctorNotes: json['doctorNotes'] as String? ?? '',
+      suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '',
+    );
   }
 
   Map<String, Object?> toJson() {
@@ -98,16 +100,18 @@ class HumanAppointmentDb {
     };
   }
 
-  /// Function to save the appointment to Firestore
   Future<void> saveToFirestore() async {
-    final collection =
-        FirebaseFirestore.instance.collection('humanappointments');
-
     try {
+      final collection = FirebaseFirestore.instance.collection('humanappointments');
       await collection.doc(appointmentId).set(toJson());
       print("Appointment saved successfully to Firestore.");
     } catch (e) {
       print("Failed to save appointment: $e");
+      if (e is FirebaseException) {
+        print("Firebase Error Code: ${e.code}");
+        print("Firebase Error Message: ${e.message}");
+      }
+      rethrow;
     }
   }
 }

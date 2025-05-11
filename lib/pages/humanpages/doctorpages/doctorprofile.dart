@@ -8,15 +8,17 @@ import 'package:safe_space_app/pages/humanpages/doctorpages/doctoravailability.d
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:safe_space_app/pages/humanpages/doctorpages/appointmentdetailpage.dart';
+import 'package:safe_space_app/pages/petpages/petappointmentdetailpage.dart';
+import 'package:safe_space_app/pages/firstpage.dart';
 
-class Doctorlogin extends StatefulWidget {
-  const Doctorlogin({super.key});
+class DoctorProfile extends StatefulWidget {
+  const DoctorProfile({super.key});
 
   @override
-  State<Doctorlogin> createState() => _DoctorloginState();
+  State<DoctorProfile> createState() => _DoctorProfileState();
 }
 
-class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStateMixin {
+class _DoctorProfileState extends State<DoctorProfile> with SingleTickerProviderStateMixin {
   final User? user = FirebaseAuth.instance.currentUser;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   int _currentIndex = 0;
@@ -28,6 +30,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
   String qualification = "***";
   String doctorType = '';
   Future<List>? _appointmentsFuture;
+  Map<String, dynamic> doctor = {};
 
   @override
   void initState() {
@@ -60,6 +63,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
       if (querySnapshot.docs.isNotEmpty) {
         final data = querySnapshot.docs.first.data();
         setState(() {
+          doctor = data;
           doctorName = data['name'] ?? "Doctor's Name";
           specialization = data['specialization'] ?? "**";
           qualification = data['qualification'] ?? "***";
@@ -70,7 +74,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
         });
       }
     } catch (e) {
-      // Error fetching profile; default values remain
+      print("Error fetching profile: $e");
     }
   }
 
@@ -96,7 +100,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => DoctorAvailabilityScreen(),
+          builder: (context) => DoctorAvailability(),
         ),
       );
       // Reset to home tab after returning
@@ -113,23 +117,36 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
 
   Future<List<PetAppointmentDb>> _fetchPetAppointments() async {
     final User? user = _auth.currentUser;
-    if (user == null) return [];
+    if (user == null) {
+      print('No user logged in');
+      return [];
+    }
 
     try {
+      print('Fetching pet appointments for doctor: ${user.uid}');
       final querySnapshot = await FirebaseFirestore.instance
           .collection('petappointments')
-          .where('uid', isEqualTo: user.uid)
+          .where('doctorUid', isEqualTo: user.uid)
           .get();
 
+      print('Query returned ${querySnapshot.docs.length} appointments');
+      
       if (querySnapshot.docs.isEmpty) {
+        print('No appointments found for this doctor');
         return [];
       }
 
-      return querySnapshot.docs
-          .map((doc) => PetAppointmentDb.fromJson(doc.data()))
+      final appointments = querySnapshot.docs
+          .map((doc) {
+            print('Processing appointment: ${doc.id}');
+            return PetAppointmentDb.fromJson(doc.data());
+          })
           .toList();
+      
+      print('Successfully processed ${appointments.length} appointments');
+      return appointments;
     } catch (e) {
-      print("Error fetching appointments: $e");
+      print("Error fetching pet appointments: $e");
       return [];
     }
   }
@@ -159,6 +176,10 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
     return WillPopScope(
       onWillPop: () async {
         bool? shouldLogout = await showDialog<bool>(
@@ -223,6 +244,11 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
                       onPressed: () async {
                         await _auth.signOut();
                         Navigator.of(context).pop(true);
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => Firstpage()),
+                          (route) => false,
+                        );
                       },
                       child: const Text('Logout'),
                     ),
@@ -238,18 +264,18 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
         backgroundColor: Colors.grey[50],
         drawer: _buildDrawer(),
         appBar: AppBar(
-          title: const Text(
-            'SAFE-SPACE',
+          title: Text(
+            'Doctor Profile',
             style: TextStyle(
+              fontSize: isDesktop ? 28 : 24,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
             ),
           ),
           centerTitle: true,
           elevation: 0,
           backgroundColor: Colors.teal,
           foregroundColor: Colors.white,
-          toolbarHeight: 70,
+          toolbarHeight: isDesktop ? 80 : 70,
           actions: [
             IconButton(
               icon: const Icon(Icons.notifications),
@@ -259,20 +285,26 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
             ),
           ],
         ),
-        body: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProfileSection(),
-                  const SizedBox(height: 24),
-                  _buildAppointmentsSection(),
-                  const SizedBox(height: 24),
-                  _buildReviewsSection(),
-                ],
+        body: Center(
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.all(isDesktop ? 32 : 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildProfileHeader(isDesktop),
+                    SizedBox(height: isDesktop ? 32 : 24),
+                    _buildProfileDetails(isDesktop),
+                    SizedBox(height: isDesktop ? 32 : 24),
+                    _buildAvailabilitySection(isDesktop),
+                    SizedBox(height: isDesktop ? 32 : 24),
+                    _buildActionButtons(context, isDesktop),
+                  ],
+                ),
               ),
             ),
           ),
@@ -326,15 +358,106 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
               ),
             ),
             _buildDrawerItem(Icons.dashboard, 'Dashboard', () {}),
-            _buildDrawerItem(Icons.calendar_today, 'Appointments', () {}),
-            _buildDrawerItem(Icons.person, 'Patients', () {}),
+            _buildDrawerItem(Icons.calendar_today, 'Appointments', () {
+              Navigator.pop(context);
+              if (doctorType.toLowerCase() == "human") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Humandoctorappointmentlistpage(),
+                  ),
+                );
+              } else if (doctorType.toLowerCase() == "veterinary") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PetDoctorAppointmentsListPage(),
+                  ),
+                );
+              }
+            }),
             _buildDrawerItem(Icons.medical_services, 'Services', () {}),
             _buildDrawerItem(Icons.settings, 'Settings', () {}),
             _buildDrawerItem(Icons.help, 'Help & Support', () {}),
             const Divider(),
             _buildDrawerItem(Icons.logout, 'Logout', () async {
-              await _auth.signOut();
-              if (mounted) {
+              bool? shouldLogout = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  titlePadding: const EdgeInsets.only(top: 24),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  actionsPadding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
+                  title: Column(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: Colors.teal.withOpacity(0.1),
+                        radius: 28,
+                        child: Icon(Icons.logout, color: Colors.teal, size: 32),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Logout Confirmation',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: Colors.teal,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  content: const Text(
+                    'Are you sure you want to log out?',
+                    style: TextStyle(fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  actions: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.teal,
+                              side: const BorderSide(color: Colors.teal),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.teal,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () async {
+                              await _auth.signOut();
+                              Navigator.of(context).pop(true);
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(builder: (context) => Firstpage()),
+                                (route) => false,
+                              );
+                            },
+                            child: const Text('Logout'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+              if (shouldLogout == true && mounted) {
                 Navigator.of(context).pop();
               }
             }),
@@ -351,253 +474,64 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
         title,
         style: const TextStyle(fontSize: 16),
       ),
-      onTap: () {
-        if (title == 'Appointments') {
-          if (doctorType == "Human") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => Humandoctorappointmentlistpage(),
-              ),
-            ).then((_) {
-              if (user != null) {
-                fetchProfileData(user!.uid);
-              }
-            });
-          } else if (doctorType == "Veterinary") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PetDoctorAppointmentsListPage(),
-              ),
-            ).then((_) {
-              if (user != null) {
-                fetchProfileData(user!.uid);
-              }
-            });
-          }
-        } else {
-          onTap();
-        }
-      },
+      onTap: onTap,
     );
   }
 
-  Widget _buildProfileSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            height: 100,
-            width: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: const DecorationImage(
-                image: AssetImage('assets/images/one.jpg'),
-                fit: BoxFit.cover,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Dr. $doctorName',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  specialization,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  qualification,
-                  style: TextStyle(
-                    color: Colors.teal,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: List.generate(
-                    5,
-                    (index) => Icon(
-                      index < 4 ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                      size: 18,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppointmentsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Pending Appointments',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 220,
-          child: FutureBuilder<List>(
-            future: _appointmentsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return const Center(child: Text('Error fetching appointments'));
-              } else if (snapshot.data == null || snapshot.data!.isEmpty) {
-                return const Center(child: Text('No appointments found'));
-              }
-
-              return ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  return _buildAppointmentCard(snapshot.data![index], context);
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAppointmentCard(dynamic appointment, BuildContext context) {
-    return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+  Widget _buildProfileHeader(bool isDesktop) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(isDesktop ? 16 : 12),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        padding: EdgeInsets.all(isDesktop ? 24 : 16),
+        child: Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.person, color: Colors.teal, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        appointment.username,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(Icons.watch_later, color: Colors.teal, size: 16),
-                    const SizedBox(width: 8),
-                    Text(
-                      appointment.timeslot,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.description, color: Colors.teal, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        appointment.reasonforvisit,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            CircleAvatar(
+              radius: isDesktop ? 60 : 40,
+              backgroundImage: NetworkImage(doctor['profileImage'] ?? ''),
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AppointmentDetailsPage(
-                      appointment: appointment,
+            SizedBox(width: isDesktop ? 24 : 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    doctor['name'] ?? 'Dr. Name',
+                    style: TextStyle(
+                      fontSize: isDesktop ? 28 : 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                minimumSize: const Size(double.infinity, 40),
+                  SizedBox(height: isDesktop ? 8 : 4),
+                  Text(
+                    doctor['specialization'] ?? 'Specialization',
+                    style: TextStyle(
+                      fontSize: isDesktop ? 20 : 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  SizedBox(height: isDesktop ? 8 : 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: isDesktop ? 24 : 20,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        '${doctor['rating'] ?? '4.5'}',
+                        style: TextStyle(
+                          fontSize: isDesktop ? 18 : 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              child: const Text('View Details'),
             ),
           ],
         ),
@@ -605,125 +539,180 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildReviewsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Recent Reviews',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
+  Widget _buildProfileDetails(bool isDesktop) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(isDesktop ? 16 : 12),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(isDesktop ? 24 : 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Professional Details',
+              style: TextStyle(
+                fontSize: isDesktop ? 24 : 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: isDesktop ? 16 : 12),
+            _buildDetailRow('Qualification', doctor['qualification'] ?? 'N/A', isDesktop),
+            _buildDetailRow('Experience', '${doctor['experience'] ?? '0'} years', isDesktop),
+            _buildDetailRow('Clinic Name', doctor['clinicName'] ?? 'N/A', isDesktop),
+            _buildDetailRow('Consultation Fee', '\$${doctor['fees'] ?? '0'}', isDesktop),
+            _buildDetailRow('Contact', doctor['phone'] ?? 'N/A', isDesktop),
+          ],
         ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 200,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: 5,
-            itemBuilder: (context, index) {
-              final fakeReviews = [
-                {
-                  "review": "He is fantastic! He truly cares and helped me manage my pain effectively.",
-                  "rating": 5
-                },
-                {
-                  "review": "Fantastic! He truly cares and helped me manage my pain effectively.",
-                  "rating": 4
-                },
-                {
-                  "review": "This Doc. is the best! listens carefully and explains everything clearly.",
-                  "rating": 5
-                },
-                {
-                  "review": "He is a great doctor. His expertise and care are unmatched!",
-                  "rating": 4
-                },
-                {
-                  "review": "He is very welcoming, and his care is excellent. Highly recommend!",
-                  "rating": 5
-                },
-              ];
-
-              final review = fakeReviews[index];
-              return _buildReviewCard(review["review"] as String, review["rating"] as int);
-            },
-          ),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildReviewCard(String review, int rating) {
-    return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildDetailRow(String label, String value, bool isDesktop) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 4),
+      child: Row(
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: Colors.teal.withOpacity(0.1),
-                child: Icon(Icons.person, color: Colors.teal),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Anonymous Patient',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Row(
-                    children: List.generate(
-                      rating,
-                      (index) => const Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           Text(
-            review,
+            '$label: ',
             style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
+              fontSize: isDesktop ? 18 : 16,
+              fontWeight: FontWeight.w500,
             ),
           ),
-          const SizedBox(height: 8),
           Text(
-            "Posted on ${DateTime.now().subtract(Duration(days: rating * 2)).toLocal().toString().split(' ')[0]}",
+            value,
             style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 12,
+              fontSize: isDesktop ? 18 : 16,
+              color: Colors.grey[700],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAvailabilitySection(bool isDesktop) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(isDesktop ? 16 : 12),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(isDesktop ? 24 : 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Availability',
+              style: TextStyle(
+                fontSize: isDesktop ? 24 : 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: isDesktop ? 16 : 12),
+            _buildTimeRow('Start Time', doctor['startTime'] ?? 'N/A', isDesktop),
+            _buildTimeRow('End Time', doctor['endTime'] ?? 'N/A', isDesktop),
+            SizedBox(height: isDesktop ? 16 : 12),
+            Text(
+              'Available Days',
+              style: TextStyle(
+                fontSize: isDesktop ? 18 : 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height: isDesktop ? 8 : 4),
+            Wrap(
+              spacing: isDesktop ? 12 : 8,
+              runSpacing: isDesktop ? 12 : 8,
+              children: (doctor['availableDays'] as List<dynamic>? ?? [])
+                  .map((day) => Chip(
+                        label: Text(
+                          day.toString(),
+                          style: TextStyle(fontSize: isDesktop ? 16 : 14),
+                        ),
+                        backgroundColor: Colors.teal[100],
+                      ))
+                  .toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeRow(String label, String time, bool isDesktop) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 4),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontSize: isDesktop ? 18 : 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            time,
+            style: TextStyle(
+              fontSize: isDesktop ? 18 : 16,
+              color: Colors.grey[700],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, bool isDesktop) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        ElevatedButton.icon(
+          onPressed: () {
+            // Handle edit profile
+          },
+          icon: Icon(Icons.edit, size: isDesktop ? 24 : 20),
+          label: Text(
+            'Edit Profile',
+            style: TextStyle(fontSize: isDesktop ? 18 : 16),
+          ),
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop ? 32 : 24,
+              vertical: isDesktop ? 16 : 12,
+            ),
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(isDesktop ? 12 : 8),
+            ),
+          ),
+        ),
+        ElevatedButton.icon(
+          onPressed: () {
+            // Handle view appointments
+          },
+          icon: Icon(Icons.calendar_today, size: isDesktop ? 24 : 20),
+          label: Text(
+            'View Appointments',
+            style: TextStyle(fontSize: isDesktop ? 18 : 16),
+          ),
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(
+              horizontal: isDesktop ? 32 : 24,
+              vertical: isDesktop ? 16 : 12,
+            ),
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(isDesktop ? 12 : 8),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

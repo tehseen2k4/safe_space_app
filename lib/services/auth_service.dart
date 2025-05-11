@@ -15,7 +15,7 @@ class AuthService {
     } catch (e, stacktrace) {
       log("Error in createUserWithEmailAndPassword: $e",
           stackTrace: stacktrace);
-      return null;
+      rethrow;
     }
   }
 
@@ -25,15 +25,29 @@ class AuthService {
       final cred = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
       return cred.user;
-    } catch (e) {
-      log("Something went wrong: $e"); // Use 'developer.log' explicitly
-      return null; // Add return statement to handle nullable return type
+    } catch (e, stacktrace) {
+      log("Error in loginUserWithEmailAndPassword: $e",
+          stackTrace: stacktrace);
+      if (e is FirebaseAuthException) {
+        log("Firebase Auth Error Code: ${e.code}");
+        log("Firebase Auth Error Message: ${e.message}");
+      }
+      rethrow;
     }
   }
 
   Future<void> signout() async {
-    try {} catch (e) {
+    try {
       await _auth.signOut();
+    } catch (e, stacktrace) {
+      log("Error in signout: $e", stackTrace: stacktrace);
+      rethrow;
     }
   }
+
+  // Get current user
+  User? get currentUser => _auth.currentUser;
+
+  // Stream of auth state changes
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 }

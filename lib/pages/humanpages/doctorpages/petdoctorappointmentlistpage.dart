@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:safe_space_app/models/petappointment_db.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:safe_space_app/pages/petpages/petappointmentdetailpage.dart';
 
 class PetDoctorAppointmentsListPage extends StatefulWidget {
   @override
@@ -15,77 +16,130 @@ class _PetDoctorAppointmentsListPageState
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Appointments'),
+        title: Text(
+          'My Appointments',
+          style: TextStyle(
+            fontSize: isDesktop ? 28 : 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.teal,
+        toolbarHeight: isDesktop ? 80 : 70,
       ),
-      body: FutureBuilder<List<PetAppointmentDb>>(
-        future: _fetchAppointments(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error fetching appointments'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No appointments found'));
-          }
+      body: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+          ),
+          child: FutureBuilder<List<PetAppointmentDb>>(
+            future: _fetchAppointments(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Text(
+                    'Error fetching appointments',
+                    style: TextStyle(
+                      fontSize: isDesktop ? 20 : 16,
+                      color: Colors.red,
+                    ),
+                  ),
+                );
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: isDesktop ? 80 : 64,
+                        color: Colors.grey[400],
+                      ),
+                      SizedBox(height: isDesktop ? 24 : 16),
+                      Text(
+                        'No appointments found',
+                        style: TextStyle(
+                          fontSize: isDesktop ? 24 : 18,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
 
-          final appointments = snapshot.data!;
+              final appointments = snapshot.data!;
 
-          return SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Column(
-              children: appointments
-                  .map((appointment) => _buildCard(appointment, context))
-                  .toList(),
-            ),
-          );
-        },
+              return SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Padding(
+                  padding: EdgeInsets.all(isDesktop ? 24 : 16),
+                  child: Column(
+                    children: appointments
+                        .map((appointment) => _buildCard(appointment, context, isDesktop))
+                        .toList(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(
-      //         builder: (context) => BookAppointmentPetPage(),
-      //       ),
-      //     );
-      //   },
-      //   backgroundColor: Colors.teal,
-      //   child: Icon(Icons.add),
-      // ),
     );
   }
 
   Future<List<PetAppointmentDb>> _fetchAppointments() async {
     final User? user = _auth.currentUser;
-    if (user == null) return [];
+    if (user == null) {
+      print('No user logged in');
+      return [];
+    }
 
     try {
+      print('Fetching pet appointments for doctor: ${user.uid}');
       final querySnapshot = await FirebaseFirestore.instance
           .collection('petappointments')
-          .where('uid', isEqualTo: user.uid)
+          .where('doctorUid', isEqualTo: user.uid)
           .get();
 
+      print('Query returned ${querySnapshot.docs.length} appointments');
+      
       if (querySnapshot.docs.isEmpty) {
+        print('No appointments found for this doctor');
         return [];
       }
 
-      return querySnapshot.docs
-          .map((doc) => PetAppointmentDb.fromJson(doc.data()))
+      final appointments = querySnapshot.docs
+          .map((doc) {
+            print('Processing appointment: ${doc.id}');
+            return PetAppointmentDb.fromJson(doc.data());
+          })
           .toList();
+      
+      print('Successfully processed ${appointments.length} appointments');
+      return appointments;
     } catch (e) {
-      print("Error fetching appointments: $e");
+      print("Error fetching pet appointments: $e");
       return [];
     }
   }
 
-  Widget _buildCard(PetAppointmentDb appointment, BuildContext context) {
+  Widget _buildCard(PetAppointmentDb appointment, BuildContext context, bool isDesktop) {
     return Container(
-      width: MediaQuery.of(context).size.width - 40,
-      height: 200,
-      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      width: double.infinity,
+      height: isDesktop ? 250 : 200,
+      margin: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 24 : 20,
+        vertical: isDesktop ? 16 : 10,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -104,7 +158,7 @@ class _PetDoctorAppointmentsListPageState
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(15),
+        padding: EdgeInsets.all(isDesktop ? 24 : 15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -115,7 +169,7 @@ class _PetDoctorAppointmentsListPageState
                 Text(
                   'Appointment ID',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: isDesktop ? 16 : 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.teal.shade700,
                   ),
@@ -123,23 +177,27 @@ class _PetDoctorAppointmentsListPageState
                 Text(
                   appointment.appointmentId,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: isDesktop ? 14 : 12,
                     color: Colors.black87,
                   ),
                 ),
               ],
             ),
-            Divider(thickness: 1, color: Colors.teal.shade200, height: 20),
+            Divider(thickness: 1, color: Colors.teal.shade200, height: isDesktop ? 24 : 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(Icons.person, color: Colors.teal, size: 18),
-                SizedBox(width: 5),
+                Icon(
+                  Icons.person,
+                  color: Colors.teal,
+                  size: isDesktop ? 22 : 18,
+                ),
+                SizedBox(width: isDesktop ? 8 : 5),
                 Expanded(
                   child: Text(
                     appointment.username,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: isDesktop ? 16 : 14,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
@@ -149,22 +207,36 @@ class _PetDoctorAppointmentsListPageState
             ),
             Row(
               children: [
-                Icon(Icons.watch_later, color: Colors.teal, size: 18),
-                SizedBox(width: 5),
+                Icon(
+                  Icons.watch_later,
+                  color: Colors.teal,
+                  size: isDesktop ? 22 : 18,
+                ),
+                SizedBox(width: isDesktop ? 8 : 5),
                 Text(
                   appointment.timeslot,
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                  style: TextStyle(
+                    fontSize: isDesktop ? 16 : 14,
+                    color: Colors.black87,
+                  ),
                 ),
               ],
             ),
             Row(
               children: [
-                Icon(Icons.description, color: Colors.teal, size: 18),
-                SizedBox(width: 5),
+                Icon(
+                  Icons.description,
+                  color: Colors.teal,
+                  size: isDesktop ? 22 : 18,
+                ),
+                SizedBox(width: isDesktop ? 8 : 5),
                 Expanded(
                   child: Text(
                     appointment.reasonforvisit,
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                    style: TextStyle(
+                      fontSize: isDesktop ? 14 : 12,
+                      color: Colors.black54,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -174,26 +246,31 @@ class _PetDoctorAppointmentsListPageState
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Navigate to the AppointmentDetailsPage
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => PetAppointmentDetailsPage(
-                  //       appointment: appointment, // Pass appointment details
-                  //     ),
-                  //   ),
-                  // );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PetAppointmentDetailsPage(
+                        appointment: appointment,
+                      ),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isDesktop ? 32 : 20,
+                    vertical: isDesktop ? 16 : 10,
+                  ),
                 ),
                 child: Text(
                   'View Details',
-                  style: TextStyle(fontSize: 14),
+                  style: TextStyle(
+                    fontSize: isDesktop ? 16 : 14,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),

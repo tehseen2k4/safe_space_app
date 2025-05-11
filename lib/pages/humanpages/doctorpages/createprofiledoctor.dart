@@ -226,63 +226,87 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Profile'),
+        title: Text(
+          'Create Profile',
+          style: TextStyle(
+            fontSize: isDesktop ? 24 : 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
+        toolbarHeight: isDesktop ? 80 : 60,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildSectionHeader('Personal Details'),
-                _buildCard([
-                  _buildTextField('Name', _nameController, 'Enter your name'),
-                  _buildTextField('Username', _usernameController, 'Enter your username'),
-                  _buildTextField('Email', _emailController, 'Enter your email', isMultiline: false),
-                  _buildTextField('Bio', _bioController, 'Tell something about yourself', isMultiline: true),
-                  _buildTextField('Age', _ageController, 'Enter your age'),
-                  _buildDropdown('Sex', _sexController, ['Male', 'Female']),
-                  _buildTextField('Phone Number', _phonenumberController, 'Enter your phone number'),
-                ]),
-                _buildSectionHeader('Professional Details'),
-                _buildCard([
-                  _buildDropdown('Doctor Type', _doctorTypeController, ['Human', 'Veterinary']),
-                  _buildDropdown('Qualification', _qualificationController, _availableQualifications),
-                  _buildDropdown('Specialization', _specializationController, _availableSpecializations),
-                  _buildTextField('Experience', _experienceController, 'Years of experience'),
-                  _buildTextField('Clinic Name', _clinicNameController, 'Enter clinic name'),
-                  _buildTextField('Clinic Contact Number', _contactNumberClinicController, 'Enter clinic contact number'),
-                  _buildTextField('Consultation Fees', _feesController, 'Enter consultation fees'),
-                ]),
-                _buildSectionHeader('Availability'),
-                _buildCard([
-                  _buildAvailableDaysField(context),
-                  _buildTimeSelector('Start Time', _startTime),
-                  _buildTimeSelector('End Time', _endTime),
-                ]),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    backgroundColor: Colors.teal,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text('Save',
-                      style: TextStyle(
-                          fontSize: 16,
+      body: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(isDesktop ? 40 : 16.0),
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildSectionHeader('Personal Details', isDesktop),
+                    _buildCard([
+                      _buildTextField('Name', _nameController, 'Enter your name', isDesktop),
+                      _buildTextField('Username', _usernameController, 'Enter your username', isDesktop),
+                      _buildTextField('Email', _emailController, 'Enter your email', isDesktop, isMultiline: false),
+                      _buildTextField('Bio', _bioController, 'Tell something about yourself', isDesktop, isMultiline: true),
+                      _buildTextField('Age', _ageController, 'Enter your age', isDesktop),
+                      _buildDropdown('Sex', _sexController, ['Male', 'Female'], isDesktop),
+                      _buildTextField('Phone Number', _phonenumberController, 'Enter your phone number', isDesktop),
+                    ], isDesktop),
+                    _buildSectionHeader('Professional Details', isDesktop),
+                    _buildCard([
+                      _buildDropdown('Doctor Type', _doctorTypeController, ['Human', 'Veterinary'], isDesktop),
+                      _buildDropdown('Qualification', _qualificationController, _availableQualifications, isDesktop),
+                      _buildDropdown('Specialization', _specializationController, _availableSpecializations, isDesktop),
+                      _buildTextField('Experience', _experienceController, 'Years of experience', isDesktop),
+                      _buildTextField('Clinic Name', _clinicNameController, 'Enter clinic name', isDesktop),
+                      _buildTextField('Clinic Contact Number', _contactNumberClinicController, 'Enter clinic contact number', isDesktop),
+                      _buildTextField('Consultation Fees', _feesController, 'Enter consultation fees', isDesktop),
+                    ], isDesktop),
+                    _buildSectionHeader('Availability', isDesktop),
+                    _buildCard([
+                      _buildAvailableDaysField(context, isDesktop),
+                      _buildTimeSelector('Start Time', _startTime, isDesktop),
+                      _buildTimeSelector('End Time', _endTime, isDesktop),
+                    ], isDesktop),
+                    SizedBox(height: isDesktop ? 40 : 20),
+                    ElevatedButton(
+                      onPressed: _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isDesktop ? 60 : 50,
+                          vertical: isDesktop ? 20 : 15,
+                        ),
+                        backgroundColor: Colors.teal,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          fontSize: isDesktop ? 18 : 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white)),
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -290,50 +314,68 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, bool isDesktop) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      padding: EdgeInsets.symmetric(vertical: isDesktop ? 15 : 10.0),
       child: Text(
         title,
         style: TextStyle(
-            fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
+          fontSize: isDesktop ? 24 : 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.teal,
+        ),
       ),
     );
   }
 
-  Widget _buildCard(List<Widget> children) {
+  Widget _buildCard(List<Widget> children, bool isDesktop) {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      margin: EdgeInsets.symmetric(vertical: 10),
+      margin: EdgeInsets.symmetric(vertical: isDesktop ? 15 : 10),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(isDesktop ? 24 : 16.0),
         child: Column(children: children),
       ),
     );
   }
 
   Widget _buildTextField(
-      String label, TextEditingController controller, String hint,
-      {bool isMultiline = false}) {
+    String label,
+    TextEditingController controller,
+    String hint,
+    bool isDesktop, {
+    bool isMultiline = false,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
+      padding: EdgeInsets.only(bottom: isDesktop ? 20 : 15.0),
       child: TextFormField(
         controller: controller,
         maxLines: isMultiline ? 3 : 1,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
+          labelStyle: TextStyle(fontSize: isDesktop ? 16 : 14),
+          hintStyle: TextStyle(fontSize: isDesktop ? 14 : 12),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 20 : 16,
+            vertical: isDesktop ? 16 : 12,
+          ),
         ),
+        style: TextStyle(fontSize: isDesktop ? 16 : 14),
       ),
     );
   }
 
   Widget _buildDropdown(
-      String label, TextEditingController controller, List<String> items) {
+    String label,
+    TextEditingController controller,
+    List<String> items,
+    bool isDesktop,
+  ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
+      padding: EdgeInsets.only(bottom: isDesktop ? 20 : 15.0),
       child: DropdownButtonFormField<String>(
         value: controller.text.isNotEmpty ? controller.text : null,
         onChanged: (value) {
@@ -348,8 +390,14 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
         },
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: TextStyle(fontSize: isDesktop ? 16 : 14),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 20 : 16,
+            vertical: isDesktop ? 16 : 12,
+          ),
         ),
+        style: TextStyle(fontSize: isDesktop ? 16 : 14),
         items: items
             .map((item) => DropdownMenuItem(value: item, child: Text(item)))
             .toList(),
@@ -357,17 +405,31 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
     );
   }
 
-  Widget _buildTimeSelector(String label, TimeOfDay? time) {
+  Widget _buildTimeSelector(String label, TimeOfDay? time, bool isDesktop) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
+      padding: EdgeInsets.only(bottom: isDesktop ? 20 : 15.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isDesktop ? 18 : 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           ElevatedButton(
             onPressed: () => _selectTime(label),
-            child: Text(time != null ? time.format(context) : 'Select Time'),
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 24 : 16,
+                vertical: isDesktop ? 16 : 12,
+              ),
+            ),
+            child: Text(
+              time != null ? time.format(context) : 'Select Time',
+              style: TextStyle(fontSize: isDesktop ? 16 : 14),
+            ),
           ),
         ],
       ),
@@ -391,11 +453,17 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
     }
   }
 
-  Widget _buildAvailableDaysField(BuildContext context) {
+  Widget _buildAvailableDaysField(BuildContext context, bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Available Days', style: _fieldLabelStyle()),
+        Text(
+          'Available Days',
+          style: TextStyle(
+            fontSize: isDesktop ? 18 : 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         GestureDetector(
           onTap: () async {
             await showDialog(
@@ -406,12 +474,18 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
                 return StatefulBuilder(
                   builder: (context, setStateDialog) {
                     return AlertDialog(
-                      title: Text('Select Available Days'),
+                      title: Text(
+                        'Select Available Days',
+                        style: TextStyle(fontSize: isDesktop ? 20 : 18),
+                      ),
                       content: SingleChildScrollView(
                         child: Column(
                           children: tempSelectedDays.entries.map((entry) {
                             return CheckboxListTile(
-                              title: Text(entry.key),
+                              title: Text(
+                                entry.key,
+                                style: TextStyle(fontSize: isDesktop ? 16 : 14),
+                              ),
                               value: entry.value,
                               onChanged: (bool? value) {
                                 setStateDialog(() {
@@ -424,13 +498,19 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
                       ),
                       actions: [
                         TextButton(
-                          child: Text('Cancel'),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(fontSize: isDesktop ? 16 : 14),
+                          ),
                           onPressed: () {
                             Navigator.pop(context);
                           },
                         ),
                         TextButton(
-                          child: Text('Save'),
+                          child: Text(
+                            'Save',
+                            style: TextStyle(fontSize: isDesktop ? 16 : 14),
+                          ),
                           onPressed: () {
                             setState(() {
                               _selectedDays.clear();
@@ -447,10 +527,14 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
             );
           },
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+            padding: EdgeInsets.symmetric(
+              vertical: isDesktop ? 16 : 10,
+              horizontal: isDesktop ? 20 : 15,
+            ),
             decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8)),
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -460,21 +544,23 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
                             .map((entry) => entry.key)
                             .join(', ') ??
                         'Select Days',
-                    style: TextStyle(color: Colors.black),
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: isDesktop ? 16 : 14,
+                    ),
                   ),
                 ),
-                Icon(Icons.arrow_drop_down),
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: isDesktop ? 28 : 24,
+                ),
               ],
             ),
           ),
         ),
-        SizedBox(height: 20),
+        SizedBox(height: isDesktop ? 30 : 20),
       ],
     );
-  }
-
-  TextStyle _fieldLabelStyle() {
-    return TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
   }
 
   Future<void> _saveProfile() async {

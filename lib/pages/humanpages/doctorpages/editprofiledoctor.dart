@@ -200,30 +200,72 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
     super.initState();
     if (user != null) {
       _emailController.text = user!.email ?? '';
-      fetchProfile(user!.uid).then((data) {
-        setState(() {
-          _nameController.text = data['name'] ?? '';
-          _usernameController.text = data['username'] ?? '';
-          _ageController.text = data['age']?.toString() ?? '';
-          _sexController.text = data['sex'] ?? '';
-          _bioController.text = data['bio'] ?? '';
-          _specializationController.text = data['specialization'] ?? '';
-          _qualificationController.text = data['qualification'] ?? '';
-          _phonenumberController.text = data['phonenumber'] ?? '';
-          _clinicNameController.text = data['clinicName'] ?? '';
-          _contactNumberClinicController.text =
-              data['contactNumberClinic'] ?? '';
-          _feesController.text = data['fees']?.toString() ?? '';
-          _doctorTypeController.text = data['doctorType'] ?? 'Human';
-          _experienceController.text = data['experience'] ?? '';
+      _initializeProfile();
+    }
+  }
+
+  Future<void> _initializeProfile() async {
+    try {
+      final data = await fetchProfile(user!.uid);
+      if (!mounted) return;
+
+      setState(() {
+        // Set basic information
+        _nameController.text = data['name'] ?? '';
+        _usernameController.text = data['username'] ?? '';
+        _ageController.text = data['age']?.toString() ?? '';
+        _sexController.text = data['sex'] ?? '';
+        _bioController.text = data['bio'] ?? '';
+        _phonenumberController.text = data['phonenumber'] ?? '';
+        _clinicNameController.text = data['clinicName'] ?? '';
+        _contactNumberClinicController.text = data['contactNumberClinic'] ?? '';
+        _feesController.text = data['fees']?.toString() ?? '';
+        _experienceController.text = data['experience'] ?? '';
+        
+        // Set doctor type and initialize related fields
+        _doctorTypeController.text = data['doctorType'] ?? 'Human';
+        
+        // Initialize qualifications based on doctor type
+        if (_doctorTypeController.text == 'Veterinary') {
+          _availableQualifications = _veterinaryQualifications.keys.toList();
+        } else {
+          _availableQualifications = _humanQualifications.keys.toList();
+        }
+        
+        // Set qualification if it exists and is valid
+        if (data['qualification'] != null) {
+          String qualification = data['qualification'];
+          if (_doctorTypeController.text == 'Veterinary') {
+            if (_veterinaryQualifications.containsKey(qualification)) {
+              _qualificationController.text = qualification;
+              _availableSpecializations = _veterinaryQualifications[qualification] ?? [];
+            }
+          } else {
+            if (_humanQualifications.containsKey(qualification)) {
+              _qualificationController.text = qualification;
+              _availableSpecializations = _humanQualifications[qualification] ?? [];
+            }
+          }
           
-          // Initialize dropdowns based on saved doctor type
-          _updateQualifications();
-          _updateSpecializations();
-        });
-      }).catchError((error) {
-        print('Error fetching profile: $error');
+          // Set specialization if it exists and is valid
+          if (data['specialization'] != null) {
+            String specialization = data['specialization'];
+            if (_availableSpecializations.contains(specialization)) {
+              _specializationController.text = specialization;
+            }
+          }
+        }
       });
+    } catch (error) {
+      print('Error initializing profile: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading profile: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -231,21 +273,35 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
     setState(() {
       if (_doctorTypeController.text == 'Human') {
         _availableQualifications = _humanQualifications.keys.toList();
+        // Reset qualification and specialization when switching to human
+        _qualificationController.text = '';
+        _specializationController.text = '';
+        _availableSpecializations = [];
       } else if (_doctorTypeController.text == 'Veterinary') {
         _availableQualifications = _veterinaryQualifications.keys.toList();
+        // Reset qualification and specialization when switching to veterinary
+        _qualificationController.text = '';
+        _specializationController.text = '';
+        _availableSpecializations = [];
       }
-      // Reset specialization when qualification changes
-      _specializationController.text = '';
-      _updateSpecializations();
     });
   }
 
   void _updateSpecializations() {
     setState(() {
-      if (_doctorTypeController.text == 'Human') {
+      if (_doctorTypeController.text == 'Human' && 
+          _humanQualifications.containsKey(_qualificationController.text)) {
         _availableSpecializations = _humanQualifications[_qualificationController.text] ?? [];
-      } else if (_doctorTypeController.text == 'Veterinary') {
+      } else if (_doctorTypeController.text == 'Veterinary' && 
+                 _veterinaryQualifications.containsKey(_qualificationController.text)) {
         _availableSpecializations = _veterinaryQualifications[_qualificationController.text] ?? [];
+      } else {
+        _availableSpecializations = [];
+      }
+      // Reset specialization if it's not in the new list
+      if (_specializationController.text.isNotEmpty && 
+          !_availableSpecializations.contains(_specializationController.text)) {
+        _specializationController.text = '';
       }
     });
   }
@@ -258,85 +314,99 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
-        return querySnapshot.docs.first.data() as Map<String, dynamic>;
+        return querySnapshot.docs.first.data();
       } else {
         throw Exception('Profile not found.');
       }
     } catch (e) {
+      print('Error fetching profile: $e');
       throw Exception('Error fetching profile: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Profile'),
+        title: Text(
+          'Edit Profile',
+          style: TextStyle(
+            fontSize: isDesktop ? 28 : 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
+        toolbarHeight: isDesktop ? 80 : 70,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildSectionHeader('Personal Details'),
-                _buildCard([
-                  _buildTextField('Name', _nameController, 'Enter your name'),
-                  _buildTextField(
-                      'Username', _usernameController, 'Enter your username'),
-                  _buildTextField(
-                      'Email', _emailController, 'Enter your email',
-                      isMultiline: false),
-                  _buildTextField(
-                      'Bio', _bioController, 'Tell something about yourself',
-                      isMultiline: true),
-                  _buildTextField('Age', _ageController, 'Enter your age'),
-                  _buildDropdown('Sex', _sexController, ['Male', 'Female']),
-                  _buildTextField('Phone Number', _phonenumberController, 'Enter your phone number'),
-                ]),
-                _buildSectionHeader('Professional Details'),
-                _buildCard([
-                  _buildDropdown('Doctor Type', _doctorTypeController,
-                      ['Human', 'Veterinary']),
-                  _buildDropdown('Qualification', _qualificationController,
-                      _availableQualifications),
-                  _buildDropdown('Specialization', _specializationController,
-                      _availableSpecializations),
-                  _buildTextField('Experience', _experienceController,
-                      'Years of experience'),
-                  _buildTextField('Clinic Name', _clinicNameController,
-                      'Enter clinic name'),
-                  _buildTextField('Clinic Contact Number', _contactNumberClinicController, 'Enter clinic contact number'),
-                  _buildTextField('Consultation Fees', _feesController,
-                      'Enter consultation fees'),
-                ]),
-                _buildSectionHeader('Availability'),
-                _buildCard([
-                  _buildAvailableDaysField(context),
-                  _buildTimeSelector('Start Time', _startTime),
-                  _buildTimeSelector('End Time', _endTime),
-                ]),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    backgroundColor: Colors.teal,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text('Save',
-                      style: TextStyle(
-                          fontSize: 16,
+      body: Center(
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(isDesktop ? 32 : 16.0),
+            child: Form(
+              key: _formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildSectionHeader('Personal Details', isDesktop),
+                    _buildCard([
+                      _buildTextField('Name', _nameController, 'Enter your name', isDesktop: isDesktop),
+                      _buildTextField('Username', _usernameController, 'Enter your username', isDesktop: isDesktop),
+                      _buildTextField('Email', _emailController, 'Enter your email', isMultiline: false, isDesktop: isDesktop),
+                      _buildTextField('Bio', _bioController, 'Tell something about yourself', isMultiline: true, isDesktop: isDesktop),
+                      _buildTextField('Age', _ageController, 'Enter your age', isDesktop: isDesktop),
+                      _buildDropdown('Sex', _sexController, ['Male', 'Female'], isDesktop: isDesktop),
+                      _buildTextField('Phone Number', _phonenumberController, 'Enter your phone number', isDesktop: isDesktop),
+                    ], isDesktop),
+                    _buildSectionHeader('Professional Details', isDesktop),
+                    _buildCard([
+                      _buildDropdown('Doctor Type', _doctorTypeController, ['Human', 'Veterinary'], isDesktop: isDesktop),
+                      _buildDropdown('Qualification', _qualificationController, _availableQualifications, isDesktop: isDesktop),
+                      _buildDropdown('Specialization', _specializationController, _availableSpecializations, isDesktop: isDesktop),
+                      _buildTextField('Experience', _experienceController, 'Years of experience', isDesktop: isDesktop),
+                      _buildTextField('Clinic Name', _clinicNameController, 'Enter clinic name', isDesktop: isDesktop),
+                      _buildTextField('Clinic Contact Number', _contactNumberClinicController, 'Enter clinic contact number', isDesktop: isDesktop),
+                      _buildTextField('Consultation Fees', _feesController, 'Enter consultation fees', isDesktop: isDesktop),
+                    ], isDesktop),
+                    _buildSectionHeader('Availability', isDesktop),
+                    _buildCard([
+                      _buildAvailableDaysField(context, isDesktop),
+                      _buildTimeSelector('Start Time', _startTime, isDesktop),
+                      _buildTimeSelector('End Time', _endTime, isDesktop),
+                    ], isDesktop),
+                    SizedBox(height: isDesktop ? 40 : 20),
+                    ElevatedButton(
+                      onPressed: _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isDesktop ? 80 : 50,
+                          vertical: isDesktop ? 20 : 15,
+                        ),
+                        backgroundColor: Colors.teal,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Save',
+                        style: TextStyle(
+                          fontSize: isDesktop ? 20 : 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white)),
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -344,100 +414,140 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, bool isDesktop) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      padding: EdgeInsets.symmetric(vertical: isDesktop ? 16 : 10.0),
       child: Text(
         title,
         style: TextStyle(
-            fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
+          fontSize: isDesktop ? 24 : 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.teal,
+        ),
       ),
     );
   }
 
-  Widget _buildCard(List<Widget> children) {
+  Widget _buildCard(List<Widget> children, bool isDesktop) {
     return Card(
       elevation: 5,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      margin: EdgeInsets.symmetric(vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(isDesktop ? 16 : 10)),
+      margin: EdgeInsets.symmetric(vertical: isDesktop ? 16 : 10),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(isDesktop ? 24 : 16.0),
         child: Column(children: children),
       ),
     );
   }
 
   Widget _buildTextField(
-      String label, TextEditingController controller, String hint,
-      {bool isMultiline = false}) {
+    String label,
+    TextEditingController controller,
+    String hint, {
+    bool isMultiline = false,
+    required bool isDesktop,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
+      padding: EdgeInsets.only(bottom: isDesktop ? 20 : 15.0),
       child: TextFormField(
         controller: controller,
         maxLines: isMultiline ? 3 : 1,
+        style: TextStyle(fontSize: isDesktop ? 18 : 16),
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          labelStyle: TextStyle(fontSize: isDesktop ? 18 : 16),
+          hintStyle: TextStyle(fontSize: isDesktop ? 16 : 14),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(isDesktop ? 12 : 8),
+          ),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 20 : 16,
+            vertical: isDesktop ? 16 : 12,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildDropdown(
-      String label, TextEditingController controller, List<String> items) {
-    // Special case for Doctor Type - use read-only TextFormField
-    if (label == 'Doctor Type') {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 15.0),
-        child: TextFormField(
-          controller: controller,
-          readOnly: true,
-          decoration: InputDecoration(
-            labelText: label,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            filled: true,
-            fillColor: Colors.grey[200],
-          ),
-        ),
-      );
-    }
-
-    // Normal dropdown for other fields
+    String label,
+    TextEditingController controller,
+    List<String> items, {
+    required bool isDesktop,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
+      padding: EdgeInsets.only(bottom: isDesktop ? 20 : 15.0),
       child: DropdownButtonFormField<String>(
-        value: controller.text.isNotEmpty ? controller.text : null,
+        value: items.contains(controller.text) ? controller.text : null,
         onChanged: (value) {
-          setState(() {
-            controller.text = value ?? '';
-            if (label == 'Qualification') {
-              _updateSpecializations();
-            }
-          });
+          if (value != null) {
+            setState(() {
+              controller.text = value;
+              if (label == 'Doctor Type') {
+                _updateQualifications();
+              } else if (label == 'Qualification') {
+                _updateSpecializations();
+              }
+            });
+          }
         },
+        style: TextStyle(fontSize: isDesktop ? 18 : 16),
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          labelStyle: TextStyle(fontSize: isDesktop ? 18 : 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(isDesktop ? 12 : 8),
+          ),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 20 : 16,
+            vertical: isDesktop ? 16 : 12,
+          ),
         ),
-        items: items
-            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-            .toList(),
+        items: items.map((item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(item),
+          );
+        }).toList(),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please select a $label';
+          }
+          return null;
+        },
       ),
     );
   }
 
-  Widget _buildTimeSelector(String label, TimeOfDay? time) {
+  Widget _buildTimeSelector(String label, TimeOfDay? time, bool isDesktop) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
+      padding: EdgeInsets.only(bottom: isDesktop ? 20 : 15.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isDesktop ? 18 : 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           ElevatedButton(
             onPressed: () => _selectTime(label),
-            child: Text(time != null ? time.format(context) : 'Select Time'),
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 24 : 16,
+                vertical: isDesktop ? 16 : 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(isDesktop ? 12 : 8),
+              ),
+            ),
+            child: Text(
+              time != null ? time.format(context) : 'Select Time',
+              style: TextStyle(fontSize: isDesktop ? 16 : 14),
+            ),
           ),
         ],
       ),
@@ -534,23 +644,38 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
           }
         }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile saved successfully!')),
-        );
-        Navigator.pop(context, true);
+        if (mounted) {  // Check if widget is still mounted
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Profile saved successfully!')),
+          );
+          Navigator.pop(context, true);
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save profile: $e')),
-        );
+        print('Error saving profile: $e');
+        if (mounted) {  // Check if widget is still mounted
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to save profile: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
 
-  Widget _buildAvailableDaysField(BuildContext context) {
+  Widget _buildAvailableDaysField(BuildContext context, bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Available Days', style: _fieldLabelStyle()),
+        Text(
+          'Available Days',
+          style: TextStyle(
+            fontSize: isDesktop ? 18 : 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: isDesktop ? 16 : 12),
         GestureDetector(
           onTap: () async {
             await showDialog(
@@ -561,12 +686,18 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
                 return StatefulBuilder(
                   builder: (context, setStateDialog) {
                     return AlertDialog(
-                      title: Text('Select Available Days'),
+                      title: Text(
+                        'Select Available Days',
+                        style: TextStyle(fontSize: isDesktop ? 24 : 20),
+                      ),
                       content: SingleChildScrollView(
                         child: Column(
                           children: tempSelectedDays.entries.map((entry) {
                             return CheckboxListTile(
-                              title: Text(entry.key),
+                              title: Text(
+                                entry.key,
+                                style: TextStyle(fontSize: isDesktop ? 18 : 16),
+                              ),
                               value: entry.value,
                               onChanged: (bool? value) {
                                 setStateDialog(() {
@@ -579,13 +710,19 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
                       ),
                       actions: [
                         TextButton(
-                          child: Text('Cancel'),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(fontSize: isDesktop ? 18 : 16),
+                          ),
                           onPressed: () {
                             Navigator.pop(context);
                           },
                         ),
                         TextButton(
-                          child: Text('Save'),
+                          child: Text(
+                            'Save',
+                            style: TextStyle(fontSize: isDesktop ? 18 : 16),
+                          ),
                           onPressed: () {
                             setState(() {
                               _selectedDays.clear();
@@ -602,10 +739,14 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
             );
           },
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+            padding: EdgeInsets.symmetric(
+              vertical: isDesktop ? 16 : 10,
+              horizontal: isDesktop ? 20 : 15,
+            ),
             decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8)),
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(isDesktop ? 12 : 8),
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -615,20 +756,22 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
                             .map((entry) => entry.key)
                             .join(', ') ??
                         'Select Days',
-                    style: TextStyle(color: Colors.black),
+                    style: TextStyle(
+                      fontSize: isDesktop ? 18 : 16,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
-                Icon(Icons.arrow_drop_down),
+                Icon(
+                  Icons.arrow_drop_down,
+                  size: isDesktop ? 32 : 24,
+                ),
               ],
             ),
           ),
         ),
-        SizedBox(height: 20),
+        SizedBox(height: isDesktop ? 24 : 20),
       ],
     );
-  }
-
-  TextStyle _fieldLabelStyle() {
-    return TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
   }
 }

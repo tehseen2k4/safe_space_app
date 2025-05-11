@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 ////////////////////////////////////////////////////////////
 class UsersDb {
@@ -46,15 +47,24 @@ class UsersDb {
 
   Future<void> addUserToFirestore(String uid) async {
     try {
-      // Reference to the 'users' collection
       final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
+      
+      // Check if document already exists
+      final docSnapshot = await userRef.get();
+      if (docSnapshot.exists) {
+        print("User document already exists for UID: $uid");
+        return;
+      }
 
       // Set user data in Firestore
       await userRef.set(toJson());
-
       print("User added to Firestore with UID: $uid");
     } catch (e) {
       print("Error adding user to Firestore: $e");
+      if (e is FirebaseException) {
+        print("Firebase Error Code: ${e.code}");
+        print("Firebase Error Message: ${e.message}");
+      }
       rethrow;
     }
   }
@@ -63,23 +73,26 @@ class UsersDb {
   // Method to fetch the usertype of a specific user by UID
   static Future<String?> getUserTypeByUid(String uid) async {
     try {
-      // Reference to the specific user document
       final userDoc = FirebaseFirestore.instance.collection('users').doc(uid);
-
-      // Fetch the document snapshot
       final snapshot = await userDoc.get();
 
-      // Check if the document exists
       if (snapshot.exists) {
-        // Extract the usertype field from the document
         final userType = snapshot.data()?['usertype'] as String?;
+        if (userType == null) {
+          print("User document exists but usertype is null for UID: $uid");
+          print("Document data: ${snapshot.data()}");
+        }
         return userType;
       } else {
-        print("User with UID $uid not found.");
+        print("User document not found for UID: $uid");
         return null;
       }
     } catch (e) {
       print("Error fetching usertype for UID $uid: $e");
+      if (e is FirebaseException) {
+        print("Firebase Error Code: ${e.code}");
+        print("Firebase Error Message: ${e.message}");
+      }
       return null;
     }
   }

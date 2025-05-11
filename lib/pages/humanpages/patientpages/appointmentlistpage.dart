@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/models/humanappointment_db.dart';
+import 'package:safe_space_app/pages/humanpages/patientpages/patientappointmentdetailpage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:safe_space_app/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:safe_space_app/pages/humanpages/doctorpages/appointmentdetailpage.dart';
-import 'package:intl/intl.dart';
 
-class Humandoctorappointmentlistpage extends StatefulWidget {
+class AppointmentsPage extends StatefulWidget {
   @override
-  _HumandoctorappointmentlistpageState createState() =>
-      _HumandoctorappointmentlistpageState();
+  _AppointmentsPageState createState() => _AppointmentsPageState();
 }
 
-class _HumandoctorappointmentlistpageState
-    extends State<Humandoctorappointmentlistpage> with SingleTickerProviderStateMixin {
+class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late TabController _tabController;
   List<HumanAppointmentDb> _allAppointments = [];
@@ -41,7 +39,7 @@ class _HumandoctorappointmentlistpageState
     try {
       final querySnapshot = await FirebaseFirestore.instance
           .collection('appointments')
-          .where('doctorUid', isEqualTo: user.uid)
+          .where('uid', isEqualTo: user.uid)
           .get();
 
       if (querySnapshot.docs.isEmpty) {
@@ -95,7 +93,7 @@ class _HumandoctorappointmentlistpageState
             fontSize: isDesktop ? 28 : 24,
           ),
         ),
-        backgroundColor: Colors.teal,
+        backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
         centerTitle: true,
         elevation: 0,
@@ -103,7 +101,7 @@ class _HumandoctorappointmentlistpageState
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(isDesktop ? 56 : 48),
           child: Container(
-            color: Colors.teal,
+            color: const Color(0xFF1976D2),
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
@@ -124,10 +122,7 @@ class _HumandoctorappointmentlistpageState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.pending_actions,
-                        size: isDesktop ? 20 : 16,
-                      ),
+                      Icon(Icons.pending_actions, size: isDesktop ? 20 : 16),
                       SizedBox(width: isDesktop ? 8 : 4),
                       Text('Pending'),
                       if (_pendingAppointments.isNotEmpty)
@@ -153,10 +148,7 @@ class _HumandoctorappointmentlistpageState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        size: isDesktop ? 20 : 16,
-                      ),
+                      Icon(Icons.check_circle_outline, size: isDesktop ? 20 : 16),
                       SizedBox(width: isDesktop ? 8 : 4),
                       Text('Confirmed'),
                       if (_confirmedAppointments.isNotEmpty)
@@ -182,10 +174,7 @@ class _HumandoctorappointmentlistpageState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.done_all,
-                        size: isDesktop ? 20 : 16,
-                      ),
+                      Icon(Icons.done_all, size: isDesktop ? 20 : 16),
                       SizedBox(width: isDesktop ? 8 : 4),
                       Text('Completed'),
                       if (_completedAppointments.isNotEmpty)
@@ -211,10 +200,7 @@ class _HumandoctorappointmentlistpageState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.cancel_outlined,
-                        size: isDesktop ? 20 : 16,
-                      ),
+                      Icon(Icons.cancel_outlined, size: isDesktop ? 20 : 16),
                       SizedBox(width: isDesktop ? 8 : 4),
                       Text('Cancelled'),
                       if (_cancelledAppointments.isNotEmpty)
@@ -257,12 +243,29 @@ class _HumandoctorappointmentlistpageState
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BookAppointmentPage(),
+            ),
+          );
+        },
+        backgroundColor: const Color(0xFF1976D2),
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+          size: isDesktop ? 32 : 24,
+        ),
+      ),
     );
   }
 
   Widget _buildAppointmentList(List<HumanAppointmentDb> appointments) {
     final screenSize = MediaQuery.of(context).size;
     final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
 
     if (appointments.isEmpty) {
       return Center(
@@ -303,6 +306,7 @@ class _HumandoctorappointmentlistpageState
   Widget _buildAppointmentCard(HumanAppointmentDb appointment) {
     final screenSize = MediaQuery.of(context).size;
     final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
 
     Color statusColor = _getStatusColor(appointment.responseStatus ?? 'pending');
     
@@ -328,7 +332,7 @@ class _HumandoctorappointmentlistpageState
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => AppointmentDetailsPage(
+                builder: (context) => PatientAppointmentDetailsPage(
                   appointment: appointment,
                 ),
               ),
@@ -374,10 +378,10 @@ class _HumandoctorappointmentlistpageState
                   children: [
                     CircleAvatar(
                       radius: isDesktop ? 30 : 24,
-                      backgroundColor: Colors.teal[100],
+                      backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
                       child: Icon(
                         Icons.person,
-                        color: Colors.teal,
+                        color: const Color(0xFF1976D2),
                         size: isDesktop ? 30 : 24,
                       ),
                     ),
@@ -412,7 +416,7 @@ class _HumandoctorappointmentlistpageState
                     Icon(
                       Icons.watch_later,
                       size: isDesktop ? 22 : 18,
-                      color: Colors.teal,
+                      color: const Color(0xFF1976D2),
                     ),
                     SizedBox(width: isDesktop ? 12 : 8),
                     Text(
@@ -430,7 +434,7 @@ class _HumandoctorappointmentlistpageState
                     Icon(
                       Icons.description,
                       size: isDesktop ? 22 : 18,
-                      color: Colors.teal,
+                      color: const Color(0xFF1976D2),
                     ),
                     SizedBox(width: isDesktop ? 12 : 8),
                     Expanded(
@@ -463,14 +467,14 @@ class _HumandoctorappointmentlistpageState
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => AppointmentDetailsPage(
+                            builder: (context) => PatientAppointmentDetailsPage(
                               appointment: appointment,
                             ),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
+                        backgroundColor: const Color(0xFF1976D2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),

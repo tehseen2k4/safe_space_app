@@ -92,285 +92,19 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
   }
 
   @override
-  // Widget build(BuildContext context) {
-  //   final User? user = FirebaseAuth.instance.currentUser;
-
-  //   if (user == null) {
-  //     return Scaffold(
-  //       appBar: AppBar(title: Text('Book Appointment For Your Pet')),
-  //       body: Center(child: CircularProgressIndicator()),
-  //     );
-  //   }
-
-  // return FutureBuilder<PetpatientDb>(
-  //   future: fetchProfile(user.uid),
-  //   builder: (context, snapshot) {
-  //     if (snapshot.connectionState == ConnectionState.waiting) {
-  //       return Scaffold(
-  //         appBar: AppBar(title: Text('Book Appointment')),
-  //         body: Center(child: CircularProgressIndicator()),
-  //       );
-  //     } else if (snapshot.hasError) {
-  //       return Scaffold(
-  //         appBar: AppBar(title: Text('Error')),
-  //         body: Center(
-  //             child: Text('Error fetching profile: ${snapshot.error}')),
-  //       );
-  //     } else if (snapshot.hasData) {
-  //       final petpatient = snapshot.data!;
-
-  //         return Scaffold(
-  //           appBar: AppBar(title: Text('Book Appointment')),
-  //           body: Padding(
-  //             padding: const EdgeInsets.all(16.0),
-  //             child: SingleChildScrollView(
-  //               child: Column(
-  //                 crossAxisAlignment: CrossAxisAlignment.start,
-  //                 children: [
-  //                   Text(
-  //                     'Pet Patient Details',
-  //                     style: TextStyle(
-  //                         fontSize: 20,
-  //                         fontWeight: FontWeight.bold,
-  //                         color: Colors.blueAccent),
-  //                   ),
-  //                   SizedBox(height: 10),
-  //                   Text('Name: ${petpatient.username}',
-  //                       style: TextStyle(fontSize: 16)),
-  //                   Text('Email: ${petpatient.email}',
-  //                       style: TextStyle(fontSize: 16)),
-  //                   Text('Age: ${petpatient.age}',
-  //                       style: TextStyle(fontSize: 16)),
-  //                   Text('Gender: ${petpatient.sex}',
-  //                       style: TextStyle(fontSize: 16)),
-  //                   SizedBox(height: 20),
-  //                   Text(
-  //                     'Appointment Details',
-  //                     style: TextStyle(
-  //                         fontSize: 20,
-  //                         fontWeight: FontWeight.bold,
-  //                         color: Colors.blueAccent),
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   FutureBuilder<List<Map<String, dynamic>>>(
-  //                     future: fetchDoctors(),
-  //                     builder: (context, doctorSnapshot) {
-  //                       if (doctorSnapshot.connectionState ==
-  //                           ConnectionState.waiting) {
-  //                         return CircularProgressIndicator();
-  //                       } else if (doctorSnapshot.hasError) {
-  //                         return Text('Error fetching doctors');
-  //                       } else if (doctorSnapshot.hasData) {
-  //                         final doctorList = doctorSnapshot.data!;
-  //                         return DropdownButton<String>(
-  //                           hint: Text('Select Doctor'),
-  //                           value: selectedDoctorUid,
-  //                           isExpanded: true,
-  //                           onChanged: (newValue) {
-  //                             setState(() {
-  //                               selectedDoctorUid = newValue;
-  //                             });
-  //                           },
-  //                           items: doctorList.map((doctor) {
-  //                             return DropdownMenuItem<String>(
-  //                               value: doctor['uid'],
-  //                               child: Text(doctor['username']),
-  //                             );
-  //                           }).toList(),
-  //                         );
-  //                       } else {
-  //                         return Text('No doctors available');
-  //                       }
-  //                     },
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   TextField(
-  //                     controller: _reasonForVisitController,
-  //                     decoration: InputDecoration(
-  //                       labelText: 'Reason for Visit',
-  //                       border: OutlineInputBorder(),
-  //                     ),
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   buildDropdown<String>(
-  //                     hint: 'Select Appointment Type',
-  //                     value: appointmentType,
-  //                     items: appointmentTypes,
-  //                     onChanged: (newValue) {
-  //                       setState(() {
-  //                         appointmentType = newValue;
-  //                       });
-  //                     },
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   buildDropdown<String>(
-  //                     hint: 'Select Urgency Level',
-  //                     value: urgencyLevel,
-  //                     items: urgencyLevels,
-  //                     onChanged: (newValue) {
-  //                       setState(() {
-  //                         urgencyLevel = newValue;
-  //                       });
-  //                     },
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   TextField(
-  //                     controller: _phoneNumberController,
-  //                     decoration: InputDecoration(
-  //                       labelText: 'Phone Number',
-  //                       border: OutlineInputBorder(),
-  //                     ),
-  //                     keyboardType: TextInputType.phone,
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   Text(
-  //                     'Available Slots',
-  //                     style: TextStyle(
-  //                         fontSize: 20,
-  //                         fontWeight: FontWeight.bold,
-  //                         color: Colors.blueAccent),
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   Container(
-  //                     padding: EdgeInsets.all(16),
-  //                     decoration: BoxDecoration(
-  //                       color: Colors.grey[200],
-  //                       borderRadius: BorderRadius.circular(8),
-  //                     ),
-  //                     child: Column(
-  //                       crossAxisAlignment: CrossAxisAlignment.start,
-  //                       children: [
-  //                         Text(
-  //                           'Selected Slot:',
-  //                           style: TextStyle(
-  //                             fontSize: 18,
-  //                             fontWeight: FontWeight.bold,
-  //                           ),
-  //                         ),
-  //                         SizedBox(height: 10),
-  //                         Text(
-  //                           selectedDateAndTime,
-  //                           style: TextStyle(
-  //                             fontSize: 16,
-  //                             color: Colors.blueGrey,
-  //                           ),
-  //                         ),
-  //                         SizedBox(height: 20),
-  // SizedBox(
-  //   width: double.infinity,
-  //   child: ElevatedButton(
-  //     onPressed: () async {
-  //       if (selectedDoctorUid != null) {
-  //         final result = await navigateToDoctorSlots(
-  //             selectedDoctorUid!);
-
-  //         if (result != null) {
-  //           setState(() {
-  //             selectedDateAndTime =
-  //                 '${result['day']} at ${result['time']}';
-  //           });
-  //         }
-  //       } else {
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(
-  //             content:
-  //                 Text('Please select a doctor first.'),
-  //           ),
-  //         );
-  //       }
-  //     },
-  //     child: Text('Select Time Slot'),
-  //   ),
-  // ),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   SizedBox(
-  //                     width: double.infinity,
-  //                     child: ElevatedButton(
-  //                       onPressed: () async {
-  //                         if (selectedDoctorUid != null &&
-  //                             appointmentType != null &&
-  //                             urgencyLevel != null &&
-  //                             _reasonForVisitController.text.isNotEmpty &&
-  //                             _phoneNumberController.text.isNotEmpty) {
-  //                           String? doctorName;
-  //                           try {
-  //                             final doctorDoc = await _firestore
-  //                                 .collection('doctors')
-  //                                 .doc(selectedDoctorUid)
-  //                                 .get();
-  //                             if (doctorDoc.exists) {
-  //                               doctorName = doctorDoc['username'];
-  //                             } else {
-  //                               throw Exception('Doctor not found');
-  //                             }
-  //                           } catch (e) {
-  //                             ScaffoldMessenger.of(context).showSnackBar(
-  //                               SnackBar(
-  //                                   content: Text(
-  //                                       'Error fetching doctor details: $e')),
-  //                             );
-  //                             return;
-  //                           }
-
-  //                           final appointmentData = PetAppointmentDb(
-  //                             username: petpatient.username,
-  //                             age: petpatient.age.toString(),
-  //                             gender: petpatient.sex,
-  //                             email: petpatient.email,
-  //                             patientUid: user.uid,
-  //                             doctorUid: selectedDoctorUid!,
-  //                             reasonforvisit: _reasonForVisitController.text,
-  //                             typeofappointment: appointmentType!,
-  //                             urgencylevel: urgencyLevel!,
-  //                             phonenumber: _phoneNumberController.text,
-  //                             timeslot: selectedDateAndTime,
-  //                             uid: user.uid,
-  //                             appointmentId: generateAppointmentId(),
-  //                             doctorpreference: doctorName!,
-  //                             status: false,
-  //                           );
-
-  //                           await _firestore
-  //                               .collection('petappointments')
-  //                               .add(appointmentData.toJson());
-
-  //                           ScaffoldMessenger.of(context).showSnackBar(
-  //                             SnackBar(content: Text('Appointment Booked!')),
-  //                           );
-  //                         } else {
-  //                           ScaffoldMessenger.of(context).showSnackBar(
-  //                             SnackBar(
-  //                                 content: Text('Please fill in all fields')),
-  //                           );
-  //                         }
-  //                       },
-  //                       child: Text('Book Appointment'),
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ),
-  //         );
-  //       } else {
-  //         return Scaffold(
-  //           appBar: AppBar(title: Text('Error')),
-  //           body: Center(child: Text('No data available')),
-  //         );
-  //       }
-  //     },
-  //   );
-  // }
-
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
+    final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 1200;
+    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Book Appointment')),
+        appBar: AppBar(
+          title: Text('Book Appointment'),
+          backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+          foregroundColor: Colors.white,
+        ),
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -380,21 +114,33 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: Text('Book Appointment')),
+            appBar: AppBar(
+              title: Text('Book Appointment'),
+              backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+              foregroundColor: Colors.white,
+            ),
             body: Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasError) {
           return Scaffold(
-            appBar: AppBar(title: Text('Error')),
-            body: Center(
-                child: Text('Error fetching profile: ${snapshot.error}')),
+            appBar: AppBar(
+              title: Text('Error'),
+              backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+              foregroundColor: Colors.white,
+            ),
+            body: Center(child: Text('Error fetching profile: ${snapshot.error}')),
           );
         } else if (snapshot.hasData) {
           final petpatient = snapshot.data!;
 
           return Scaffold(
             appBar: AppBar(
-              title: Text('Book Appointment'),
+              title: Text(
+                'Book Appointment',
+                style: TextStyle(
+                  fontSize: isDesktop ? 24 : 20,
+                ),
+              ),
               backgroundColor: const Color.fromARGB(255, 225, 118, 82),
               foregroundColor: Colors.white,
               centerTitle: true,
@@ -407,237 +153,41 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
                 ),
               ],
             ),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
+            body: Container(
+              constraints: BoxConstraints(
+                maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
+              ),
+              margin: EdgeInsets.symmetric(
+                horizontal: isDesktop ? 40 : (isTablet ? 20 : 0),
+              ),
               child: SingleChildScrollView(
+                padding: EdgeInsets.all(isDesktop ? 24 : 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Patient Details
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Patient Details',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      const Color.fromARGB(255, 225, 118, 82),
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Text('Name: ${petpatient.username}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Email: ${petpatient.email}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Age: ${petpatient.age}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Gender: ${petpatient.sex}',
-                                  style: TextStyle(fontSize: 16)),
-                            ],
+                    if (isDesktop)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _buildPatientDetailsCard(petpatient, isDesktop),
                           ),
-                        ),
+                          SizedBox(width: 24),
+                          Expanded(
+                            child: _buildAppointmentDetailsCard(isDesktop),
+                          ),
+                        ],
+                      )
+                    else
+                      Column(
+                        children: [
+                          _buildPatientDetailsCard(petpatient, isDesktop),
+                          SizedBox(height: 20),
+                          _buildAppointmentDetailsCard(isDesktop),
+                        ],
                       ),
-                    ),
                     SizedBox(height: 20),
-
-                    // Appointment Details
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Appointment Details',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      const Color.fromARGB(255, 225, 118, 82),
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              FutureBuilder<List<Map<String, dynamic>>>(
-                                future: fetchDoctors(),
-                                builder: (context, doctorSnapshot) {
-                                  if (doctorSnapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return CircularProgressIndicator();
-                                  } else if (doctorSnapshot.hasError) {
-                                    return Text('Error fetching doctors');
-                                  } else if (doctorSnapshot.hasData) {
-                                    final doctorList = doctorSnapshot.data!;
-                                    return DropdownButton<String>(
-                                      hint: Text('Select Doctor'),
-                                      value: selectedDoctorUid,
-                                      isExpanded: true,
-                                      icon: Icon(Icons.person,
-                                          color: const Color.fromARGB(
-                                              255, 225, 118, 82)),
-                                      onChanged: (newValue) {
-                                        setState(() {
-                                          selectedDoctorUid = newValue;
-                                        });
-                                      },
-                                      items: doctorList.map((doctor) {
-                                        return DropdownMenuItem<String>(
-                                          value: doctor['uid'],
-                                          child: Text(doctor['username']),
-                                        );
-                                      }).toList(),
-                                    );
-                                  } else {
-                                    return Text('No doctors available');
-                                  }
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              TextField(
-                                controller: _reasonForVisitController,
-                                decoration: InputDecoration(
-                                  labelText: 'Reason for Visit',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              TextField(
-                                controller: _phoneNumberController,
-                                decoration: InputDecoration(
-                                  labelText: 'Phone Number',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              buildDropdown<String>(
-                                hint: 'Select Appointment Type',
-                                value: appointmentType,
-                                items: appointmentTypes,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    appointmentType = newValue;
-                                  });
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              buildDropdown<String>(
-                                hint: 'Select Urgency Level',
-                                value: urgencyLevel,
-                                items: urgencyLevels,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    urgencyLevel = newValue;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Time Slot and Actions
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Available Slots',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      const Color.fromARGB(255, 225, 118, 82),
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Selected Slot:',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Text(
-                                      selectedDateAndTime,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.blueGrey,
-                                      ),
-                                    ),
-                                    SizedBox(height: 20),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        onPressed: () async {
-                                          if (selectedDoctorUid != null) {
-                                            final result =
-                                                await navigateToDoctorSlots(
-                                                    selectedDoctorUid!);
-
-                                            if (result != null) {
-                                              setState(() {
-                                                selectedDateAndTime =
-                                                    '${result['day']} at ${result['time']}';
-                                              });
-                                            }
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                    'Please select a doctor first.'),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        child: Text('Select Time Slot'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    _buildTimeSlotCard(isDesktop),
                     SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
@@ -669,20 +219,22 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
                             }
 
                             final appointmentData = PetAppointmentDb(
-                              username: petpatient.username,
-                              age: petpatient.age.toString(),
-                              gender: petpatient.sex,
-                              email: petpatient.email,
-                              patientUid: user.uid,
+                              appointmentId: generateAppointmentId(),
                               doctorUid: selectedDoctorUid!,
+                              patientUid: user.uid,
+                              username: petpatient.username,
+                              email: petpatient.email,
+                              petname: petpatient.name,
+                              pettype: "Pet",
+                              petbreed: "Unknown",
+                              petage: petpatient.age.toString(),
                               reasonforvisit: _reasonForVisitController.text,
                               typeofappointment: appointmentType!,
-                              urgencylevel: urgencyLevel!,
-                              phonenumber: _phoneNumberController.text,
-                              timeslot: selectedDateAndTime,
-                              uid: user.uid,
-                              appointmentId: generateAppointmentId(),
                               doctorpreference: doctorName!,
+                              urgencylevel: urgencyLevel!,
+                              uid: user.uid,
+                              timeslot: selectedDateAndTime,
+                              phonenumber: _phoneNumberController.text,
                               status: false,
                             );
 
@@ -700,7 +252,23 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
                             );
                           }
                         },
-                        child: Text('Book Appointment'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isDesktop ? 32 : 24,
+                            vertical: isDesktop ? 16 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Book Appointment',
+                          style: TextStyle(
+                            fontSize: isDesktop ? 18 : 16,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -710,11 +278,264 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
           );
         } else {
           return Scaffold(
-            appBar: AppBar(title: Text('Error')),
+            appBar: AppBar(
+              title: Text('Error'),
+              backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+              foregroundColor: Colors.white,
+            ),
             body: Center(child: Text('Unexpected error occurred')),
           );
         }
       },
+    );
+  }
+
+  Widget _buildPatientDetailsCard(PetpatientDb petpatient, bool isDesktop) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      elevation: 5,
+      child: Container(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.all(isDesktop ? 24 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Patient Details',
+                style: TextStyle(
+                  fontSize: isDesktop ? 24 : 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color.fromARGB(255, 225, 118, 82),
+                ),
+              ),
+              SizedBox(height: isDesktop ? 16 : 10),
+              _buildDetailRow('Name', petpatient.username, isDesktop),
+              _buildDetailRow('Email', petpatient.email, isDesktop),
+              _buildDetailRow('Age', petpatient.age.toString(), isDesktop),
+              _buildDetailRow('Gender', petpatient.sex, isDesktop),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, bool isDesktop) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: isDesktop ? 8 : 4),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontSize: isDesktop ? 18 : 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: isDesktop ? 18 : 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppointmentDetailsCard(bool isDesktop) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      elevation: 5,
+      child: Container(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.all(isDesktop ? 24 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Appointment Details',
+                style: TextStyle(
+                  fontSize: isDesktop ? 24 : 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color.fromARGB(255, 225, 118, 82),
+                ),
+              ),
+              SizedBox(height: isDesktop ? 16 : 10),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: fetchDoctors(),
+                builder: (context, doctorSnapshot) {
+                  if (doctorSnapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (doctorSnapshot.hasError) {
+                    return Text('Error fetching doctors');
+                  } else if (doctorSnapshot.hasData) {
+                    final doctorList = doctorSnapshot.data!;
+                    return DropdownButton<String>(
+                      hint: Text('Select Doctor'),
+                      value: selectedDoctorUid,
+                      isExpanded: true,
+                      icon: Icon(Icons.person,
+                          color: const Color.fromARGB(255, 225, 118, 82)),
+                      onChanged: (newValue) {
+                        setState(() {
+                          selectedDoctorUid = newValue;
+                        });
+                      },
+                      items: doctorList.map((doctor) {
+                        return DropdownMenuItem<String>(
+                          value: doctor['uid'],
+                          child: Text(doctor['username']),
+                        );
+                      }).toList(),
+                    );
+                  } else {
+                    return Text('No doctors available');
+                  }
+                },
+              ),
+              SizedBox(height: isDesktop ? 20 : 16),
+              TextField(
+                controller: _reasonForVisitController,
+                decoration: InputDecoration(
+                  labelText: 'Reason for Visit',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: isDesktop ? 20 : 16),
+              TextField(
+                controller: _phoneNumberController,
+                decoration: InputDecoration(
+                  labelText: 'Phone Number',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: isDesktop ? 20 : 16),
+              buildDropdown<String>(
+                hint: 'Select Appointment Type',
+                value: appointmentType,
+                items: appointmentTypes,
+                onChanged: (newValue) {
+                  setState(() {
+                    appointmentType = newValue;
+                  });
+                },
+              ),
+              SizedBox(height: isDesktop ? 20 : 16),
+              buildDropdown<String>(
+                hint: 'Select Urgency Level',
+                value: urgencyLevel,
+                items: urgencyLevels,
+                onChanged: (newValue) {
+                  setState(() {
+                    urgencyLevel = newValue;
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeSlotCard(bool isDesktop) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      elevation: 5,
+      child: Container(
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.all(isDesktop ? 24 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Available Slots',
+                style: TextStyle(
+                  fontSize: isDesktop ? 24 : 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color.fromARGB(255, 225, 118, 82),
+                ),
+              ),
+              SizedBox(height: isDesktop ? 16 : 10),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(isDesktop ? 24 : 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Selected Slot:',
+                      style: TextStyle(
+                        fontSize: isDesktop ? 20 : 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: isDesktop ? 12 : 8),
+                    Text(
+                      selectedDateAndTime,
+                      style: TextStyle(
+                        fontSize: isDesktop ? 18 : 16,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                    SizedBox(height: isDesktop ? 24 : 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (selectedDoctorUid != null) {
+                            final result = await navigateToDoctorSlots(selectedDoctorUid!);
+                            if (result != null) {
+                              setState(() {
+                                selectedDateAndTime = '${result['day']} at ${result['time']}';
+                              });
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Please select a doctor first.')),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isDesktop ? 32 : 24,
+                            vertical: isDesktop ? 16 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Select Time Slot',
+                          style: TextStyle(
+                            fontSize: isDesktop ? 18 : 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

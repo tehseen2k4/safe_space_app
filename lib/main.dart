@@ -1,20 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:safe_space_app/firebase_init.dart';
 import 'package:safe_space_app/pages/firstpage.dart';
-import 'package:flutter/services.dart';
 
 void main() async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Required to ensure everything is initialized properly
-  await Firebase.initializeApp(); // Wait until Firebase is initialized
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
-
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-  );
-  runApp(MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  await FirebaseInit.initialize();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -23,13 +14,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'Safe Space App',
       theme: ThemeData(
-        primarySwatch: Colors.orange,
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: Firstpage(),
-      //const LoginPage(),
     );
   }
 }
