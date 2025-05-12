@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
 import 'package:safe_space_app/models/patients_db.dart';
-import 'package:safe_space_app/pages/bookappointment.dart';
+import 'package:safe_space_app/mobile/pages/bookappointment.dart';
 import 'package:safe_space_app/models/humanappointment_db.dart';
 
 class BookAppointmentPage extends StatefulWidget {

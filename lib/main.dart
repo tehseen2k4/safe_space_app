@@ -1,20 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:safe_space_app/pages/firstpage.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:safe_space_app/mobile/pages/firstpage.dart';
+import 'package:safe_space_app/web/layouts/web_layout.dart';
+import 'package:safe_space_app/web/pages/web_home_page.dart';
 import 'package:flutter/services.dart';
 
 void main() async {
-  WidgetsFlutterBinding
-      .ensureInitialized(); // Required to ensure everything is initialized properly
-  await Firebase.initializeApp(); // Wait until Firebase is initialized
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID",
+      ),
+    );
+  } else {
+    await Firebase.initializeApp();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
 
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
   );
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -27,9 +42,11 @@ class MyApp extends StatelessWidget {
       title: 'Safe Space App',
       theme: ThemeData(
         primarySwatch: Colors.orange,
+        useMaterial3: true,
       ),
-      home: Firstpage(),
-      //const LoginPage(),
+      home: kIsWeb 
+        ? const WebLayout(child: WebHomePage())
+        : const Firstpage(),
     );
   }
 }

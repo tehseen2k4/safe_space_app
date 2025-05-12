@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space_app/models/humanappointment_db.dart';
-import 'package:safe_space_app/pages/humanpages/doctorpages/appointmentdetailpage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:safe_space_app/pages/humanpages/patientpages/appointmentbooking.dart';
+import 'package:safe_space_app/models/petappointment_db.dart';
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
+import 'package:safe_space_app/mobile/pages/petpages/petappointmentbooking.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:safe_space_app/mobile/pages/petpages/petappointmentdetailpage.dart';
 
-class AppointmentsPage extends StatefulWidget {
+class PetAppointmentsListPage extends StatefulWidget {
   @override
-  _AppointmentsPageState createState() => _AppointmentsPageState();
+  _PetAppointmentsListPageState createState() =>
+      _PetAppointmentsListPageState();
 }
 
-class _AppointmentsPageState extends State<AppointmentsPage> {
+class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
@@ -21,11 +22,11 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
           'My Appointments',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color.fromARGB(255, 2, 93, 98),
+        backgroundColor: const Color.fromARGB(255, 225, 118, 82),
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: FutureBuilder<List<HumanAppointmentDb>>(
+      body: FutureBuilder<List<PetAppointmentDb>>(
         future: _fetchAppointments(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -53,11 +54,11 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => BookAppointmentPage(),
+              builder: (context) => BookAppointmentPetPage(),
             ),
           );
         },
-        backgroundColor: const Color.fromARGB(255, 2, 93, 98),
+        backgroundColor: const Color.fromARGB(255, 225, 118, 82),
         child: Icon(
           Icons.add,
           color: Colors.white,
@@ -66,13 +67,13 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
     );
   }
 
-  Future<List<HumanAppointmentDb>> _fetchAppointments() async {
+  Future<List<PetAppointmentDb>> _fetchAppointments() async {
     final User? user = _auth.currentUser;
     if (user == null) return [];
 
     try {
       final querySnapshot = await FirebaseFirestore.instance
-          .collection('appointments')
+          .collection('petappointments')
           .where('uid', isEqualTo: user.uid)
           .get();
 
@@ -81,7 +82,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
       }
 
       return querySnapshot.docs
-          .map((doc) => HumanAppointmentDb.fromJson(doc.data()))
+          .map((doc) => PetAppointmentDb.fromJson(doc.data()))
           .toList();
     } catch (e) {
       print("Error fetching appointments: $e");
@@ -89,7 +90,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
     }
   }
 
-  Widget _buildCard(HumanAppointmentDb appointment, BuildContext context) {
+  Widget _buildCard(PetAppointmentDb appointment, BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width - 40,
       height: 200,
@@ -99,8 +100,8 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
         borderRadius: BorderRadius.circular(15),
         gradient: LinearGradient(
           colors: [
-            const Color.fromARGB(255, 2, 93, 98),
-            const Color.fromARGB(255, 177, 181, 181)
+            const Color.fromARGB(255, 225, 118, 82),
+            const Color.fromARGB(128, 228, 211, 190)
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -126,35 +127,36 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                 Text(
                   'Appointment ID',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 255, 255, 255),
+                    color: Colors.white,
                   ),
                 ),
                 Text(
                   appointment.appointmentId,
                   style: TextStyle(
                     fontSize: 12,
-                    color: const Color.fromARGB(221, 255, 255, 255),
+                    color: Colors.white,
                   ),
                 ),
               ],
             ),
             Divider(
                 thickness: 1,
-                color: const Color.fromARGB(255, 2, 93, 98),
+                color: const Color.fromARGB(255, 225, 118, 82),
                 height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(Icons.person, color: Colors.white, size: 18),
+                Icon(Icons.person,
+                    color: const Color.fromARGB(255, 255, 255, 255), size: 18),
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
                     appointment.username,
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
                       color: const Color.fromARGB(221, 255, 255, 255),
                     ),
                   ),
@@ -163,27 +165,30 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
             ),
             Row(
               children: [
-                Icon(Icons.watch_later, color: Colors.white, size: 18),
+                Icon(Icons.watch_later,
+                    color: const Color.fromARGB(255, 255, 255, 255), size: 18),
                 SizedBox(width: 5),
                 Text(
                   appointment.timeslot,
                   style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
                       color: const Color.fromARGB(221, 255, 255, 255)),
                 ),
               ],
             ),
             Row(
               children: [
-                Icon(Icons.description, color: Colors.white, size: 18),
+                Icon(Icons.description,
+                    color: const Color.fromARGB(255, 255, 255, 255), size: 18),
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
                     appointment.reasonforvisit,
                     style: TextStyle(
-                        fontSize: 12,
-                        color: const Color.fromRGBO(255, 255, 255, 1)),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: const Color.fromARGB(255, 255, 255, 255)),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -197,14 +202,14 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => AppointmentDetailsPage(
+                      builder: (context) => PetAppointmentDetailsPage(
                         appointment: appointment, // Pass appointment details
                       ),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 2, 93, 98),
+                  backgroundColor: const Color.fromARGB(255, 225, 118, 82),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -212,7 +217,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                 ),
                 child: Text(
                   'View Details',
-                  style: TextStyle(color: Colors.white, fontSize: 14),
+                  style: TextStyle(fontSize: 14, color: Colors.white),
                 ),
               ),
             ),

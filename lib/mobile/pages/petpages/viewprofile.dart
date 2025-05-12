@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/models/petpatient_db.dart';
-import 'package:safe_space_app/pages/petpages/editprofile.dart';
+import 'package:safe_space_app/mobile/pages/petpages/editprofile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 

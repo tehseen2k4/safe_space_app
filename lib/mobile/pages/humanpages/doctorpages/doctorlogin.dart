@@ -4,7 +4,7 @@ import 'package:safe_space_app/models/users_db.dart';
 import 'package:safe_space_app/services/database_service.dart';
 import 'doctorprofile.dart';
 import 'package:safe_space_app/services/auth_service.dart';
-import 'package:safe_space_app/pages/humanpages/doctorpages/signuppaged.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/signuppaged.dart';
 import 'dart:developer' as developer;
 
 //MaterialPageRoute(builder: (context) => Doctorlogin()),

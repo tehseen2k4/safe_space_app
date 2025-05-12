@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/services/auth_service.dart';
-import 'package:safe_space_app/pages/humanpages/doctorpages/doctorlogin.dart'; // Import for the log function
 import 'package:safe_space_app/models/users_db.dart';
 import 'package:safe_space_app/services/database_service.dart';
-import 'package:safe_space_app/models/users_db.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/patientlogin.dart';
 import 'dart:developer' as developer;
 
-class SignupPage extends StatefulWidget {
-  const SignupPage({Key? key}) : super(key: key);
+class SignupPagep extends StatefulWidget {
+  const SignupPagep({Key? key}) : super(key: key);
 
   @override
-  State<SignupPage> createState() => _SigninPageState();
+  State<SignupPagep> createState() => _SigninPageState();
 }
 
-class _SigninPageState extends State<SignupPage> {
+class _SigninPageState extends State<SignupPagep> {
   final _auth = AuthService();
 
   final _formKey = GlobalKey<FormState>();
@@ -133,7 +132,7 @@ class _SigninPageState extends State<SignupPage> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
+                    backgroundColor: Colors.orangeAccent,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 48, vertical: 16),
                   ),
@@ -173,8 +172,8 @@ class _SigninPageState extends State<SignupPage> {
     );
   }
 
-  _gotodoctorlogin(BuildContext context) => Navigator.push(
-      context, MaterialPageRoute(builder: (context) => const Doctorpagee()));
+  _gotopatientlogin(BuildContext context) => Navigator.push(
+      context, MaterialPageRoute(builder: (context) => const LoginPage()));
 
   _signup() async {
     if (_formKey.currentState!.validate()) {
@@ -183,23 +182,31 @@ class _SigninPageState extends State<SignupPage> {
             _emailController.text, _passwordController.text);
 
         if (user != null) {
+          // Add user data to Firestore with UID as document ID
+          // final newUser = UsersDb(
+          //   username: _usernameController.text,
+          //   emaill: _emailController.text,
+          //   password: _passwordController.text,
+          //   usertype: 'patient',
+          // );
+
+          // Pass the user's UID to the database service
+          //DatabaseService().addUser(user.uid, newUser);
+
           UsersDb uuser = UsersDb(
               username: _usernameController.text,
               emaill: _emailController.text,
               password: _passwordController.text,
-              usertype: 'doctor');
+              usertype: 'patient');
           uuser.addUserToFirestore(user.uid);
-          /////////////////////////////////////////////////////
 
-          //DatabaseService().addUser(uuser);
-
-          developer.log("Doctor created successfully: ${user.email}");
+          developer.log("Patient created successfully: ${user.email}");
           _formKey.currentState!.reset();
           _usernameController.clear();
           _emailController.clear();
           _passwordController.clear();
           _confirmPasswordController.clear();
-          _gotodoctorlogin(context);
+          _gotopatientlogin(context);
         }
       } catch (e, stacktrace) {
         developer.log("Error during signup: $e", stackTrace: stacktrace);
@@ -207,6 +214,63 @@ class _SigninPageState extends State<SignupPage> {
       }
     }
   }
+
+  // _signup() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     try {
+  //       final user = await _auth.createUserWithEmailAndPassword(
+  //           _emailController.text, _passwordController.text);
+  //       if (user != null) {
+  //         // Add user data to Firestore with usertype as 'doctor'
+  //         final newUser = UsersDb(
+  //           username: _usernameController.text,
+  //           emaill: _emailController.text,
+  //           password: _passwordController.text,
+  //           usertype: 'patient',
+  //         );
+  //         DatabaseService().addUser(newUser);
+
+  //         developer.log("Patient created successfully: ${user.email}");
+  //         _formKey.currentState!.reset();
+  //         _usernameController.clear();
+  //         _emailController.clear();
+  //         _passwordController.clear();
+  //         _confirmPasswordController.clear();
+  //         _gotopatientlogin(context);
+  //       }
+  //     } catch (e, stacktrace) {
+  //       developer.log("Error during signup: $e", stackTrace: stacktrace);
+  //       _showErrorDialog("An unexpected error occurred. Please try again.");
+  //     }
+  //   }
+  // }     //////////////////////////////////////        222222
+
+  // _signup() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     try {
+  //       final user = await _auth.createUserWithEmailAndPassword(
+  //           _emailController.text, _passwordController.text);
+  //       if (user != null) {
+  //         developer.log("User created successfully: ${user.email}");
+  //         // Reset the form and clear controllers
+  //         _formKey.currentState!.reset();
+  //         _usernameController.clear();
+  //         _emailController.clear();
+  //         _passwordController.clear();
+  //         _confirmPasswordController.clear();
+  //         _gotopatientlogin(context);
+  //       } else {
+  //         developer.log("User creation failed. Received null.");
+  //         _showErrorDialog("Failed to create an account. Please try again.");
+  //       }
+  //     } catch (e, stacktrace) {
+  //       developer.log("Error during signup: $e", stackTrace: stacktrace);
+  //       _showErrorDialog("An unexpected error occurred. Please try again.");
+  //     }
+  //   } else {
+  //     developer.log("Form validation failed.");
+  //   }
+  // }
 
   void _showErrorDialog(String message) {
     showDialog(

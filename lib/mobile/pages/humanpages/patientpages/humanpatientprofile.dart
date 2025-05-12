@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space_app/pages/chatpages/Home_page.dart';
-import 'package:safe_space_app/pages/humanpages/doctorpages/humandoctordetail.dart';
-import 'package:safe_space_app/pages/humanpages/patientpages/viewprofilehuman.dart';
-import 'package:safe_space_app/pages/humanpages/patientpages/appointmentbooking.dart';
+import 'package:safe_space_app/mobile/pages/chatpages/Home_page.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/humandoctordetail.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/viewprofilehuman.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:safe_space_app/pages/appointmentlistpage.dart';
+import 'package:safe_space_app/mobile/pages/appointmentlistpage.dart';
 
 class HumanPatientProfile extends StatefulWidget {
   @override

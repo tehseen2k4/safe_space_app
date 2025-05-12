@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space_app/models/petappointment_db.dart';
-import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, User;
-import 'package:safe_space_app/pages/petpages/petappointmentbooking.dart';
+import 'package:safe_space_app/models/humanappointment_db.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/appointmentdetailpage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:safe_space_app/pages/petpages/petappointmentdetailpage.dart';
 
-class PetAppointmentsListPage extends StatefulWidget {
+class AppointmentsPage extends StatefulWidget {
   @override
-  _PetAppointmentsListPageState createState() =>
-      _PetAppointmentsListPageState();
+  _AppointmentsPageState createState() => _AppointmentsPageState();
 }
 
-class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
+class _AppointmentsPageState extends State<AppointmentsPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
@@ -22,11 +21,11 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
           'My Appointments',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+        backgroundColor: const Color.fromARGB(255, 2, 93, 98),
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: FutureBuilder<List<PetAppointmentDb>>(
+      body: FutureBuilder<List<HumanAppointmentDb>>(
         future: _fetchAppointments(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -54,11 +53,11 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => BookAppointmentPetPage(),
+              builder: (context) => BookAppointmentPage(),
             ),
           );
         },
-        backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+        backgroundColor: const Color.fromARGB(255, 2, 93, 98),
         child: Icon(
           Icons.add,
           color: Colors.white,
@@ -67,13 +66,13 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
     );
   }
 
-  Future<List<PetAppointmentDb>> _fetchAppointments() async {
+  Future<List<HumanAppointmentDb>> _fetchAppointments() async {
     final User? user = _auth.currentUser;
     if (user == null) return [];
 
     try {
       final querySnapshot = await FirebaseFirestore.instance
-          .collection('petappointments')
+          .collection('appointments')
           .where('uid', isEqualTo: user.uid)
           .get();
 
@@ -82,7 +81,7 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
       }
 
       return querySnapshot.docs
-          .map((doc) => PetAppointmentDb.fromJson(doc.data()))
+          .map((doc) => HumanAppointmentDb.fromJson(doc.data()))
           .toList();
     } catch (e) {
       print("Error fetching appointments: $e");
@@ -90,7 +89,7 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
     }
   }
 
-  Widget _buildCard(PetAppointmentDb appointment, BuildContext context) {
+  Widget _buildCard(HumanAppointmentDb appointment, BuildContext context) {
     return Container(
       width: MediaQuery.of(context).size.width - 40,
       height: 200,
@@ -100,8 +99,8 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
         borderRadius: BorderRadius.circular(15),
         gradient: LinearGradient(
           colors: [
-            const Color.fromARGB(255, 225, 118, 82),
-            const Color.fromARGB(128, 228, 211, 190)
+            const Color.fromARGB(255, 2, 93, 98),
+            const Color.fromARGB(255, 177, 181, 181)
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -127,36 +126,35 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
                 Text(
                   'Appointment ID',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: const Color.fromARGB(255, 255, 255, 255),
                   ),
                 ),
                 Text(
                   appointment.appointmentId,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.white,
+                    color: const Color.fromARGB(221, 255, 255, 255),
                   ),
                 ),
               ],
             ),
             Divider(
                 thickness: 1,
-                color: const Color.fromARGB(255, 225, 118, 82),
+                color: const Color.fromARGB(255, 2, 93, 98),
                 height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(Icons.person,
-                    color: const Color.fromARGB(255, 255, 255, 255), size: 18),
+                Icon(Icons.person, color: Colors.white, size: 18),
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
                     appointment.username,
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                       color: const Color.fromARGB(221, 255, 255, 255),
                     ),
                   ),
@@ -165,30 +163,27 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
             ),
             Row(
               children: [
-                Icon(Icons.watch_later,
-                    color: const Color.fromARGB(255, 255, 255, 255), size: 18),
+                Icon(Icons.watch_later, color: Colors.white, size: 18),
                 SizedBox(width: 5),
                 Text(
                   appointment.timeslot,
                   style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
                       color: const Color.fromARGB(221, 255, 255, 255)),
                 ),
               ],
             ),
             Row(
               children: [
-                Icon(Icons.description,
-                    color: const Color.fromARGB(255, 255, 255, 255), size: 18),
+                Icon(Icons.description, color: Colors.white, size: 18),
                 SizedBox(width: 5),
                 Expanded(
                   child: Text(
                     appointment.reasonforvisit,
                     style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color.fromARGB(255, 255, 255, 255)),
+                        fontSize: 12,
+                        color: const Color.fromRGBO(255, 255, 255, 1)),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -202,14 +197,14 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PetAppointmentDetailsPage(
+                      builder: (context) => AppointmentDetailsPage(
                         appointment: appointment, // Pass appointment details
                       ),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+                  backgroundColor: const Color.fromARGB(255, 2, 93, 98),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -217,7 +212,7 @@ class _PetAppointmentsListPageState extends State<PetAppointmentsListPage> {
                 ),
                 child: Text(
                   'View Details',
-                  style: TextStyle(fontSize: 14, color: Colors.white),
+                  style: TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ),
             ),

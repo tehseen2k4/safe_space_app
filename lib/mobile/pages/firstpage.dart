@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 //import 'Loginpage.dart';
-import 'package:safe_space_app/pages/humanpages/doctorpages/doctorlogin.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/doctorlogin.dart';
 //import 'package:safe_space/pages/doctorprofile.dart'; // Import HumanLogin page
-import 'package:safe_space_app/pages/humanpages/patientpages/patientlogin.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/patientlogin.dart';
 
 class Firstpage extends StatelessWidget {
   const Firstpage({super.key});

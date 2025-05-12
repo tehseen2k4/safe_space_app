@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space_app/pages/humanpages/patientpages/humanpatientprofile.dart';
-import 'package:safe_space_app/pages/petpages/petpatientprofile.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/humanpatientprofile.dart';
+import 'package:safe_space_app/mobile/pages/petpages/petpatientprofile.dart';
 
 class PatientLogin extends StatelessWidget {
   const PatientLogin({super.key});
