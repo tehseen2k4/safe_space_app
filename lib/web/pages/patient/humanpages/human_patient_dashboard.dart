@@ -5,7 +5,7 @@ import 'package:safe_space_app/mobile/pages/humanpages/patientpages/humandoctord
 import 'package:safe_space_app/mobile/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:safe_space_app/mobile/pages/humanpages/patientpages/appointmentlistpage.dart';
 import 'package:safe_space_app/mobile/pages/chatpages/Home_page.dart';
-import 'package:safe_space_app/web/pages/patient/patient_profile_page.dart';
+import 'package:safe_space_app/web/pages/patient/humanpages/human_patient_profile_page.dart';
 
 class PatientDashboard extends StatefulWidget {
   const PatientDashboard({Key? key}) : super(key: key);
