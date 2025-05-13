@@ -56,13 +56,13 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
               children: [
                 Text(
                   day,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 2, 93, 98),
+                    color: Color.fromARGB(255, 2, 93, 98),
                   ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 ...slotList.map((slot) {
                   final isBooked = slot['booked'] as bool;
                   return ListTile(
@@ -72,9 +72,8 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
                       color: isBooked ? Colors.red : Colors.green,
                     ),
                     title: Text(
-                      DateFormat('hh:mm a')
-                          .format(DateTime.parse(slot['time'])),
-                      style: TextStyle(
+                      DateFormat('hh:mm a').format(DateTime.parse(slot['time'])),
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
                       ),
@@ -106,7 +105,7 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          title: Text(
+          title: const Text(
             'Select Appointment Day',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
@@ -122,7 +121,7 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
                       day,
-                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                   ),
                 );
@@ -148,7 +147,7 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Doctor Availability',
           style: TextStyle(color: Colors.white),
         ),
@@ -161,15 +160,15 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
         future: doctorSlots,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.error, color: Colors.red, size: 60),
-                  SizedBox(height: 10),
+                  const Icon(Icons.error, color: Colors.red, size: 60),
+                  const SizedBox(height: 10),
                   Text(
                     'Error fetching doctor slots',
                     style: TextStyle(fontSize: 16, color: Colors.black54),
@@ -184,8 +183,8 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.event_busy, color: Colors.grey, size: 60),
-                  SizedBox(height: 10),
+                  const Icon(Icons.event_busy, color: Colors.grey, size: 60),
+                  const SizedBox(height: 10),
                   Text(
                     'No slots available.',
                     style: TextStyle(fontSize: 16, color: Colors.black54),
@@ -206,13 +205,13 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
                   child: ElevatedButton(
                     onPressed: _showDaySelectionDialog,
                     style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, 60),
+                      minimumSize: const Size(double.infinity, 60),
                       backgroundColor: const Color.fromARGB(255, 2, 93, 98),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Select Time',
                       style: TextStyle(color: Colors.white),
                     ),
@@ -245,6 +244,9 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           title: Text('Select Time Slot for $selectedDay'),
           content: SingleChildScrollView(
             child: ListBody(
@@ -257,8 +259,8 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
-                      DateFormat('hh:mm a')
-                          .format(DateTime.parse(slot['time'])),
+                      DateFormat('hh:mm a').format(DateTime.parse(slot['time'])),
+                      style: const TextStyle(fontSize: 16),
                     ),
                   ),
                 );
@@ -275,14 +277,17 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('No Slots Available'),
-          content: Text('Sorry, there are no available slots for booking.'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text('No Slots Available'),
+          content: const Text('Sorry, there are no available slots for booking.'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -293,20 +298,17 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
   void _bookSlot(String selectedDay, dynamic selectedSlot) async {
     final slotTime = DateTime.parse(selectedSlot['time']);
 
-    // Check if the slot is already booked
     if (selectedSlot['booked']) {
       _showSlotAlreadyBookedDialog();
       return;
     }
 
-    // Update the slot to be booked
     final updatedSlot = {
       'time': slotTime.toIso8601String(),
       'booked': true,
     };
 
     try {
-      // Fetch the existing slots for the selected day
       final slotsData = await fetchDoctorSlots(widget.doctorId);
       if (slotsData == null || slotsData['slots'] == null) {
         return;
@@ -315,7 +317,6 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
       final slotsByDay = slotsData['slots'] as Map<String, dynamic>;
       final slotsForSelectedDay = slotsByDay[selectedDay] as List<dynamic>;
 
-      // Find the index of the slot to be updated
       final slotIndex = slotsForSelectedDay.indexWhere(
           (slot) => DateTime.parse(slot['time']).isAtSameMomentAs(slotTime));
 
@@ -324,10 +325,8 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
         return;
       }
 
-      // Update the booked slot status to true
       slotsForSelectedDay[slotIndex] = updatedSlot;
 
-      // Update the Firestore database
       await FirebaseFirestore.instance
           .collection('slots')
           .doc(widget.doctorId)
@@ -335,14 +334,12 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
         'slots.$selectedDay': slotsForSelectedDay,
       });
 
-      // Navigate back with the selected time slot
       Navigator.pop(context, {
         'day': selectedDay,
         'time': DateFormat('hh:mm a').format(slotTime),
       });
 
-      print(
-          'Slot booked for $selectedDay at ${DateFormat('hh:mm a').format(slotTime)}');
+      print('Slot booked for $selectedDay at ${DateFormat('hh:mm a').format(slotTime)}');
     } catch (e) {
       print('Error booking slot: $e');
       _showBookingErrorDialog();
@@ -354,15 +351,17 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Booking Failed'),
-          content: Text(
-              'An error occurred while booking the slot. Please try again later.'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text('Booking Failed'),
+          content: const Text('An error occurred while booking the slot. Please try again later.'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -375,15 +374,17 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Slot Already Booked'),
-          content: Text(
-              'The selected slot is already booked. Please select another one.'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text('Slot Already Booked'),
+          content: const Text('The selected slot is already booked. Please select another one.'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -396,15 +397,17 @@ class _DoctorSlotsWidgetState extends State<DoctorSlotsWidget> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Slot Not Found'),
-          content:
-              Text('The selected slot could not be found. Please try again.'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text('Slot Not Found'),
+          content: const Text('The selected slot could not be found. Please try again.'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );

@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/mobile/pages/chatpages/Home_page.dart';
-import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/humandoctordetail.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/humandoctordetail.dart';
 import 'package:safe_space_app/mobile/pages/humanpages/patientpages/viewprofilehuman.dart';
 import 'package:safe_space_app/mobile/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:safe_space_app/mobile/pages/appointmentlistpage.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/appointmentlistpage.dart';
 
 class HumanPatientProfile extends StatefulWidget {
+  const HumanPatientProfile({super.key});
+
   @override
   _HumanPatientProfileState createState() => _HumanPatientProfileState();
 }
 
-class _HumanPatientProfileState extends State<HumanPatientProfile> {
+class _HumanPatientProfileState extends State<HumanPatientProfile> with SingleTickerProviderStateMixin {
   final User? user = FirebaseAuth.instance.currentUser;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  int _currentIndex = 0;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   final double hospitalCardHeight = 200;
   final double hospitalCardWidth = 150;
@@ -29,6 +35,13 @@ class _HumanPatientProfileState extends State<HumanPatientProfile> {
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
+    _animationController.forward();
+
     if (user != null) {
       fetchProfileData(user!.uid);
       fetchDoctors();
@@ -36,12 +49,9 @@ class _HumanPatientProfileState extends State<HumanPatientProfile> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (user != null) {
-      fetchProfileData(user!.uid);
-      fetchDoctors();
-    }
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchProfileData(String uid) async {
@@ -66,8 +76,10 @@ class _HumanPatientProfileState extends State<HumanPatientProfile> {
 
   Future<void> fetchDoctors() async {
     try {
-      final querySnapshot =
-          await FirebaseFirestore.instance.collection('doctors').get();
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('doctors')
+          .where('doctorType', isEqualTo: 'Human')
+          .get();
 
       final fetchedDoctors = querySnapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)
@@ -81,227 +93,486 @@ class _HumanPatientProfileState extends State<HumanPatientProfile> {
     }
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  void _onBottomNavTap(int index) async {
+    if (index == 3) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ViewProfileHumanScreen(),
+        ),
+      );
+      if (user != null) {
+        fetchProfileData(user!.uid);
+      }
+      setState(() {
+        _currentIndex = 0;
+      });
+    } else if (index == 1) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => AppointmentsPage(),
+        ),
+      );
+      setState(() {
+        _currentIndex = 0;
+      });
+    } else if (index == 2) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(),
+        ),
+      );
+      setState(() {
+        _currentIndex = 0;
+      });
+    } else {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        title: Text('SAFE-SPACE'),
+        title: const Text(
+          'SAFE-SPACE',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+            fontSize: 24,
+          ),
+        ),
         centerTitle: true,
-        backgroundColor:
-            const Color.fromARGB(255, 2, 93, 98), // Teal color theme
+        elevation: 0,
+        backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
-        elevation: 2,
+        toolbarHeight: 70,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications, size: 24),
+            onPressed: () {
+              // TODO: Implement notifications
+            },
+          ),
+        ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0), // Global padding for the body
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey[300],
-                        backgroundImage: NetworkImage(
-                            'https://placekitten.com/200/200'), // Temporary image
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: CircleAvatar(
-                          radius: 15,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.add,
-                            size: 20,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          patientName,
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Age: $age',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Sex: $sex',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProfileSection(),
+                const SizedBox(height: 24),
+                _buildQuickActionsSection(),
+                const SizedBox(height: 24),
+                _buildDoctorsSection(),
+                const SizedBox(height: 24),
+                _buildHospitalsSection(),
+              ],
+            ),
+          ),
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildProfileSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: 100,
+            width: 100,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: const DecorationImage(
+                image: NetworkImage('https://placekitten.com/200/200'),
+                fit: BoxFit.cover,
               ),
-              Divider(thickness: 1),
-              SizedBox(height: 16),
-              GridView.count(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                children: [
-                  _buildCard(
-                    title: 'Online Consultations',
-                    icon: Icons.video_call,
-                    onTap: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(builder: (context) => OnlineConsultationPage()),
-                      // );
-                    },
-                  ),
-                  _buildCard(
-                    title: 'Book Appointment',
-                    icon: Icons.local_hospital,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => BookAppointmentPage()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Doctors',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => HumanDoctorDetail(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'View all',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: const Color.fromARGB(
-                              255, 2, 93, 98), // Teal color theme
-                        ),
-                      ),
-                    ),
-                  ],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  blurRadius: 10,
+                  spreadRadius: 2,
                 ),
-              ),
-              SizedBox(height: 8),
-              Container(
-                height: doctorCardHeight,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: doctorList.length,
-                  itemBuilder: (context, index) {
-                    final doctor = doctorList[index];
-                    return _buildDoctorCard(
-                      name: doctor['name'] ?? 'Unknown',
-                      specialty:
-                          doctor['specialization'] ?? 'Specialty Not Available',
-                      experience: doctor['experience'] ?? '0',
-                      height: doctorCardHeight,
-                      width: doctorCardWidth,
-                    );
-                  },
-                ),
-              ),
-              SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Hospitals',
-                  style: TextStyle(
-                    fontSize: 18,
+              ],
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  patientName,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    fontSize: 22,
                   ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  'Age: $age',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Sex: $sex',
+                  style: const TextStyle(
+                    color: Color(0xFF1976D2),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Color(0xFF1976D2),
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.1,
+          children: [
+            _buildActionCard(
+              'Book Appointment',
+              Icons.calendar_today,
+              const Color(0xFF1976D2),
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => BookAppointmentPage()),
+                );
+              },
+            ),
+            _buildActionCard(
+              'Online Consultation',
+              Icons.video_call,
+              const Color(0xFF2196F3),
+              () {
+                // TODO: Implement online consultation
+              },
+            ),
+            _buildActionCard(
+              'Medical Records',
+              Icons.medical_services,
+              const Color(0xFF1976D2),
+              () {
+                // TODO: Implement medical records
+              },
+            ),
+            _buildActionCard(
+              'Emergency',
+              Icons.emergency,
+              const Color(0xFFD32F2F),
+              () {
+                // TODO: Implement emergency
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 32,
+                color: color,
               ),
-              SizedBox(height: 8),
-              Container(
-                height: hospitalCardHeight,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10,
-                  itemBuilder: (context, index) {
-                    return _buildHospitalCard(
-                      'Hospital ${index + 1}',
-                      height: hospitalCardHeight,
-                      width: hospitalCardWidth,
-                    );
-                  },
+              const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[800],
                 ),
               ),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 3) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => ViewProfileHumanScreen()),
-            );
-          } else if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => AppointmentsPage()),
-            );
-          } else if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => HomePage()),
-            );
-          }
-        },
-        items: [
+    );
+  }
+
+  Widget _buildDoctorsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Available Doctors',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HumanDoctorDetail()),
+                );
+              },
+              child: const Text(
+                'View All',
+                style: TextStyle(
+                  color: Color(0xFF1976D2),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: doctorList.length,
+            itemBuilder: (context, index) {
+              final doctor = doctorList[index];
+              return _buildDoctorCard(
+                name: doctor['name'] ?? 'Unknown',
+                specialty: doctor['specialization'] ?? 'Specialty Not Available',
+                experience: doctor['experience'] ?? '0',
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDoctorCard({
+    required String name,
+    required String specialty,
+    required String experience,
+  }) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
+              child: const Icon(
+                Icons.person,
+                color: Color(0xFF1976D2),
+                size: 30,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              name,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              specialty,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$experience Years Experience',
+              style: const TextStyle(
+                color: Color(0xFF1976D2),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHospitalsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Nearby Hospitals',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: 5,
+            itemBuilder: (context, index) {
+              return _buildHospitalCard('Hospital ${index + 1}');
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHospitalCard(String name) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 100,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1976D2).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.local_hospital,
+                  size: 40,
+                  color: Color(0xFF1976D2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              name,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '24/7 Emergency Care',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFF1976D2),
+        unselectedItemColor: Colors.grey,
+        currentIndex: _currentIndex,
+        onTap: _onBottomNavTap,
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -316,124 +587,9 @@ class _HumanPatientProfileState extends State<HumanPatientProfile> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.menu),
-            label: 'Menu',
+            label: 'More',
           ),
         ],
-        selectedItemColor:
-            const Color.fromARGB(255, 2, 93, 98), // Teal color theme
-        unselectedItemColor: Colors.grey,
-      ),
-    );
-  }
-
-  Widget _buildCard(
-      {required String title,
-      required IconData icon,
-      required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        elevation: 5,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon,
-                size: 40,
-                color:
-                    const Color.fromARGB(255, 2, 93, 98)), // Teal color theme
-            SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDoctorCard({
-    required String name,
-    required String specialty,
-    required String experience,
-    required double height,
-    required double width,
-  }) {
-    return Card(
-      margin: EdgeInsets.all(13),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      elevation: 4,
-      child: Container(
-        width: width,
-        height: height,
-        padding: EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.person,
-                size: 40,
-                color:
-                    const Color.fromARGB(255, 2, 93, 98)), // Teal color theme
-            SizedBox(height: 8),
-            Text(
-              name,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            Text(
-              specialty,
-              style: TextStyle(color: Colors.grey),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '$experience Years Experience',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHospitalCard(
-    String hospitalName, {
-    required double height,
-    required double width,
-  }) {
-    return Card(
-      margin: EdgeInsets.all(13),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      elevation: 4,
-      child: Container(
-        width: width,
-        height: height,
-        padding: EdgeInsets.all(8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.local_hospital,
-                size: 40,
-                color:
-                    const Color.fromARGB(255, 2, 93, 98)), // Teal color theme
-            SizedBox(height: 8),
-            Text(
-              hospitalName,
-              style: TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
       ),
     );
   }

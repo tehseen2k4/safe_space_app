@@ -10,9 +10,11 @@ class EditPagePet extends StatefulWidget {
   _EditPagePetState createState() => _EditPagePetState();
 }
 
-class _EditPagePetState extends State<EditPagePet> {
+class _EditPagePetState extends State<EditPagePet> with SingleTickerProviderStateMixin {
   final User? user = FirebaseAuth.instance.currentUser;
   final _formKey = GlobalKey<FormState>();
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   // Controllers for TextFormFields
   final TextEditingController _nameController = TextEditingController();
@@ -21,12 +23,43 @@ class _EditPagePetState extends State<EditPagePet> {
   final TextEditingController _sexController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
+    _animationController.forward();
+
+    // Fetch user data and populate controllers
+    if (user != null) {
+      fetchProfile(user!.uid).then((data) {
+        setState(() {
+          _nameController.text = data['name'] ?? '';
+          _usernameController.text = data['username'] ?? '';
+          _ageController.text = data['age']?.toString() ?? '';
+          _sexController.text = data['sex'] ?? '';
+        });
+      }).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching profile: $error'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      });
+    }
+  }
+
+  @override
   void dispose() {
-    // Clean up the controllers when the widget is disposed
     _nameController.dispose();
     _usernameController.dispose();
     _ageController.dispose();
     _sexController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -48,53 +81,38 @@ class _EditPagePetState extends State<EditPagePet> {
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    // Fetch user data and populate controllers
-    if (user != null) {
-      fetchProfile(user!.uid).then((data) {
-        setState(() {
-          _nameController.text = data['name'] ?? '';
-          _usernameController.text = data['username'] ?? '';
-          _ageController.text = data['age']?.toString() ?? '';
-          _sexController.text = data['sex'] ?? '';
-        });
-      }).catchError((error) {
-        print('Error fetching profile: $error');
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        title: Text(
-          'Edit',
-          style: TextStyle(color: Colors.white),
+        title: const Text(
+          'Edit Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+          ),
         ),
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+        backgroundColor: const Color(0xFFE17652),
         foregroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    borderRadius: BorderRadius.circular(16.0),
-                    gradient: LinearGradient(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: const LinearGradient(
                       colors: [
-                        const Color.fromARGB(255, 225, 118, 82),
-                        const Color.fromARGB(128, 228, 211, 190)
+                        Color(0xFFE17652),
+                        Color(0x80E4D3BE),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -104,32 +122,36 @@ class _EditPagePetState extends State<EditPagePet> {
                     children: [
                       CircleAvatar(
                         radius: 40,
-                        backgroundColor:
-                            const Color.fromARGB(255, 255, 255, 255),
-                        child: Icon(Icons.person,
-                            size: 50,
-                            color: const Color.fromARGB(255, 149, 147, 147)),
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.pets,
+                          size: 50,
+                          color: const Color(0xFFE17652),
+                        ),
                       ),
-                      SizedBox(width: 16),
-                      Text(
-                        "Welcome, ${_nameController.text.isEmpty ? 'User' : _nameController.text}",
-                        style: TextStyle(
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          "Welcome, ${_nameController.text.isEmpty ? 'Pet' : _nameController.text}",
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
-                            fontWeight: FontWeight.bold),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
                 _buildFieldCard(
                   title: 'Name',
                   child: TextFormField(
                     controller: _nameController,
-                    decoration: _inputDecoration('Enter your name'),
+                    decoration: _inputDecoration('Enter pet name'),
                     validator: (value) => value == null || value.isEmpty
-                        ? 'Please enter your name'
+                        ? 'Please enter pet name'
                         : null,
                   ),
                 ),
@@ -137,7 +159,7 @@ class _EditPagePetState extends State<EditPagePet> {
                   title: 'Username',
                   child: TextFormField(
                     controller: _usernameController,
-                    decoration: _inputDecoration('Enter your username'),
+                    decoration: _inputDecoration('Enter username'),
                     validator: (value) => value == null || value.isEmpty
                         ? 'Please enter a username'
                         : null,
@@ -147,10 +169,10 @@ class _EditPagePetState extends State<EditPagePet> {
                   title: 'Age',
                   child: TextFormField(
                     controller: _ageController,
-                    decoration: _inputDecoration('Enter your age'),
+                    decoration: _inputDecoration('Enter pet age'),
                     keyboardType: TextInputType.number,
                     validator: (value) => value == null || value.isEmpty
-                        ? 'Please enter your age'
+                        ? 'Please enter pet age'
                         : null,
                   ),
                 ),
@@ -160,7 +182,7 @@ class _EditPagePetState extends State<EditPagePet> {
                     value: _sexController.text.isNotEmpty
                         ? _sexController.text
                         : null,
-                    decoration: _inputDecoration('Select your Gender'),
+                    decoration: _inputDecoration('Select pet gender'),
                     items: ['Male', 'Female']
                         .map((sex) =>
                             DropdownMenuItem(value: sex, child: Text(sex)))
@@ -169,48 +191,53 @@ class _EditPagePetState extends State<EditPagePet> {
                       if (value != null) _sexController.text = value;
                     },
                     validator: (value) => value == null || value.isEmpty
-                        ? 'Please select your Gender'
+                        ? 'Please select pet gender'
                         : null,
                   ),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 Center(
                   child: ElevatedButton(
                     onPressed: () async {
                       if (_formKey.currentState?.validate() ?? false) {
-                        final User? user = FirebaseAuth.instance.currentUser;
                         if (user != null) {
                           final patientProfile = PetpatientDb(
                             name: _nameController.text,
                             username: _usernameController.text,
                             sex: _sexController.text,
-                            email: user.email ?? '',
+                            email: user!.email ?? '',
                             age: int.tryParse(_ageController.text) ?? 0,
-                            uid: user.uid,
+                            uid: user!.uid,
                           );
 
-                          // Save or update the profile in Firestore
                           await patientProfile.checkAndSaveProfile();
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content: Text('Profile Updated Successfully')),
+                              content: const Text('Profile Updated Successfully'),
+                              backgroundColor: const Color(0xFFE17652),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
                           );
                           Navigator.pop(context, true);
                         }
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+                      backgroundColor: const Color(0xFFE17652),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 50,
                         vertical: 15,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      elevation: 2,
                     ),
-                    child: Text(
-                      'Save',
+                    child: const Text(
+                      'Save Changes',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -227,28 +254,28 @@ class _EditPagePetState extends State<EditPagePet> {
     );
   }
 
-  // Helper function for field labels
-  TextStyle _fieldLabelStyle() {
-    return TextStyle(
-        fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black87);
-  }
-
-  Widget _buildFieldCard({required String title, required Widget child}) {
+  Widget _buildFieldCard({
+    required String title,
+    required Widget child,
+  }) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black)),
-            SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 10),
             child,
           ],
         ),
@@ -260,12 +287,12 @@ class _EditPagePetState extends State<EditPagePet> {
     return InputDecoration(
       hintText: hintText,
       filled: true,
-      fillColor: const Color.fromARGB(183, 255, 255, 255),
+      fillColor: const Color(0xB7FFFFFF),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
     );
   }
 }

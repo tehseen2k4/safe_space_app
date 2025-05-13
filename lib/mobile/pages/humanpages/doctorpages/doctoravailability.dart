@@ -55,7 +55,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
     final User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
 
     return Scaffold(
@@ -63,7 +63,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
       appBar: AppBar(
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
-        title: Text(
+        title: const Text(
           'Availability Schedule',
           style: TextStyle(
             color: Colors.white,
@@ -75,7 +75,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, size: 24),
             onPressed: _refreshData,
             tooltip: 'Refresh',
           ),
@@ -88,9 +88,9 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeaderSection(),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               _buildStatsSection(),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               _buildScheduleSection(user.uid),
             ],
           ),
@@ -101,7 +101,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
 
   Widget _buildHeaderSection() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.teal,
         borderRadius: BorderRadius.circular(15),
@@ -109,19 +109,19 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           BoxShadow(
             color: Colors.teal.withOpacity(0.2),
             blurRadius: 10,
-            offset: Offset(0, 5),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Row(
         children: [
-          Icon(Icons.calendar_today, color: Colors.white, size: 30),
-          SizedBox(width: 15),
+          const Icon(Icons.calendar_today, color: Colors.white, size: 30),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Manage Your Schedule',
                   style: TextStyle(
                     color: Colors.white,
@@ -129,7 +129,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 Text(
                   'View and manage your availability slots',
                   style: TextStyle(
@@ -153,9 +153,9 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           return Row(
             children: [
               Expanded(child: _buildStatCard('Total Slots', '...', Icons.access_time, Colors.blue)),
-              SizedBox(width: 15),
+              const SizedBox(width: 15),
               Expanded(child: _buildStatCard('Booked', '...', Icons.event_busy, Colors.red)),
-              SizedBox(width: 15),
+              const SizedBox(width: 15),
               Expanded(child: _buildStatCard('Available', '...', Icons.event_available, Colors.green)),
             ],
           );
@@ -165,9 +165,9 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           return Row(
             children: [
               Expanded(child: _buildStatCard('Total Slots', '0', Icons.access_time, Colors.blue)),
-              SizedBox(width: 15),
+              const SizedBox(width: 15),
               Expanded(child: _buildStatCard('Booked', '0', Icons.event_busy, Colors.red)),
-              SizedBox(width: 15),
+              const SizedBox(width: 15),
               Expanded(child: _buildStatCard('Available', '0', Icons.event_available, Colors.green)),
             ],
           );
@@ -195,7 +195,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                 Colors.blue,
               ),
             ),
-            SizedBox(width: 15),
+            const SizedBox(width: 15),
             Expanded(
               child: _buildStatCard(
                 'Booked',
@@ -204,7 +204,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                 Colors.red,
               ),
             ),
-            SizedBox(width: 15),
+            const SizedBox(width: 15),
             Expanded(
               child: _buildStatCard(
                 'Available',
@@ -221,7 +221,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: EdgeInsets.all(15),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -229,14 +229,14 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 5),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         children: [
           Icon(icon, color: color, size: 30),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             value,
             style: TextStyle(
@@ -262,7 +262,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
       future: fetchSlots(uid),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
         
         if (!snapshot.hasData || snapshot.data == null) {
@@ -273,7 +273,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Weekly Schedule',
               style: TextStyle(
                 fontSize: 20,
@@ -281,13 +281,13 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                 color: Colors.teal,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ...slots.entries.map((entry) {
               final day = entry.key;
               final slotList = entry.value as List<dynamic>;
               
               return Container(
-                margin: EdgeInsets.only(bottom: 15),
+                margin: const EdgeInsets.only(bottom: 15),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
@@ -295,19 +295,19 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                     BoxShadow(
                       color: Colors.grey.withOpacity(0.1),
                       blurRadius: 10,
-                      offset: Offset(0, 5),
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
                 child: ExpansionTile(
                   title: Text(
                     day,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  leading: Icon(Icons.calendar_today, color: Colors.teal),
+                  leading: const Icon(Icons.calendar_today, color: Colors.teal),
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -317,8 +317,8 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                           final isBooked = slot['booked'] ?? false;
                           
                           return Container(
-                            margin: EdgeInsets.only(bottom: 10),
-                            padding: EdgeInsets.all(12),
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: isBooked ? Colors.red[50] : Colors.green[50],
                               borderRadius: BorderRadius.circular(10),
@@ -336,10 +336,10 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                                       color: isBooked ? Colors.red : Colors.green,
                                       size: 20,
                                     ),
-                                    SizedBox(width: 10),
+                                    const SizedBox(width: 10),
                                     Text(
                                       DateFormat('hh:mm a').format(time),
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -347,7 +347,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                                   ],
                                 ),
                                 Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
                                     color: isBooked ? Colors.red[100] : Colors.green[100],
                                     borderRadius: BorderRadius.circular(20),
@@ -387,7 +387,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
             size: 80,
             color: Colors.grey[300],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Text(
             'No Availability Slots',
             style: TextStyle(
@@ -396,7 +396,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             'Add your availability slots to start accepting appointments',
             textAlign: TextAlign.center,
@@ -405,19 +405,19 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
               color: Colors.grey[500],
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
               // TODO: Implement add new slot functionality
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: Text(
+            child: const Text(
               'Add New Slot',
               style: TextStyle(
                 fontSize: 16,

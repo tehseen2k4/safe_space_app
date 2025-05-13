@@ -81,18 +81,23 @@ class _HumandoctorappointmentlistpageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'My Appointments',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
         ),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
         centerTitle: true,
         elevation: 0,
+        toolbarHeight: 70,
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(48),
+          preferredSize: const Size.fromHeight(48),
           child: Container(
             color: Colors.teal,
             child: TabBar(
@@ -103,27 +108,33 @@ class _HumandoctorappointmentlistpageState
               indicatorSize: TabBarIndicatorSize.label,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white70,
-              labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              unselectedLabelStyle: TextStyle(fontSize: 12),
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              unselectedLabelStyle: const TextStyle(fontSize: 12),
               tabs: [
                 Tab(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.pending_actions, size: 16),
-                      SizedBox(width: 4),
-                      Text('Pending'),
+                      const Icon(Icons.pending_actions, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Pending'),
                       if (_pendingAppointments.isNotEmpty)
                         Container(
-                          margin: EdgeInsets.only(left: 4),
-                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             _pendingAppointments.length.toString(),
-                            style: TextStyle(fontSize: 10),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                     ],
@@ -133,20 +144,23 @@ class _HumandoctorappointmentlistpageState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle_outline, size: 16),
-                      SizedBox(width: 4),
-                      Text('Confirmed'),
+                      const Icon(Icons.check_circle_outline, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Confirmed'),
                       if (_confirmedAppointments.isNotEmpty)
                         Container(
-                          margin: EdgeInsets.only(left: 4),
-                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             _confirmedAppointments.length.toString(),
-                            style: TextStyle(fontSize: 10),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                     ],
@@ -156,20 +170,23 @@ class _HumandoctorappointmentlistpageState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.done_all, size: 16),
-                      SizedBox(width: 4),
-                      Text('Completed'),
+                      const Icon(Icons.done_all, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Completed'),
                       if (_completedAppointments.isNotEmpty)
                         Container(
-                          margin: EdgeInsets.only(left: 4),
-                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             _completedAppointments.length.toString(),
-                            style: TextStyle(fontSize: 10),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                     ],
@@ -179,20 +196,23 @@ class _HumandoctorappointmentlistpageState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.cancel_outlined, size: 16),
-                      SizedBox(width: 4),
-                      Text('Cancelled'),
+                      const Icon(Icons.cancel_outlined, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Cancelled'),
                       if (_cancelledAppointments.isNotEmpty)
                         Container(
-                          margin: EdgeInsets.only(left: 4),
-                          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             _cancelledAppointments.length.toString(),
-                            style: TextStyle(fontSize: 10),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                     ],
@@ -221,8 +241,12 @@ class _HumandoctorappointmentlistpageState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_today, size: 64, color: Colors.grey[400]),
-            SizedBox(height: 16),
+            Icon(
+              Icons.calendar_today,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
             Text(
               'No appointments found',
               style: TextStyle(
@@ -239,7 +263,7 @@ class _HumandoctorappointmentlistpageState
     return RefreshIndicator(
       onRefresh: _fetchAppointments,
       child: ListView.builder(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         itemCount: appointments.length,
         itemBuilder: (context, index) {
           return _buildAppointmentCard(appointments[index]);
@@ -252,23 +276,23 @@ class _HumandoctorappointmentlistpageState
     Color statusColor = _getStatusColor(appointment.responseStatus ?? 'pending');
     
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(20),
           onTap: () {
             Navigator.push(
               context,
@@ -280,7 +304,7 @@ class _HumandoctorappointmentlistpageState
             );
           },
           child: Padding(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -288,10 +312,13 @@ class _HumandoctorappointmentlistpageState
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(24),
                       ),
                       child: Text(
                         appointment.responseStatus?.toUpperCase() ?? 'PENDING',
@@ -311,26 +338,31 @@ class _HumandoctorappointmentlistpageState
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     CircleAvatar(
+                      radius: 24,
                       backgroundColor: Colors.teal[100],
-                      child: Icon(Icons.person, color: Colors.teal),
+                      child: Icon(
+                        Icons.person,
+                        color: Colors.teal,
+                        size: 24,
+                      ),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             appointment.username,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             'Age: ${appointment.age} | ${appointment.gender}',
                             style: TextStyle(
@@ -343,25 +375,33 @@ class _HumandoctorappointmentlistpageState
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Row(
                   children: [
-                    Icon(Icons.watch_later, size: 18, color: Colors.teal),
-                    SizedBox(width: 8),
+                    Icon(
+                      Icons.watch_later,
+                      size: 18,
+                      color: Colors.teal,
+                    ),
+                    const SizedBox(width: 8),
                     Text(
                       appointment.timeslot,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.description, size: 18, color: Colors.teal),
-                    SizedBox(width: 8),
+                    Icon(
+                      Icons.description,
+                      size: 18,
+                      color: Colors.teal,
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         appointment.reasonforvisit,
@@ -375,7 +415,7 @@ class _HumandoctorappointmentlistpageState
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -384,6 +424,7 @@ class _HumandoctorappointmentlistpageState
                       style: TextStyle(
                         color: _getUrgencyColor(appointment.urgencylevel),
                         fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
                     ElevatedButton(
@@ -400,11 +441,14 @@ class _HumandoctorappointmentlistpageState
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.teal,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(24),
                         ),
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'View Details',
                         style: TextStyle(color: Colors.white),
                       ),

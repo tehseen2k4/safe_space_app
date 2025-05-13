@@ -21,9 +21,9 @@ class PatientLogin extends StatelessWidget {
             title: Column(
               children: [
                 CircleAvatar(
-                  backgroundColor: Colors.teal.withOpacity(0.1),
+                  backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
                   radius: 28,
-                  child: Icon(Icons.logout, color: Colors.teal, size: 32),
+                  child: const Icon(Icons.logout, color: Color(0xFF1976D2), size: 32),
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -31,7 +31,7 @@ class PatientLogin extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
-                    color: Colors.teal,
+                    color: Color(0xFF1976D2),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -48,8 +48,8 @@ class PatientLogin extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.teal,
-                        side: const BorderSide(color: Colors.teal),
+                        foregroundColor: const Color(0xFF1976D2),
+                        side: const BorderSide(color: Color(0xFF1976D2)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -62,7 +62,7 @@ class PatientLogin extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
+                        backgroundColor: const Color(0xFF1976D2),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -80,96 +80,179 @@ class PatientLogin extends StatelessWidget {
         return shouldLogout ?? false;
       },
       child: Scaffold(
-        backgroundColor: Colors.white, // Background color
-        body: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // "SAFE-SPACE" Heading
-            Text(
-              'SAFE-SPACE',
-              style: TextStyle(
-                fontSize: 35,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
+        backgroundColor: const Color(0xFFF5F6FA),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 20),
+                    // Header Section
+                    const Icon(
+                      Icons.health_and_safety_rounded,
+                      size: 60,
+                      color: Color(0xFF1976D2),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'SAFE-SPACE',
+                      style: TextStyle(
+                        fontSize: 35,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                        color: Color(0xFF1976D2),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Choose Your Care Type',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Color(0xFF666666),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+
+                    // Human Patient Section
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 30),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const HumanPatientProfile(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1976D2),
+                          foregroundColor: Colors.white,
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.person_outline,
+                              size: 28,
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              children: const [
+                                Text(
+                                  'Human',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Access human healthcare services',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+
+                    // Pet Patient Section
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 30),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>  Petpatientprofile(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFA726),
+                          foregroundColor: Colors.white,
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.pets,
+                              size: 28,
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              children: const [
+                                Text(
+                                  'Pet',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Access pet healthcare services',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w300,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 50),
+
+                    // Footer Description
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      child: Column(
+                        children: const [
+                          Text(
+                            'Comprehensive Healthcare Solutions',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1976D2),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            'Expert medical care for both you and your beloved pets, available 24/7 at your convenience.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF666666),
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 50), // Spacer between heading and buttons
-
-            // Human and Pet Buttons
-            Column(
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HumanPatientProfile(),
-                        ));
-                    // Add navigation logic for Human section here
-                    print("Human button clicked!");
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color.fromARGB(255, 2, 93, 98), // Button color
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    fixedSize: Size(200, 100), // Button size
-                  ),
-                  child: Text(
-                    'Human',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 35), // Spacer between buttons
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Petpatientprofile(),
-                        ));
-                    // Add navigation logic for Pet section here
-                    print("Pet button clicked!");
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        const Color.fromARGB(255, 250, 160, 43), // Button color
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    fixedSize: Size(200, 100), // Button size
-                  ),
-                  child: Text(
-                    'Pet',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 100), // Spacer before footer text
-
-            // Footer Description
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Your one-stop solution for expert healthcare—caring for you and your pets, anytime, anywhere.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.black54,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

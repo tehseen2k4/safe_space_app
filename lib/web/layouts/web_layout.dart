@@ -21,6 +21,7 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
   bool _isAuthenticated = false;
   late AnimationController _animationController;
   late Animation<double> _animation;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
   @override
   void dispose() {
     _animationController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -126,6 +128,24 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
                     ],
                   ),
                 ),
+                // Search Bar
+                if (_isSidebarExpanded)
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[100],
+                      ),
+                    ),
+                  ),
                 // Navigation Items
                 Expanded(
                   child: ListView(
@@ -147,45 +167,50 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
                         ),
                       ] else ...[
                         _buildNavItem(
-                          icon: Icons.home,
-                          title: 'Home',
+                          icon: Icons.dashboard,
+                          title: 'Dashboard',
                           index: 0,
+                        ),
+                        _buildNavItem(
+                          icon: Icons.calendar_today,
+                          title: 'Appointments',
+                          index: 1,
                         ),
                         _buildNavItem(
                           icon: Icons.medical_services,
                           title: 'Services',
-                          index: 1,
+                          index: 2,
                         ),
                         _buildNavItem(
                           icon: Icons.people,
                           title: 'Doctors',
-                          index: 2,
+                          index: 3,
                         ),
                         _buildNavItem(
                           icon: Icons.chat,
                           title: 'Chat',
-                          index: 3,
+                          index: 4,
                         ),
                         _buildNavItem(
                           icon: Icons.group,
                           title: 'Community',
-                          index: 4,
+                          index: 5,
                         ),
                         _buildNavItem(
                           icon: Icons.person,
                           title: 'Profile',
-                          index: 5,
+                          index: 6,
                         ),
                         const Divider(height: 32),
                         _buildNavItem(
                           icon: Icons.settings,
                           title: 'Settings',
-                          index: 6,
+                          index: 7,
                         ),
                         _buildNavItem(
                           icon: Icons.help,
                           title: 'Help',
-                          index: 7,
+                          index: 8,
                         ),
                         _buildNavItem(
                           icon: Icons.logout,
@@ -223,14 +248,15 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
                   color: Colors.grey[50],
                   child: widget.child,
                 ),
-                // Sidebar Toggle Button
+                // Top Bar
                 Positioned(
-                  top: 16,
-                  left: 16,
+                  top: 0,
+                  left: 0,
+                  right: 0,
                   child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
@@ -239,12 +265,63 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
                         ),
                       ],
                     ),
-                    child: IconButton(
-                      icon: Icon(
-                        _isSidebarVisible ? Icons.menu_open : Icons.menu,
-                        color: const Color(0xFF2196F3),
-                      ),
-                      onPressed: _toggleSidebar,
+                    child: Row(
+                      children: [
+                        // Sidebar Toggle Button
+                        IconButton(
+                          icon: Icon(
+                            _isSidebarVisible ? Icons.menu_open : Icons.menu,
+                            color: const Color(0xFF2196F3),
+                          ),
+                          onPressed: _toggleSidebar,
+                        ),
+                        const SizedBox(width: 16),
+                        // Breadcrumb
+                        if (_isAuthenticated)
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Dashboard',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                if (_selectedIndex > 0) ...[
+                                  const Icon(Icons.chevron_right, size: 16),
+                                  Text(
+                                    _getPageTitle(_selectedIndex),
+                                    style: const TextStyle(
+                                      color: Color(0xFF2196F3),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        // Quick Actions
+                        if (_isAuthenticated)
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.notifications),
+                                onPressed: () {},
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.help_outline),
+                                onPressed: () {},
+                              ),
+                              const SizedBox(width: 16),
+                              CircleAvatar(
+                                backgroundColor: Colors.grey[200],
+                                child: const Icon(Icons.person),
+                              ),
+                            ],
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -254,6 +331,31 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
         ],
       ),
     );
+  }
+
+  String _getPageTitle(int index) {
+    switch (index) {
+      case 0:
+        return 'Dashboard';
+      case 1:
+        return 'Appointments';
+      case 2:
+        return 'Services';
+      case 3:
+        return 'Doctors';
+      case 4:
+        return 'Chat';
+      case 5:
+        return 'Community';
+      case 6:
+        return 'Profile';
+      case 7:
+        return 'Settings';
+      case 8:
+        return 'Help';
+      default:
+        return '';
+    }
   }
 
   Widget _buildNavItem({

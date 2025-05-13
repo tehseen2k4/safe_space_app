@@ -12,11 +12,12 @@ class BookAppointmentPetPage extends StatefulWidget {
   _BookAppointmentPetPageState createState() => _BookAppointmentPetPageState();
 }
 
-class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
+class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> with SingleTickerProviderStateMixin {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final TextEditingController _reasonForVisitController =
-      TextEditingController();
+  final TextEditingController _reasonForVisitController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   String? selectedDoctorUid;
   String? appointmentType;
@@ -27,9 +28,21 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
   final List<String> urgencyLevels = ['Normal', 'Urgent', 'Critical'];
 
   @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
+    _animationController.forward();
+  }
+
+  @override
   void dispose() {
     _reasonForVisitController.dispose();
     _phoneNumberController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -45,10 +58,15 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
                 'username': doc['username'],
               })
           .toList();
-      print('Fetched doctors: $doctors'); // Debugging
       return doctors;
     } catch (e) {
-      print("Error fetching doctors: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching doctors: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return [];
     }
   }
@@ -77,301 +95,46 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
     required List<T> items,
     required void Function(T?) onChanged,
   }) {
-    return DropdownButton<T>(
-      hint: Text(hint),
-      value: value,
-      onChanged: onChanged,
-      isExpanded: true,
-      items: items.map((item) {
-        return DropdownMenuItem<T>(
-          value: item,
-          child: Text(item.toString()),
-        );
-      }).toList(),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE17652)),
+      ),
+      child: DropdownButton<T>(
+        hint: Text(hint),
+        value: value,
+        onChanged: onChanged,
+        isExpanded: true,
+        underline: const SizedBox(),
+        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFFE17652)),
+        items: items.map((item) {
+          return DropdownMenuItem<T>(
+            value: item,
+            child: Text(item.toString()),
+          );
+        }).toList(),
+      ),
     );
   }
 
   @override
-  // Widget build(BuildContext context) {
-  //   final User? user = FirebaseAuth.instance.currentUser;
-
-  //   if (user == null) {
-  //     return Scaffold(
-  //       appBar: AppBar(title: Text('Book Appointment For Your Pet')),
-  //       body: Center(child: CircularProgressIndicator()),
-  //     );
-  //   }
-
-  // return FutureBuilder<PetpatientDb>(
-  //   future: fetchProfile(user.uid),
-  //   builder: (context, snapshot) {
-  //     if (snapshot.connectionState == ConnectionState.waiting) {
-  //       return Scaffold(
-  //         appBar: AppBar(title: Text('Book Appointment')),
-  //         body: Center(child: CircularProgressIndicator()),
-  //       );
-  //     } else if (snapshot.hasError) {
-  //       return Scaffold(
-  //         appBar: AppBar(title: Text('Error')),
-  //         body: Center(
-  //             child: Text('Error fetching profile: ${snapshot.error}')),
-  //       );
-  //     } else if (snapshot.hasData) {
-  //       final petpatient = snapshot.data!;
-
-  //         return Scaffold(
-  //           appBar: AppBar(title: Text('Book Appointment')),
-  //           body: Padding(
-  //             padding: const EdgeInsets.all(16.0),
-  //             child: SingleChildScrollView(
-  //               child: Column(
-  //                 crossAxisAlignment: CrossAxisAlignment.start,
-  //                 children: [
-  //                   Text(
-  //                     'Pet Patient Details',
-  //                     style: TextStyle(
-  //                         fontSize: 20,
-  //                         fontWeight: FontWeight.bold,
-  //                         color: Colors.blueAccent),
-  //                   ),
-  //                   SizedBox(height: 10),
-  //                   Text('Name: ${petpatient.username}',
-  //                       style: TextStyle(fontSize: 16)),
-  //                   Text('Email: ${petpatient.email}',
-  //                       style: TextStyle(fontSize: 16)),
-  //                   Text('Age: ${petpatient.age}',
-  //                       style: TextStyle(fontSize: 16)),
-  //                   Text('Gender: ${petpatient.sex}',
-  //                       style: TextStyle(fontSize: 16)),
-  //                   SizedBox(height: 20),
-  //                   Text(
-  //                     'Appointment Details',
-  //                     style: TextStyle(
-  //                         fontSize: 20,
-  //                         fontWeight: FontWeight.bold,
-  //                         color: Colors.blueAccent),
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   FutureBuilder<List<Map<String, dynamic>>>(
-  //                     future: fetchDoctors(),
-  //                     builder: (context, doctorSnapshot) {
-  //                       if (doctorSnapshot.connectionState ==
-  //                           ConnectionState.waiting) {
-  //                         return CircularProgressIndicator();
-  //                       } else if (doctorSnapshot.hasError) {
-  //                         return Text('Error fetching doctors');
-  //                       } else if (doctorSnapshot.hasData) {
-  //                         final doctorList = doctorSnapshot.data!;
-  //                         return DropdownButton<String>(
-  //                           hint: Text('Select Doctor'),
-  //                           value: selectedDoctorUid,
-  //                           isExpanded: true,
-  //                           onChanged: (newValue) {
-  //                             setState(() {
-  //                               selectedDoctorUid = newValue;
-  //                             });
-  //                           },
-  //                           items: doctorList.map((doctor) {
-  //                             return DropdownMenuItem<String>(
-  //                               value: doctor['uid'],
-  //                               child: Text(doctor['username']),
-  //                             );
-  //                           }).toList(),
-  //                         );
-  //                       } else {
-  //                         return Text('No doctors available');
-  //                       }
-  //                     },
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   TextField(
-  //                     controller: _reasonForVisitController,
-  //                     decoration: InputDecoration(
-  //                       labelText: 'Reason for Visit',
-  //                       border: OutlineInputBorder(),
-  //                     ),
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   buildDropdown<String>(
-  //                     hint: 'Select Appointment Type',
-  //                     value: appointmentType,
-  //                     items: appointmentTypes,
-  //                     onChanged: (newValue) {
-  //                       setState(() {
-  //                         appointmentType = newValue;
-  //                       });
-  //                     },
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   buildDropdown<String>(
-  //                     hint: 'Select Urgency Level',
-  //                     value: urgencyLevel,
-  //                     items: urgencyLevels,
-  //                     onChanged: (newValue) {
-  //                       setState(() {
-  //                         urgencyLevel = newValue;
-  //                       });
-  //                     },
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   TextField(
-  //                     controller: _phoneNumberController,
-  //                     decoration: InputDecoration(
-  //                       labelText: 'Phone Number',
-  //                       border: OutlineInputBorder(),
-  //                     ),
-  //                     keyboardType: TextInputType.phone,
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   Text(
-  //                     'Available Slots',
-  //                     style: TextStyle(
-  //                         fontSize: 20,
-  //                         fontWeight: FontWeight.bold,
-  //                         color: Colors.blueAccent),
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   Container(
-  //                     padding: EdgeInsets.all(16),
-  //                     decoration: BoxDecoration(
-  //                       color: Colors.grey[200],
-  //                       borderRadius: BorderRadius.circular(8),
-  //                     ),
-  //                     child: Column(
-  //                       crossAxisAlignment: CrossAxisAlignment.start,
-  //                       children: [
-  //                         Text(
-  //                           'Selected Slot:',
-  //                           style: TextStyle(
-  //                             fontSize: 18,
-  //                             fontWeight: FontWeight.bold,
-  //                           ),
-  //                         ),
-  //                         SizedBox(height: 10),
-  //                         Text(
-  //                           selectedDateAndTime,
-  //                           style: TextStyle(
-  //                             fontSize: 16,
-  //                             color: Colors.blueGrey,
-  //                           ),
-  //                         ),
-  //                         SizedBox(height: 20),
-  // SizedBox(
-  //   width: double.infinity,
-  //   child: ElevatedButton(
-  //     onPressed: () async {
-  //       if (selectedDoctorUid != null) {
-  //         final result = await navigateToDoctorSlots(
-  //             selectedDoctorUid!);
-
-  //         if (result != null) {
-  //           setState(() {
-  //             selectedDateAndTime =
-  //                 '${result['day']} at ${result['time']}';
-  //           });
-  //         }
-  //       } else {
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(
-  //             content:
-  //                 Text('Please select a doctor first.'),
-  //           ),
-  //         );
-  //       }
-  //     },
-  //     child: Text('Select Time Slot'),
-  //   ),
-  // ),
-  //                       ],
-  //                     ),
-  //                   ),
-  //                   SizedBox(height: 20),
-  //                   SizedBox(
-  //                     width: double.infinity,
-  //                     child: ElevatedButton(
-  //                       onPressed: () async {
-  //                         if (selectedDoctorUid != null &&
-  //                             appointmentType != null &&
-  //                             urgencyLevel != null &&
-  //                             _reasonForVisitController.text.isNotEmpty &&
-  //                             _phoneNumberController.text.isNotEmpty) {
-  //                           String? doctorName;
-  //                           try {
-  //                             final doctorDoc = await _firestore
-  //                                 .collection('doctors')
-  //                                 .doc(selectedDoctorUid)
-  //                                 .get();
-  //                             if (doctorDoc.exists) {
-  //                               doctorName = doctorDoc['username'];
-  //                             } else {
-  //                               throw Exception('Doctor not found');
-  //                             }
-  //                           } catch (e) {
-  //                             ScaffoldMessenger.of(context).showSnackBar(
-  //                               SnackBar(
-  //                                   content: Text(
-  //                                       'Error fetching doctor details: $e')),
-  //                             );
-  //                             return;
-  //                           }
-
-  //                           final appointmentData = PetAppointmentDb(
-  //                             username: petpatient.username,
-  //                             age: petpatient.age.toString(),
-  //                             gender: petpatient.sex,
-  //                             email: petpatient.email,
-  //                             patientUid: user.uid,
-  //                             doctorUid: selectedDoctorUid!,
-  //                             reasonforvisit: _reasonForVisitController.text,
-  //                             typeofappointment: appointmentType!,
-  //                             urgencylevel: urgencyLevel!,
-  //                             phonenumber: _phoneNumberController.text,
-  //                             timeslot: selectedDateAndTime,
-  //                             uid: user.uid,
-  //                             appointmentId: generateAppointmentId(),
-  //                             doctorpreference: doctorName!,
-  //                             status: false,
-  //                           );
-
-  //                           await _firestore
-  //                               .collection('petappointments')
-  //                               .add(appointmentData.toJson());
-
-  //                           ScaffoldMessenger.of(context).showSnackBar(
-  //                             SnackBar(content: Text('Appointment Booked!')),
-  //                           );
-  //                         } else {
-  //                           ScaffoldMessenger.of(context).showSnackBar(
-  //                             SnackBar(
-  //                                 content: Text('Please fill in all fields')),
-  //                           );
-  //                         }
-  //                       },
-  //                       child: Text('Book Appointment'),
-  //                     ),
-  //                   ),
-  //                 ],
-  //               ),
-  //             ),
-  //           ),
-  //         );
-  //       } else {
-  //         return Scaffold(
-  //           appBar: AppBar(title: Text('Error')),
-  //           body: Center(child: Text('No data available')),
-  //         );
-  //       }
-  //     },
-  //   );
-  // }
-
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Book Appointment')),
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: const Color(0xFFF5F6FA),
+        appBar: AppBar(
+          title: const Text(
+            'Book Appointment',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: const Color(0xFFE17652),
+          foregroundColor: Colors.white,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -380,265 +143,87 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: Text('Book Appointment')),
-            body: Center(child: CircularProgressIndicator()),
+            backgroundColor: const Color(0xFFF5F6FA),
+            appBar: AppBar(
+              title: const Text(
+                'Book Appointment',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: const Color(0xFFE17652),
+              foregroundColor: Colors.white,
+            ),
+            body: const Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasError) {
           return Scaffold(
-            appBar: AppBar(title: Text('Error')),
+            backgroundColor: const Color(0xFFF5F6FA),
+            appBar: AppBar(
+              title: const Text(
+                'Error',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: const Color(0xFFE17652),
+              foregroundColor: Colors.white,
+            ),
             body: Center(
-                child: Text('Error fetching profile: ${snapshot.error}')),
+              child: Text(
+                'Error fetching profile: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
           );
         } else if (snapshot.hasData) {
           final petpatient = snapshot.data!;
 
           return Scaffold(
+            backgroundColor: const Color(0xFFF5F6FA),
             appBar: AppBar(
-              title: Text('Book Appointment'),
-              backgroundColor: const Color.fromARGB(255, 225, 118, 82),
+              title: const Text(
+                'Book Appointment',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                ),
+              ),
+              backgroundColor: const Color(0xFFE17652),
               foregroundColor: Colors.white,
               centerTitle: true,
               actions: [
                 IconButton(
-                  icon: Icon(Icons.help_outline),
+                  icon: const Icon(Icons.help_outline),
                   onPressed: () {
-                    // Show help dialog or FAQs
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Help'),
+                        content: const Text(
+                          'Fill in all the required fields to book an appointment for your pet. Make sure to select a doctor and time slot before proceeding.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('OK'),
+                          ),
+                        ],
+                      ),
+                    );
                   },
                 ),
               ],
             ),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
+            body: FadeTransition(
+              opacity: _fadeAnimation,
               child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Patient Details
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Patient Details',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      const Color.fromARGB(255, 225, 118, 82),
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Text('Name: ${petpatient.username}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Email: ${petpatient.email}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Age: ${petpatient.age}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Gender: ${petpatient.sex}',
-                                  style: TextStyle(fontSize: 16)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Appointment Details
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Appointment Details',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      const Color.fromARGB(255, 225, 118, 82),
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              FutureBuilder<List<Map<String, dynamic>>>(
-                                future: fetchDoctors(),
-                                builder: (context, doctorSnapshot) {
-                                  if (doctorSnapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return CircularProgressIndicator();
-                                  } else if (doctorSnapshot.hasError) {
-                                    return Text('Error fetching doctors');
-                                  } else if (doctorSnapshot.hasData) {
-                                    final doctorList = doctorSnapshot.data!;
-                                    return DropdownButton<String>(
-                                      hint: Text('Select Doctor'),
-                                      value: selectedDoctorUid,
-                                      isExpanded: true,
-                                      icon: Icon(Icons.person,
-                                          color: const Color.fromARGB(
-                                              255, 225, 118, 82)),
-                                      onChanged: (newValue) {
-                                        setState(() {
-                                          selectedDoctorUid = newValue;
-                                        });
-                                      },
-                                      items: doctorList.map((doctor) {
-                                        return DropdownMenuItem<String>(
-                                          value: doctor['uid'],
-                                          child: Text(doctor['username']),
-                                        );
-                                      }).toList(),
-                                    );
-                                  } else {
-                                    return Text('No doctors available');
-                                  }
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              TextField(
-                                controller: _reasonForVisitController,
-                                decoration: InputDecoration(
-                                  labelText: 'Reason for Visit',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              TextField(
-                                controller: _phoneNumberController,
-                                decoration: InputDecoration(
-                                  labelText: 'Phone Number',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              buildDropdown<String>(
-                                hint: 'Select Appointment Type',
-                                value: appointmentType,
-                                items: appointmentTypes,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    appointmentType = newValue;
-                                  });
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              buildDropdown<String>(
-                                hint: 'Select Urgency Level',
-                                value: urgencyLevel,
-                                items: urgencyLevels,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    urgencyLevel = newValue;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Time Slot and Actions
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Available Slots',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      const Color.fromARGB(255, 225, 118, 82),
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Selected Slot:',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Text(
-                                      selectedDateAndTime,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.blueGrey,
-                                      ),
-                                    ),
-                                    SizedBox(height: 20),
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        onPressed: () async {
-                                          if (selectedDoctorUid != null) {
-                                            final result =
-                                                await navigateToDoctorSlots(
-                                                    selectedDoctorUid!);
-
-                                            if (result != null) {
-                                              setState(() {
-                                                selectedDateAndTime =
-                                                    '${result['day']} at ${result['time']}';
-                                              });
-                                            }
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                    'Please select a doctor first.'),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        child: Text('Select Time Slot'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
+                    _buildPatientDetailsCard(petpatient),
+                    const SizedBox(height: 20),
+                    _buildAppointmentDetailsCard(),
+                    const SizedBox(height: 20),
+                    _buildTimeSlotCard(),
+                    const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -662,8 +247,10 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                    content: Text(
-                                        'Error fetching doctor details: $e')),
+                                  content: Text('Error fetching doctor details: $e'),
+                                  backgroundColor: Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
                               );
                               return;
                             }
@@ -691,16 +278,45 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
                                 .add(appointmentData.toJson());
 
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Appointment Booked!')),
+                              SnackBar(
+                                content: const Text('Appointment Booked Successfully!'),
+                                backgroundColor: const Color(0xFFE17652),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
                             );
+                            Navigator.pop(context);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('Please fill in all fields')),
+                              const SnackBar(
+                                content: Text('Please fill in all fields'),
+                                backgroundColor: Colors.red,
+                                behavior: SnackBarBehavior.floating,
+                              ),
                             );
                           }
                         },
-                        child: Text('Book Appointment'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFE17652),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 50,
+                            vertical: 15,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        child: const Text(
+                          'Book Appointment',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -710,11 +326,312 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
           );
         } else {
           return Scaffold(
-            appBar: AppBar(title: Text('Error')),
-            body: Center(child: Text('Unexpected error occurred')),
+            backgroundColor: const Color(0xFFF5F6FA),
+            appBar: AppBar(
+              title: const Text(
+                'Error',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: const Color(0xFFE17652),
+              foregroundColor: Colors.white,
+            ),
+            body: const Center(
+              child: Text(
+                'Unexpected error occurred',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
           );
         }
       },
+    );
+  }
+
+  Widget _buildPatientDetailsCard(PetpatientDb petpatient) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.pets,
+                  color: Color(0xFFE17652),
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Patient Details',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFE17652),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildDetailRow('Name', petpatient.username),
+            _buildDetailRow('Email', petpatient.email),
+            _buildDetailRow('Age', petpatient.age.toString()),
+            _buildDetailRow('Gender', petpatient.sex),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black54,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppointmentDetailsCard() {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.calendar_today,
+                  color: Color(0xFFE17652),
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Appointment Details',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFE17652),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: fetchDoctors(),
+              builder: (context, doctorSnapshot) {
+                if (doctorSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (doctorSnapshot.hasError) {
+                  return Text(
+                    'Error fetching doctors',
+                    style: TextStyle(color: Colors.red),
+                  );
+                } else if (doctorSnapshot.hasData) {
+                  final doctorList = doctorSnapshot.data!;
+                  return buildDropdown<String>(
+                    hint: 'Select Doctor',
+                    value: selectedDoctorUid,
+                    items: doctorList.map((doc) => doc['uid'] as String).toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        selectedDoctorUid = newValue;
+                      });
+                    },
+                  );
+                } else {
+                  return const Text('No doctors available');
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _reasonForVisitController,
+              decoration: InputDecoration(
+                labelText: 'Reason for Visit',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFE17652)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _phoneNumberController,
+              decoration: InputDecoration(
+                labelText: 'Phone Number',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFE17652)),
+                ),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 16),
+            buildDropdown<String>(
+              hint: 'Select Appointment Type',
+              value: appointmentType,
+              items: appointmentTypes,
+              onChanged: (newValue) {
+                setState(() {
+                  appointmentType = newValue;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            buildDropdown<String>(
+              hint: 'Select Urgency Level',
+              value: urgencyLevel,
+              items: urgencyLevels,
+              onChanged: (newValue) {
+                setState(() {
+                  urgencyLevel = newValue;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeSlotCard() {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.access_time,
+                  color: Color(0xFFE17652),
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Available Slots',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFE17652),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Selected Slot:',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    selectedDateAndTime,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (selectedDoctorUid != null) {
+                          final result = await navigateToDoctorSlots(selectedDoctorUid!);
+                          if (result != null) {
+                            setState(() {
+                              selectedDateAndTime = '${result['day']} at ${result['time']}';
+                            });
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please select a doctor first'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE17652),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                      child: const Text(
+                        'Select Time Slot',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -735,7 +652,7 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> {
   String generateAppointmentId() {
     final random = Random();
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final randomSuffix = random.nextInt(1000000); // Random 6-digit number
-    return '$timestamp-$randomSuffix'; // Combining timestamp and random number
+    final randomSuffix = random.nextInt(1000000);
+    return '$timestamp-$randomSuffix';
   }
 }

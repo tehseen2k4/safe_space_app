@@ -73,29 +73,42 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Suggest Alternative Time'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: const Text(
+          'Suggest Alternative Time',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         content: TextField(
           controller: _suggestedTimeController,
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Enter suggested time (e.g., Monday 2:00 PM)',
+            hintStyle: const TextStyle(fontSize: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            contentPadding: const EdgeInsets.all(16),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               _updateAppointmentStatus('rejected');
             },
-            child: Text('Submit'),
+            child: const Text('Submit'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
           ),
         ],
@@ -107,7 +120,13 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Appointment Details'),
+        title: const Text(
+          'Appointment Details',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.teal,
         elevation: 0,
       ),
@@ -127,11 +146,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Status Card
               _buildStatusCard(),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               
-              // Patient Information Section
               _buildSectionTitle('Patient Information'),
               _buildInfoCard(
                 [
@@ -142,9 +159,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                   _buildInfoRow('Age', _appointment.age, Icons.calendar_today),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-              // Appointment Details Section
               _buildSectionTitle('Appointment Details'),
               _buildInfoCard(
                 [
@@ -155,9 +171,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                   _buildInfoRow('Timeslot', _appointment.timeslot, Icons.access_time),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-              // Doctor's Notes Section
               _buildSectionTitle('Doctor\'s Notes'),
               Card(
                 elevation: 2,
@@ -172,13 +187,16 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                       TextField(
                         controller: _notesController,
                         maxLines: 4,
+                        style: const TextStyle(fontSize: 14),
                         decoration: InputDecoration(
                           hintText: 'Enter your notes here...',
+                          hintStyle: const TextStyle(fontSize: 12),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           filled: true,
                           fillColor: Colors.grey[50],
+                          contentPadding: const EdgeInsets.all(16),
                         ),
                       ),
                     ],
@@ -186,13 +204,12 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                 ),
               ),
 
-              // Suggested Time (if rejected)
               if ((_appointment.responseStatus ?? 'pending') == 'rejected' && 
                   (_appointment.suggestedTimeslot ?? '').isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     _buildSectionTitle('Suggested Alternative Time'),
                     Card(
                       elevation: 2,
@@ -203,11 +220,11 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                         padding: const EdgeInsets.all(16.0),
                         child: Row(
                           children: [
-                            Icon(Icons.access_time, color: Colors.teal),
-                            SizedBox(width: 12),
+                            const Icon(Icons.access_time, color: Colors.teal, size: 24),
+                            const SizedBox(width: 12),
                             Text(
                               _appointment.suggestedTimeslot ?? '',
-                              style: TextStyle(fontSize: 16),
+                              style: const TextStyle(fontSize: 16),
                             ),
                           ],
                         ),
@@ -216,7 +233,6 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                   ],
                 ),
 
-              // Response Buttons
               if ((_appointment.responseStatus ?? 'pending') == 'pending')
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24.0),
@@ -248,7 +264,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   Widget _buildStatusCard() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
       decoration: BoxDecoration(
         color: _getStatusColor(),
         borderRadius: BorderRadius.circular(15),
@@ -256,7 +272,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
           BoxShadow(
             color: _getStatusColor().withOpacity(0.3),
             blurRadius: 8,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -267,10 +283,10 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
             color: Colors.white,
             size: 32,
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Status: ${(_appointment.responseStatus ?? 'pending').toUpperCase()}',
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -317,7 +333,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: Colors.teal, size: 20),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,10 +345,10 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                     color: Colors.grey[600],
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   value,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
@@ -349,11 +365,17 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       String label, IconData icon, Color color, VoidCallback onPressed) {
     return ElevatedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon),
-      label: Text(label),
+      icon: Icon(icon, size: 20),
+      label: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
-        padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),

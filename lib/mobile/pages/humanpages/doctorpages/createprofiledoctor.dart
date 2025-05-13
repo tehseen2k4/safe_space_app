@@ -196,7 +196,6 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
     super.initState();
     if (user != null) {
       _emailController.text = user!.email ?? '';
-      // Initialize dropdowns
       _updateQualifications();
     }
   }
@@ -208,7 +207,6 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
       } else if (_doctorTypeController.text == 'Veterinary') {
         _availableQualifications = _veterinaryQualifications.keys.toList();
       }
-      // Reset specialization when qualification changes
       _specializationController.text = '';
       _updateSpecializations();
     });
@@ -228,7 +226,13 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Profile'),
+        title: const Text(
+          'Create Profile',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
@@ -266,21 +270,24 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
                   _buildTimeSelector('Start Time', _startTime),
                   _buildTimeSelector('End Time', _endTime),
                 ]),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _saveProfile,
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     backgroundColor: Colors.teal,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Text('Save',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
+                  child: const Text(
+                    'Save',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -295,8 +302,11 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Text(
         title,
-        style: TextStyle(
-            fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal),
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Colors.teal,
+        ),
       ),
     );
   }
@@ -305,7 +315,7 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      margin: EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.symmetric(vertical: 10),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(children: children),
@@ -314,8 +324,11 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
   }
 
   Widget _buildTextField(
-      String label, TextEditingController controller, String hint,
-      {bool isMultiline = false}) {
+    String label,
+    TextEditingController controller,
+    String hint, {
+    bool isMultiline = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15.0),
       child: TextFormField(
@@ -324,14 +337,21 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
+          labelStyle: const TextStyle(fontSize: 14),
+          hintStyle: const TextStyle(fontSize: 12),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
+        style: const TextStyle(fontSize: 14),
       ),
     );
   }
 
   Widget _buildDropdown(
-      String label, TextEditingController controller, List<String> items) {
+    String label,
+    TextEditingController controller,
+    List<String> items,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15.0),
       child: DropdownButtonFormField<String>(
@@ -348,8 +368,11 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
         },
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: const TextStyle(fontSize: 14),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
+        style: const TextStyle(fontSize: 14),
         items: items
             .map((item) => DropdownMenuItem(value: item, child: Text(item)))
             .toList(),
@@ -363,11 +386,22 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           ElevatedButton(
             onPressed: () => _selectTime(label),
-            child: Text(time != null ? time.format(context) : 'Select Time'),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            child: Text(
+              time != null ? time.format(context) : 'Select Time',
+              style: const TextStyle(fontSize: 14),
+            ),
           ),
         ],
       ),
@@ -395,7 +429,13 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Available Days', style: _fieldLabelStyle()),
+        const Text(
+          'Available Days',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         GestureDetector(
           onTap: () async {
             await showDialog(
@@ -406,12 +446,21 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
                 return StatefulBuilder(
                   builder: (context, setStateDialog) {
                     return AlertDialog(
-                      title: Text('Select Available Days'),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      title: const Text(
+                        'Select Available Days',
+                        style: TextStyle(fontSize: 18),
+                      ),
                       content: SingleChildScrollView(
                         child: Column(
                           children: tempSelectedDays.entries.map((entry) {
                             return CheckboxListTile(
-                              title: Text(entry.key),
+                              title: Text(
+                                entry.key,
+                                style: const TextStyle(fontSize: 14),
+                              ),
                               value: entry.value,
                               onChanged: (bool? value) {
                                 setStateDialog(() {
@@ -424,13 +473,19 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
                       ),
                       actions: [
                         TextButton(
-                          child: Text('Cancel'),
+                          child: const Text(
+                            'Cancel',
+                            style: TextStyle(fontSize: 14),
+                          ),
                           onPressed: () {
                             Navigator.pop(context);
                           },
                         ),
                         TextButton(
-                          child: Text('Save'),
+                          child: const Text(
+                            'Save',
+                            style: TextStyle(fontSize: 14),
+                          ),
                           onPressed: () {
                             setState(() {
                               _selectedDays.clear();
@@ -447,10 +502,11 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
             );
           },
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
             decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8)),
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -460,21 +516,23 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
                             .map((entry) => entry.key)
                             .join(', ') ??
                         'Select Days',
-                    style: TextStyle(color: Colors.black),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-                Icon(Icons.arrow_drop_down),
+                const Icon(
+                  Icons.arrow_drop_down,
+                  size: 24,
+                ),
               ],
             ),
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
       ],
     );
-  }
-
-  TextStyle _fieldLabelStyle() {
-    return TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
   }
 
   Future<void> _saveProfile() async {
@@ -515,7 +573,7 @@ class _CreateProfileDoctorState extends State<CreateProfileDoctor> {
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Profile created successfully!')),
+          const SnackBar(content: Text('Profile created successfully!')),
         );
         Navigator.pop(context, true);
       } catch (e) {

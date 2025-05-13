@@ -1,22 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'petdoctorfulldetailpage.dart';
+import 'humandoctorfulldetailpage.dart';
 
-class PetDoctorDetail extends StatefulWidget {
+class HumanDoctorDetail extends StatefulWidget {
   @override
-  _PetDoctorDetailState createState() => _PetDoctorDetailState();
+  _HumanDoctorDetailState createState() => _HumanDoctorDetailState();
 }
 
-class _PetDoctorDetailState extends State<PetDoctorDetail> {
+class _HumanDoctorDetailState extends State<HumanDoctorDetail> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String selectedCategory = 'All';
+  String selectedCategory = 'All'; // Initially show all doctors
 
+  // Function to fetch doctors from Firestore
   Future<List<Map<String, dynamic>>> fetchDoctors() async {
     try {
       QuerySnapshot snapshot = await _firestore
           .collection('doctors')
-          .where('doctorType', isEqualTo: 'Veterinary')
+          .where('doctorType', isEqualTo: 'Human')
           .get();
+      
+      print("Number of human doctors found: ${snapshot.docs.length}");
+      
+      if (snapshot.docs.isEmpty) {
+        // If no doctors found with type 'Human', let's check all doctors
+        final allDoctors = await _firestore.collection('doctors').get();
+        print("Total number of doctors in database: ${allDoctors.docs.length}");
+        print("First doctor data (if any): ${allDoctors.docs.isNotEmpty ? allDoctors.docs.first.data() : 'No doctors found'}");
+      }
+
       return snapshot.docs
           .map((doc) => doc.data() as Map<String, dynamic>)
           .toList();
@@ -26,13 +37,14 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
     }
   }
 
+  // Function to build a doctor card
   Widget buildDoctorCard(Map<String, dynamic> doctor) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
       ),
-      elevation: 4,
+      elevation: 5,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -40,13 +52,13 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
           children: [
             CircleAvatar(
               radius: 40,
-              backgroundColor: const Color(0xFFE17652).withOpacity(0.1),
+              backgroundColor: Colors.teal.withOpacity(0.1),
               child: Text(
-                doctor['name'] != null ? doctor['name'][0].toUpperCase() : 'V',
+                doctor['name'] != null ? doctor['name'][0].toUpperCase() : 'D',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFE17652),
+                  color: Colors.teal,
                 ),
               ),
             ),
@@ -65,74 +77,24 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
                   const SizedBox(height: 8.0),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.medical_services,
-                        color: Color(0xFFE17652),
-                        size: 20,
-                      ),
+                      const Icon(Icons.medical_services, color: Colors.teal),
                       const SizedBox(width: 8.0),
                       Text(
                         doctor['specialization'] ?? 'Specialization',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
-                        ),
+                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8.0),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.location_on,
-                        color: Color(0xFFE17652),
-                        size: 20,
-                      ),
+                      const Icon(Icons.location_on, color: Colors.teal),
                       const SizedBox(width: 8.0),
                       Flexible(
                         child: Text(
                           doctor['clinicName'] ?? 'Clinic Name',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[700],
-                          ),
+                          style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                           overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8.0),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.phone,
-                        color: Color(0xFFE17652),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8.0),
-                      Text(
-                        doctor['contactNumberClinic'] ?? 'Contact Not Available',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8.0),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.attach_money,
-                        color: Color(0xFFE17652),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8.0),
-                      Text(
-                        'Fees: \$${doctor['fees']?.toString() ?? 'Not specified'}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
                         ),
                       ),
                     ],
@@ -145,7 +107,7 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PetDoctorFullDetailPage(
+                            builder: (context) => DoctorDetailPage(
                               doctor: doctor,
                             ),
                           ),
@@ -154,19 +116,12 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
                       icon: const Icon(Icons.info, color: Colors.white),
                       label: const Text(
                         'View Details',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE17652),
+                        backgroundColor: Colors.teal,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
+                          borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
                     ),
@@ -180,19 +135,22 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
     );
   }
 
+  // Function to build the category selection
   Widget buildCategorySelection() {
     List<String> categories = [
       'All',
-      'General Veterinary',
-      'Surgery',
-      'Dermatology',
-      'Internal Medicine',
-      'Emergency Care',
+      'Psychiatrist',
+      'Cardiologist',
+      'Dermatologist',
+      'Neurologist',
+      'Pediatrician',
+      'Orthopedic',
+      'Gynecologist',
+      'Radiologist',
     ];
 
     return Container(
       height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
@@ -209,17 +167,9 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
               margin: const EdgeInsets.only(right: 10),
               decoration: BoxDecoration(
                 color: selectedCategory == category
-                    ? const Color(0xFFE17652)
+                    ? Colors.teal
                     : Colors.grey[300],
                 borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  if (selectedCategory == category)
-                    BoxShadow(
-                      color: const Color(0xFFE17652).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                ],
               ),
               child: Center(
                 child: Text(
@@ -246,17 +196,17 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
       backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
         title: const Text(
-          'Veterinary Doctors',
+          'Available Doctors',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
             fontWeight: FontWeight.bold,
+            fontSize: 24,
           ),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFFE17652),
-        foregroundColor: Colors.white,
         elevation: 0,
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
+        toolbarHeight: 70,
       ),
       body: Column(
         children: [
@@ -268,52 +218,19 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
               future: fetchDoctors(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFFE17652),
-                    ),
-                  );
+                  return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: Colors.red,
-                          size: 48,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Error fetching doctor data.',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Error fetching doctor data.',
+                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                     ),
                   );
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.pets,
-                          color: Color(0xFFE17652),
-                          size: 64,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No veterinary doctors available.',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'No doctors available.',
+                      style: TextStyle(fontSize: 18, color: Colors.grey[700]),
                     ),
                   );
                 } else {
@@ -325,7 +242,6 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
                   }).toList();
 
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: doctors.length,
                     itemBuilder: (context, index) {
                       return buildDoctorCard(doctors[index]);
@@ -339,4 +255,4 @@ class _PetDoctorDetailState extends State<PetDoctorDetail> {
       ),
     );
   }
-} 
+}

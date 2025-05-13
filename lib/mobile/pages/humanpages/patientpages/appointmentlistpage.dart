@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/models/humanappointment_db.dart';
-import 'package:safe_space_app/pages/humanpages/patientpages/patientappointmentdetailpage.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/appointmentdetailpage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:safe_space_app/pages/humanpages/patientpages/appointmentbooking.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/appointmentbooking.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppointmentsPage extends StatefulWidget {
+  const AppointmentsPage({super.key});
+
   @override
   _AppointmentsPageState createState() => _AppointmentsPageState();
 }
@@ -78,28 +80,24 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
-    final isDesktop = screenSize.width > 1200;
-    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
-
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'My Appointments',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: isDesktop ? 28 : 24,
+            fontSize: 24,
           ),
         ),
         backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
         centerTitle: true,
         elevation: 0,
-        toolbarHeight: isDesktop ? 80 : 70,
+        toolbarHeight: 70,
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(isDesktop ? 56 : 48),
+          preferredSize: const Size.fromHeight(48),
           child: Container(
             color: const Color(0xFF1976D2),
             child: TabBar(
@@ -110,27 +108,27 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
               indicatorSize: TabBarIndicatorSize.label,
               labelColor: Colors.white,
               unselectedLabelColor: Colors.white70,
-              labelStyle: TextStyle(
+              labelStyle: const TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: isDesktop ? 14 : 12,
+                fontSize: 12,
               ),
-              unselectedLabelStyle: TextStyle(
-                fontSize: isDesktop ? 14 : 12,
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 12,
               ),
               tabs: [
                 Tab(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.pending_actions, size: isDesktop ? 20 : 16),
-                      SizedBox(width: isDesktop ? 8 : 4),
-                      Text('Pending'),
+                      const Icon(Icons.pending_actions, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Pending'),
                       if (_pendingAppointments.isNotEmpty)
                         Container(
-                          margin: EdgeInsets.only(left: isDesktop ? 8 : 4),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isDesktop ? 8 : 4,
-                            vertical: isDesktop ? 2 : 1,
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
@@ -138,7 +136,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                           ),
                           child: Text(
                             _pendingAppointments.length.toString(),
-                            style: TextStyle(fontSize: isDesktop ? 12 : 10),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                     ],
@@ -148,15 +146,15 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle_outline, size: isDesktop ? 20 : 16),
-                      SizedBox(width: isDesktop ? 8 : 4),
-                      Text('Confirmed'),
+                      const Icon(Icons.check_circle_outline, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Confirmed'),
                       if (_confirmedAppointments.isNotEmpty)
                         Container(
-                          margin: EdgeInsets.only(left: isDesktop ? 8 : 4),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isDesktop ? 8 : 4,
-                            vertical: isDesktop ? 2 : 1,
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
@@ -164,7 +162,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                           ),
                           child: Text(
                             _confirmedAppointments.length.toString(),
-                            style: TextStyle(fontSize: isDesktop ? 12 : 10),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                     ],
@@ -174,15 +172,15 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.done_all, size: isDesktop ? 20 : 16),
-                      SizedBox(width: isDesktop ? 8 : 4),
-                      Text('Completed'),
+                      const Icon(Icons.done_all, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Completed'),
                       if (_completedAppointments.isNotEmpty)
                         Container(
-                          margin: EdgeInsets.only(left: isDesktop ? 8 : 4),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isDesktop ? 8 : 4,
-                            vertical: isDesktop ? 2 : 1,
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
@@ -190,7 +188,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                           ),
                           child: Text(
                             _completedAppointments.length.toString(),
-                            style: TextStyle(fontSize: isDesktop ? 12 : 10),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                     ],
@@ -200,15 +198,15 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.cancel_outlined, size: isDesktop ? 20 : 16),
-                      SizedBox(width: isDesktop ? 8 : 4),
-                      Text('Cancelled'),
+                      const Icon(Icons.cancel_outlined, size: 16),
+                      const SizedBox(width: 4),
+                      const Text('Cancelled'),
                       if (_cancelledAppointments.isNotEmpty)
                         Container(
-                          margin: EdgeInsets.only(left: isDesktop ? 8 : 4),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: isDesktop ? 8 : 4,
-                            vertical: isDesktop ? 2 : 1,
+                          margin: const EdgeInsets.only(left: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 1,
                           ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
@@ -216,7 +214,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                           ),
                           child: Text(
                             _cancelledAppointments.length.toString(),
-                            style: TextStyle(fontSize: isDesktop ? 12 : 10),
+                            style: const TextStyle(fontSize: 10),
                           ),
                         ),
                     ],
@@ -227,46 +225,35 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
           ),
         ),
       ),
-      body: Center(
-        child: Container(
-          constraints: BoxConstraints(
-            maxWidth: isDesktop ? 1200 : (isTablet ? 800 : screenSize.width),
-          ),
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildAppointmentList(_pendingAppointments),
-              _buildAppointmentList(_confirmedAppointments),
-              _buildAppointmentList(_completedAppointments),
-              _buildAppointmentList(_cancelledAppointments),
-            ],
-          ),
-        ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildAppointmentList(_pendingAppointments),
+          _buildAppointmentList(_confirmedAppointments),
+          _buildAppointmentList(_completedAppointments),
+          _buildAppointmentList(_cancelledAppointments),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => BookAppointmentPage(),
+              builder: (context) => const BookAppointmentPage(),
             ),
           );
         },
         backgroundColor: const Color(0xFF1976D2),
-        child: Icon(
+        child: const Icon(
           Icons.add,
           color: Colors.white,
-          size: isDesktop ? 32 : 24,
+          size: 24,
         ),
       ),
     );
   }
 
   Widget _buildAppointmentList(List<HumanAppointmentDb> appointments) {
-    final screenSize = MediaQuery.of(context).size;
-    final isDesktop = screenSize.width > 1200;
-    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
-
     if (appointments.isEmpty) {
       return Center(
         child: Column(
@@ -274,14 +261,14 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
           children: [
             Icon(
               Icons.calendar_today,
-              size: isDesktop ? 80 : 64,
+              size: 64,
               color: Colors.grey[400],
             ),
-            SizedBox(height: isDesktop ? 24 : 16),
+            const SizedBox(height: 16),
             Text(
               'No appointments found',
               style: TextStyle(
-                fontSize: isDesktop ? 24 : 18,
+                fontSize: 18,
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
@@ -294,7 +281,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
     return RefreshIndicator(
       onRefresh: _fetchAppointments,
       child: ListView.builder(
-        padding: EdgeInsets.all(isDesktop ? 24 : 16),
+        padding: const EdgeInsets.all(16),
         itemCount: appointments.length,
         itemBuilder: (context, index) {
           return _buildAppointmentCard(appointments[index]);
@@ -304,14 +291,10 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
   }
 
   Widget _buildAppointmentCard(HumanAppointmentDb appointment) {
-    final screenSize = MediaQuery.of(context).size;
-    final isDesktop = screenSize.width > 1200;
-    final isTablet = screenSize.width > 600 && screenSize.width <= 1200;
-
     Color statusColor = _getStatusColor(appointment.responseStatus ?? 'pending');
     
     return Container(
-      margin: EdgeInsets.only(bottom: isDesktop ? 24 : 16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -320,7 +303,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
             color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -332,14 +315,14 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => PatientAppointmentDetailsPage(
+                builder: (context) => AppointmentDetailsPage(
                   appointment: appointment,
                 ),
               ),
             );
           },
           child: Padding(
-            padding: EdgeInsets.all(isDesktop ? 24 : 16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -347,9 +330,9 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isDesktop ? 16 : 12,
-                        vertical: isDesktop ? 8 : 6,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
                       ),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.1),
@@ -359,7 +342,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                         appointment.responseStatus?.toUpperCase() ?? 'PENDING',
                         style: TextStyle(
                           color: statusColor,
-                          fontSize: isDesktop ? 14 : 12,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -368,41 +351,41 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                       appointment.appointmentId,
                       style: TextStyle(
                         color: Colors.grey[600],
-                        fontSize: isDesktop ? 14 : 12,
+                        fontSize: 12,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: isDesktop ? 20 : 16),
+                const SizedBox(height: 16),
                 Row(
                   children: [
                     CircleAvatar(
-                      radius: isDesktop ? 30 : 24,
+                      radius: 24,
                       backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
-                      child: Icon(
+                      child: const Icon(
                         Icons.person,
-                        color: const Color(0xFF1976D2),
-                        size: isDesktop ? 30 : 24,
+                        color: Color(0xFF1976D2),
+                        size: 24,
                       ),
                     ),
-                    SizedBox(width: isDesktop ? 16 : 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             appointment.username,
-                            style: TextStyle(
-                              fontSize: isDesktop ? 20 : 16,
+                            style: const TextStyle(
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: isDesktop ? 6 : 4),
+                          const SizedBox(height: 4),
                           Text(
                             'Age: ${appointment.age} | ${appointment.gender}',
                             style: TextStyle(
                               color: Colors.grey[600],
-                              fontSize: isDesktop ? 16 : 14,
+                              fontSize: 14,
                             ),
                           ),
                         ],
@@ -410,38 +393,38 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                     ),
                   ],
                 ),
-                SizedBox(height: isDesktop ? 20 : 16),
+                const SizedBox(height: 16),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.watch_later,
-                      size: isDesktop ? 22 : 18,
-                      color: const Color(0xFF1976D2),
+                      size: 18,
+                      color: Color(0xFF1976D2),
                     ),
-                    SizedBox(width: isDesktop ? 12 : 8),
+                    const SizedBox(width: 8),
                     Text(
                       appointment.timeslot,
-                      style: TextStyle(
-                        fontSize: isDesktop ? 16 : 14,
+                      style: const TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: isDesktop ? 12 : 8),
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.description,
-                      size: isDesktop ? 22 : 18,
-                      color: const Color(0xFF1976D2),
+                      size: 18,
+                      color: Color(0xFF1976D2),
                     ),
-                    SizedBox(width: isDesktop ? 12 : 8),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         appointment.reasonforvisit,
                         style: TextStyle(
-                          fontSize: isDesktop ? 16 : 14,
+                          fontSize: 14,
                           color: Colors.grey[700],
                         ),
                         maxLines: 2,
@@ -450,7 +433,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                     ),
                   ],
                 ),
-                SizedBox(height: isDesktop ? 20 : 16),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -459,7 +442,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                       style: TextStyle(
                         color: _getUrgencyColor(appointment.urgencylevel),
                         fontWeight: FontWeight.bold,
-                        fontSize: isDesktop ? 16 : 14,
+                        fontSize: 14,
                       ),
                     ),
                     ElevatedButton(
@@ -467,7 +450,7 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => PatientAppointmentDetailsPage(
+                            builder: (context) => AppointmentDetailsPage(
                               appointment: appointment,
                             ),
                           ),
@@ -478,16 +461,16 @@ class _AppointmentsPageState extends State<AppointmentsPage> with SingleTickerPr
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isDesktop ? 24 : 20,
-                          vertical: isDesktop ? 12 : 8,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'View Details',
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: isDesktop ? 16 : 14,
+                          fontSize: 14,
                         ),
                       ),
                     ),

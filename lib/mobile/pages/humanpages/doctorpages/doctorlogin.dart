@@ -34,102 +34,184 @@ class _LoginPageState extends State<Doctorpagee> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Login',
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 25),
-                TextFormField(
-                  controller: _mailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(30.0)),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Please enter a valid email address';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(30.0)),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 35),
-                ElevatedButton(
-                  onPressed: _login, // Call the login method here
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal, // Button color
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 48, vertical: 16),
-                  ),
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                const SizedBox(height: 40),
+                _buildHeader(),
+                const SizedBox(height: 24),
+                _buildLoginForm(),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Don't have an account? "),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const SignupPage()),
-                        );
-                      },
-                      child: const Text(
-                        'Sign Up',
-                        style: TextStyle(
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                _buildSignUpLink(context),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        const Icon(
+          Icons.medical_services,
+          size: 60,
+          color: Colors.teal,
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Doctor Login',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Welcome back! Please login to your account.',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginForm() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildTextField(
+                'Email',
+                _mailController,
+                Icons.email,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return 'Please enter a valid email address';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                'Password',
+                _passwordController,
+                Icons.lock,
+                isPassword: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildLoginButton(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    bool isPassword = false,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword,
+      style: const TextStyle(fontSize: 16),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 20),
+        labelStyle: const TextStyle(fontSize: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
+      ),
+      validator: validator,
+    );
+  }
+
+  Widget _buildLoginButton() {
+    return ElevatedButton(
+      onPressed: _login,
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: const Text(
+        'Login',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSignUpLink(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "Don't have an account? ",
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey[600],
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SignupPage()),
+            );
+          },
+          child: const Text(
+            'Sign Up',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.teal,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -140,36 +222,32 @@ class _LoginPageState extends State<Doctorpagee> {
             _mailController.text, _passwordController.text);
         if (user != null) {
           developer.log("User logged in successfully: ${user.email}");
-          //developer.log("User logged in successfully: ${user.uid}");
           final userType = await UsersDb.getUserTypeByUid(user.uid);
           if (userType == 'doctor') {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Doctor Login Successful !')),
+              const SnackBar(content: Text('Doctor Login Successful !')),
             );
             _gotoDoctorProfile(context);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Login failed. Invalid UserType.')),
+              const SnackBar(content: Text('Login failed. Invalid UserType.')),
             );
-            //developer.log("User login failed. Invalid UserType.");
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('User login failed. Received null.')),
+            const SnackBar(content: Text('User login failed. Received null.')),
           );
-          // developer.log("User login failed. Received null.");
         }
       } catch (e, stacktrace) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error during login: ')),
+          SnackBar(content: Text('Error during login: $e')),
         );
-        // developer.log("Error during login: $e", stackTrace: stacktrace);
+        developer.log("Error during login: $e", stackTrace: stacktrace);
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Form validation failed (LOGIN).')),
+        const SnackBar(content: Text('Form validation failed (LOGIN).')),
       );
-      // developer.log("Form validation failed (LOGIN).");
     }
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:safe_space_app/models/petappointment_db.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:safe_space_app/mobile/pages/petpages/petappointmentdetailpage.dart';
 
 class PetDoctorAppointmentsListPage extends StatefulWidget {
   @override
@@ -16,79 +17,123 @@ class _PetDoctorAppointmentsListPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        title: Text('My Appointments'),
+        title: const Text(
+          'My Appointments',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        elevation: 0,
+        toolbarHeight: 70,
       ),
       body: FutureBuilder<List<PetAppointmentDb>>(
         future: _fetchAppointments(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error fetching appointments'));
+            return Center(
+              child: Text(
+                'Error fetching appointments',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.red[700],
+                ),
+              ),
+            );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No appointments found'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.calendar_today,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No appointments found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           final appointments = snapshot.data!;
 
-          return SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            child: Column(
-              children: appointments
-                  .map((appointment) => _buildCard(appointment, context))
-                  .toList(),
+          return RefreshIndicator(
+            onRefresh: () async {
+              setState(() {});
+            },
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: appointments
+                    .map((appointment) => _buildCard(appointment, context))
+                    .toList(),
+              ),
             ),
           );
         },
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(
-      //         builder: (context) => BookAppointmentPetPage(),
-      //       ),
-      //     );
-      //   },
-      //   backgroundColor: Colors.teal,
-      //   child: Icon(Icons.add),
-      // ),
     );
   }
 
   Future<List<PetAppointmentDb>> _fetchAppointments() async {
     final User? user = _auth.currentUser;
-    if (user == null) return [];
+    if (user == null) {
+      print('No user logged in');
+      return [];
+    }
 
     try {
+      print('Fetching pet appointments for doctor: ${user.uid}');
       final querySnapshot = await FirebaseFirestore.instance
           .collection('petappointments')
-          .where('uid', isEqualTo: user.uid)
+          .where('doctorUid', isEqualTo: user.uid)
           .get();
 
+      print('Query returned ${querySnapshot.docs.length} appointments');
+      
       if (querySnapshot.docs.isEmpty) {
+        print('No appointments found for this doctor');
         return [];
       }
 
-      return querySnapshot.docs
-          .map((doc) => PetAppointmentDb.fromJson(doc.data()))
+      final appointments = querySnapshot.docs
+          .map((doc) {
+            print('Processing appointment: ${doc.id}');
+            return PetAppointmentDb.fromJson(doc.data());
+          })
           .toList();
+      
+      print('Successfully processed ${appointments.length} appointments');
+      return appointments;
     } catch (e) {
-      print("Error fetching appointments: $e");
+      print("Error fetching pet appointments: $e");
       return [];
     }
   }
 
   Widget _buildCard(PetAppointmentDb appointment, BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width - 40,
-      height: 200,
-      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
           colors: [Colors.teal.shade100, Colors.teal.shade50],
           begin: Alignment.topLeft,
@@ -96,18 +141,17 @@ class _PetDoctorAppointmentsListPageState
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 3,
-            blurRadius: 6,
-            offset: Offset(0, 2),
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(15),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -122,23 +166,30 @@ class _PetDoctorAppointmentsListPageState
                 ),
                 Text(
                   appointment.appointmentId,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: Colors.black87,
                   ),
                 ),
               ],
             ),
-            Divider(thickness: 1, color: Colors.teal.shade200, height: 20),
+            Divider(
+              thickness: 1,
+              color: Colors.teal.shade200,
+              height: 20,
+            ),
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Icon(Icons.person, color: Colors.teal, size: 18),
-                SizedBox(width: 5),
+                Icon(
+                  Icons.person,
+                  color: Colors.teal,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     appointment.username,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
@@ -147,53 +198,75 @@ class _PetDoctorAppointmentsListPageState
                 ),
               ],
             ),
+            const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.watch_later, color: Colors.teal, size: 18),
-                SizedBox(width: 5),
+                Icon(
+                  Icons.watch_later,
+                  color: Colors.teal,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
                 Text(
                   appointment.timeslot,
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.description, color: Colors.teal, size: 18),
-                SizedBox(width: 5),
+                Icon(
+                  Icons.description,
+                  color: Colors.teal,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     appointment.reasonforvisit,
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 16),
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Navigate to the AppointmentDetailsPage
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => PetAppointmentDetailsPage(
-                  //       appointment: appointment, // Pass appointment details
-                  //     ),
-                  //   ),
-                  // );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PetAppointmentDetailsPage(
+                        appointment: appointment,
+                      ),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.teal,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(24),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
-                child: Text(
+                child: const Text(
                   'View Details',
-                  style: TextStyle(fontSize: 14),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),

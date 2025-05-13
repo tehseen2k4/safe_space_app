@@ -8,6 +8,7 @@ import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/doctoravailab
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/appointmentdetailpage.dart';
+import 'package:safe_space_app/mobile/pages/petpages/petappointmentdetailpage.dart';
 
 class Doctorlogin extends StatefulWidget {
   const Doctorlogin({super.key});
@@ -28,6 +29,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
   String qualification = "***";
   String doctorType = '';
   Future<List>? _appointmentsFuture;
+  Map<String, dynamic> doctor = {};
 
   @override
   void initState() {
@@ -60,6 +62,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
       if (querySnapshot.docs.isNotEmpty) {
         final data = querySnapshot.docs.first.data();
         setState(() {
+          doctor = data;
           doctorName = data['name'] ?? "Doctor's Name";
           specialization = data['specialization'] ?? "**";
           qualification = data['qualification'] ?? "***";
@@ -70,41 +73,35 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
         });
       }
     } catch (e) {
-      // Error fetching profile; default values remain
+      print("Error fetching profile: $e");
     }
   }
 
   void _onBottomNavTap(int index) async {
     if (index == 3) {
-      // "More" screen
       await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ViewProfileDoctorScreen(),
         ),
       );
-      // Refresh profile data after returning
       if (user != null) {
         fetchProfileData(user!.uid);
       }
-      // Reset to home tab after returning
       setState(() {
         _currentIndex = 0;
       });
     } else if (index == 1) {
-      // Navigate to DoctorAvailability page
       await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => DoctorAvailabilityScreen(),
         ),
       );
-      // Reset to home tab after returning
       setState(() {
         _currentIndex = 0;
       });
     } else {
-      // For other tabs (home, messages), just update the index
       setState(() {
         _currentIndex = index;
       });
@@ -118,7 +115,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
     try {
       final querySnapshot = await FirebaseFirestore.instance
           .collection('petappointments')
-          .where('uid', isEqualTo: user.uid)
+          .where('doctorUid', isEqualTo: user.uid)
           .get();
 
       if (querySnapshot.docs.isEmpty) {
@@ -235,8 +232,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
         return shouldLogout ?? false;
       },
       child: Scaffold(
-        backgroundColor: Colors.grey[50],
-        drawer: _buildDrawer(),
+        backgroundColor: const Color(0xFFF5F6FA),
         appBar: AppBar(
           title: const Text(
             'SAFE-SPACE',
@@ -269,9 +265,11 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
                 children: [
                   _buildProfileSection(),
                   const SizedBox(height: 24),
+                  _buildQuickActionsSection(),
+                  const SizedBox(height: 24),
                   _buildAppointmentsSection(),
                   const SizedBox(height: 24),
-                  _buildReviewsSection(),
+                  _buildStatisticsSection(),
                 ],
               ),
             ),
@@ -279,107 +277,6 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
         ),
         bottomNavigationBar: _buildBottomNavigationBar(),
       ),
-    );
-  }
-
-  Widget _buildDrawer() {
-    return Drawer(
-      child: Container(
-        color: Colors.white,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.teal,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.teal, Colors.teal.shade300],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 35, color: Colors.teal),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Dr. $doctorName',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    specialization,
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _buildDrawerItem(Icons.dashboard, 'Dashboard', () {}),
-            _buildDrawerItem(Icons.calendar_today, 'Appointments', () {}),
-            _buildDrawerItem(Icons.person, 'Patients', () {}),
-            _buildDrawerItem(Icons.medical_services, 'Services', () {}),
-            _buildDrawerItem(Icons.settings, 'Settings', () {}),
-            _buildDrawerItem(Icons.help, 'Help & Support', () {}),
-            const Divider(),
-            _buildDrawerItem(Icons.logout, 'Logout', () async {
-              await _auth.signOut();
-              if (mounted) {
-                Navigator.of(context).pop();
-              }
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.teal),
-      title: Text(
-        title,
-        style: const TextStyle(fontSize: 16),
-      ),
-      onTap: () {
-        if (title == 'Appointments') {
-          if (doctorType == "Human") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => Humandoctorappointmentlistpage(),
-              ),
-            ).then((_) {
-              if (user != null) {
-                fetchProfileData(user!.uid);
-              }
-            });
-          } else if (doctorType == "Veterinary") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => PetDoctorAppointmentsListPage(),
-              ),
-            ).then((_) {
-              if (user != null) {
-                fetchProfileData(user!.uid);
-              }
-            });
-          }
-        } else {
-          onTap();
-        }
-      },
     );
   }
 
@@ -399,23 +296,10 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
       ),
       child: Row(
         children: [
-          Container(
-            height: 100,
-            width: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: const DecorationImage(
-                image: AssetImage('assets/images/one.jpg'),
-                fit: BoxFit.cover,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: Colors.teal.withOpacity(0.1),
+            child: Icon(Icons.person, size: 40, color: Colors.teal),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -441,27 +325,124 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
                 const SizedBox(height: 4),
                 Text(
                   qualification,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.teal,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: List.generate(
-                    5,
-                    (index) => Icon(
-                      index < 4 ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                      size: 18,
-                    ),
                   ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          children: [
+            _buildActionCard(
+              'View Appointments',
+              Icons.calendar_today,
+              Colors.teal,
+              () {
+                if (doctorType.toLowerCase() == "human") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Humandoctorappointmentlistpage(),
+                    ),
+                  );
+                } else if (doctorType.toLowerCase() == "veterinary") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PetDoctorAppointmentsListPage(),
+                    ),
+                  );
+                }
+              },
+            ),
+            _buildActionCard(
+              'Set Availability',
+              Icons.access_time,
+              Colors.blue,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DoctorAvailabilityScreen(),
+                  ),
+                );
+              },
+            ),
+            _buildActionCard(
+              'Medical Records',
+              Icons.medical_services,
+              Colors.purple,
+              () {
+                // TODO: Implement medical records
+              },
+            ),
+            _buildActionCard(
+              'Messages',
+              Icons.message,
+              Colors.orange,
+              () {
+                // TODO: Implement messages
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 32, color: color),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -470,259 +451,251 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Pending Appointments',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Today\'s Appointments',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.teal.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: TextButton.icon(
+                onPressed: () {
+                  if (doctorType.toLowerCase() == "human") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Humandoctorappointmentlistpage(),
+                      ),
+                    );
+                  } else if (doctorType.toLowerCase() == "veterinary") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PetDoctorAppointmentsListPage(),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(
+                  Icons.calendar_month,
+                  size: 18,
+                  color: Colors.teal,
+                ),
+                label: const Text(
+                  'View All',
+                  style: TextStyle(
+                    color: Colors.teal,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 220,
-          child: FutureBuilder<List>(
-            future: _appointmentsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return const Center(child: Text('Error fetching appointments'));
-              } else if (snapshot.data == null || snapshot.data!.isEmpty) {
-                return const Center(child: Text('No appointments found'));
-              }
-
-              return ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  return _buildAppointmentCard(snapshot.data![index], context);
-                },
+        FutureBuilder<List>(
+          future: _appointmentsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(
+                child: Text('No appointments for today'),
               );
-            },
-          ),
+            }
+            return ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: snapshot.data!.length > 3 ? 3 : snapshot.data!.length,
+              itemBuilder: (context, index) {
+                final appointment = snapshot.data![index];
+                return _buildAppointmentCard(appointment);
+              },
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildAppointmentCard(dynamic appointment, BuildContext context) {
-    return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+  Widget _buildAppointmentCard(dynamic appointment) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: CircleAvatar(
+          backgroundColor: Colors.teal.withOpacity(0.1),
+          child: Icon(Icons.person, color: Colors.teal),
+        ),
+        title: Text(
+          appointment.username ?? 'Patient Name',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.person, color: Colors.teal, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        appointment.username,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(Icons.watch_later, color: Colors.teal, size: 16),
-                    const SizedBox(width: 8),
-                    Text(
-                      appointment.timeslot,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.description, color: Colors.teal, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        appointment.reasonforvisit,
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AppointmentDetailsPage(
-                      appointment: appointment,
-                    ),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                minimumSize: const Size(double.infinity, 40),
+            const SizedBox(height: 4),
+            Text(
+              'Time: ${appointment.timeslot ?? 'N/A'}',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
               ),
-              child: const Text('View Details'),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Status: ${appointment.status ?? 'Pending'}',
+              style: TextStyle(
+                color: _getStatusColor(appointment.status?.toString()),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.arrow_forward_ios, size: 16),
+          onPressed: () {
+            if (doctorType.toLowerCase() == "human") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AppointmentDetailsPage(appointment: appointment),
+                ),
+              );
+            } else if (doctorType.toLowerCase() == "veterinary") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => PetAppointmentDetailsPage(appointment: appointment),
+                ),
+              );
+            }
+          },
         ),
       ),
     );
   }
 
-  Widget _buildReviewsSection() {
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'confirmed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildStatisticsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Recent Reviews',
+          'Statistics',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 200,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: 5,
-            itemBuilder: (context, index) {
-              final fakeReviews = [
-                {
-                  "review": "He is fantastic! He truly cares and helped me manage my pain effectively.",
-                  "rating": 5
-                },
-                {
-                  "review": "Fantastic! He truly cares and helped me manage my pain effectively.",
-                  "rating": 4
-                },
-                {
-                  "review": "This Doc. is the best! listens carefully and explains everything clearly.",
-                  "rating": 5
-                },
-                {
-                  "review": "He is a great doctor. His expertise and care are unmatched!",
-                  "rating": 4
-                },
-                {
-                  "review": "He is very welcoming, and his care is excellent. Highly recommend!",
-                  "rating": 5
-                },
-              ];
-
-              final review = fakeReviews[index];
-              return _buildReviewCard(review["review"] as String, review["rating"] as int);
-            },
-          ),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          children: [
+            _buildStatCard(
+              'Total Patients',
+              '150',
+              Icons.people,
+              Colors.blue,
+            ),
+            _buildStatCard(
+              'Appointments',
+              '25',
+              Icons.calendar_today,
+              Colors.green,
+            ),
+            _buildStatCard(
+              'Reviews',
+              '4.8',
+              Icons.star,
+              Colors.amber,
+            ),
+            _buildStatCard(
+              'Earnings',
+              '\$2,500',
+              Icons.attach_money,
+              Colors.purple,
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildReviewCard(String review, int rating) {
-    return Container(
-      width: 280,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: Colors.teal.withOpacity(0.1),
-                child: Icon(Icons.person, color: Colors.teal),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 32, color: color),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
               ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Anonymous Patient',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  Row(
-                    children: List.generate(
-                      rating,
-                      (index) => const Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            review,
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Posted on ${DateTime.now().subtract(Duration(days: rating * 2)).toLocal().toString().split(' ')[0]}",
-            style: TextStyle(
-              color: Colors.grey[400],
-              fontSize: 12,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -765,36 +738,6 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
           ),
         ],
       ),
-    );
-  }
-}
-
-class ProfilePhoto extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    double imageSize = MediaQuery.of(context).size.width * 0.4;
-
-    return Column(
-      children: [
-        Container(
-          height: 100,
-          width: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            image: DecorationImage(
-              image: AssetImage('assets/images/one.jpg'),
-              fit: BoxFit.cover,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.3),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

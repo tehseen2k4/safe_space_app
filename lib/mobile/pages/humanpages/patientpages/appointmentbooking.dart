@@ -8,14 +8,15 @@ import 'package:safe_space_app/mobile/pages/bookappointment.dart';
 import 'package:safe_space_app/models/humanappointment_db.dart';
 
 class BookAppointmentPage extends StatefulWidget {
+  const BookAppointmentPage({super.key});
+
   @override
   _BookAppointmentPageState createState() => _BookAppointmentPageState();
 }
 
 class _BookAppointmentPageState extends State<BookAppointmentPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final TextEditingController _reasonForVisitController =
-      TextEditingController();
+  final TextEditingController _reasonForVisitController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
 
   String? selectedDoctorUid;
@@ -69,34 +70,26 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
     }
   }
 
-  Widget buildDropdown<T>({
-    required String hint,
-    required T? value,
-    required List<T> items,
-    required void Function(T?) onChanged,
-  }) {
-    return DropdownButton<T>(
-      hint: Text(hint),
-      value: value,
-      onChanged: onChanged,
-      isExpanded: true,
-      items: items.map((item) {
-        return DropdownMenuItem<T>(
-          value: item,
-          child: Text(item.toString()),
-        );
-      }).toList(),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Book Appointment')),
-        body: Center(child: CircularProgressIndicator()),
+        appBar: AppBar(
+          title: const Text(
+            'Book Appointment',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: const Color(0xFF1976D2),
+          foregroundColor: Colors.white,
+          centerTitle: true,
+          toolbarHeight: 70,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -105,16 +98,43 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-            appBar: AppBar(title: Text('Book Appointment')),
-            body: Center(child: CircularProgressIndicator()),
+            appBar: AppBar(
+              title: const Text(
+                'Book Appointment',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: const Color(0xFF1976D2),
+              foregroundColor: Colors.white,
+              centerTitle: true,
+              toolbarHeight: 70,
+            ),
+            body: const Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasError) {
           return Scaffold(
-            appBar: AppBar(title: Text('Error')),
+            appBar: AppBar(
+              title: const Text(
+                'Error',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: const Color(0xFF1976D2),
+              foregroundColor: Colors.white,
+              centerTitle: true,
+              toolbarHeight: 70,
+            ),
             body: Center(
               child: Text(
                 'Error fetching profile: ${snapshot.error}',
-                style: TextStyle(color: Colors.red, fontSize: 18),
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 18,
+                ),
               ),
             ),
           );
@@ -123,248 +143,38 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
 
           return Scaffold(
             appBar: AppBar(
-              title: Text('Book Appointment'),
-              backgroundColor: const Color.fromARGB(255, 2, 93, 98),
+              title: const Text(
+                'Book Appointment',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: const Color(0xFF1976D2),
               foregroundColor: Colors.white,
               centerTitle: true,
+              toolbarHeight: 70,
               actions: [
                 IconButton(
-                  icon: Icon(Icons.help_outline),
+                  icon: const Icon(Icons.help_outline),
                   onPressed: () {
                     // Show help dialog or FAQs
                   },
                 ),
               ],
             ),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
+            body: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Patient Details
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Patient Details',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.teal,
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Text('Name: ${patient.username}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Email: ${patient.email}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Age: ${patient.age}',
-                                  style: TextStyle(fontSize: 16)),
-                              Text('Gender: ${patient.sex}',
-                                  style: TextStyle(fontSize: 16)),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Appointment Details
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Appointment Details',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.teal,
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              FutureBuilder<List<Map<String, dynamic>>>(
-                                future: fetchDoctors(),
-                                builder: (context, doctorSnapshot) {
-                                  if (doctorSnapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return CircularProgressIndicator();
-                                  } else if (doctorSnapshot.hasError) {
-                                    return Text('Error fetching doctors');
-                                  } else if (doctorSnapshot.hasData) {
-                                    final doctorList = doctorSnapshot.data!;
-                                    return DropdownButton<String>(
-                                      hint: Text('Select Doctor'),
-                                      value: selectedDoctorUid,
-                                      isExpanded: true,
-                                      icon: Icon(Icons.person,
-                                          color:
-                                              Color.fromARGB(255, 2, 93, 98)),
-                                      onChanged: (newValue) {
-                                        setState(() {
-                                          selectedDoctorUid = newValue;
-                                        });
-                                      },
-                                      items: doctorList.map((doctor) {
-                                        return DropdownMenuItem<String>(
-                                          value: doctor['uid'],
-                                          child: Text(doctor['username']),
-                                        );
-                                      }).toList(),
-                                    );
-                                  } else {
-                                    return Text('No doctors available');
-                                  }
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              TextField(
-                                controller: _reasonForVisitController,
-                                decoration: InputDecoration(
-                                  labelText: 'Reason for Visit',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              TextField(
-                                controller: _phoneNumberController,
-                                decoration: InputDecoration(
-                                  labelText: 'Phone Number',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              SizedBox(height: 20),
-                              buildDropdown<String>(
-                                hint: 'Select Appointment Type',
-                                value: appointmentType,
-                                items: appointmentTypes,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    appointmentType = newValue;
-                                  });
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              buildDropdown<String>(
-                                hint: 'Select Urgency Level',
-                                value: urgencyLevel,
-                                items: urgencyLevels,
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    urgencyLevel = newValue;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
-
-                    // Time Slot and Actions
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 5,
-                      child: Container(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Available Slots',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.teal,
-                                ),
-                              ),
-                              SizedBox(height: 10),
-                              Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[200],
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Selected Slot:',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    Text(
-                                      selectedDateAndTime,
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.blueGrey,
-                                      ),
-                                    ),
-                                    SizedBox(height: 20),
-                                    Center(
-                                      child: ElevatedButton.icon(
-                                        onPressed: () async {
-                                          if (selectedDoctorUid != null) {
-                                            final result =
-                                                await navigateToDoctorSlots(
-                                                    selectedDoctorUid!);
-
-                                            if (result != null) {
-                                              setState(() {
-                                                selectedDateAndTime =
-                                                    '${result['day']} at ${result['time']}';
-                                              });
-                                            }
-                                          } else {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                    'Please select a doctor first.'),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        icon: Icon(Icons.calendar_today),
-                                        label: Text('Select Time Slot'),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 20),
+                    _buildPatientDetailsCard(patient),
+                    const SizedBox(height: 20),
+                    _buildAppointmentDetailsCard(),
+                    const SizedBox(height: 20),
+                    _buildTimeSlotCard(),
+                    const SizedBox(height: 20),
                     Center(
                       child: ElevatedButton.icon(
                         onPressed: () async {
@@ -387,8 +197,8 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                    content: Text(
-                                        'Error fetching doctor details: $e')),
+                                  content: Text('Error fetching doctor details: $e'),
+                                ),
                               );
                               return;
                             }
@@ -416,29 +226,36 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                                 .add(appointmentData.toJson());
 
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Appointment Booked!')),
+                              const SnackBar(content: Text('Appointment Booked!')),
                             );
                             
-                            // Navigate back to previous page
                             Navigator.pop(context);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text('Please fill in all fields')),
+                              const SnackBar(content: Text('Please fill in all fields')),
                             );
                           }
                         },
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.check_circle_outline,
                           color: Colors.white,
                         ),
-                        label: Text(
+                        label: const Text(
                           'Book Appointment',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 2, 93, 98),
-                          textStyle: TextStyle(fontSize: 18),
+                          backgroundColor: const Color(0xFF1976D2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
@@ -449,11 +266,296 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
           );
         } else {
           return Scaffold(
-            appBar: AppBar(title: Text('Error')),
-            body: Center(child: Text('Unexpected error occurred')),
+            appBar: AppBar(
+              title: const Text(
+                'Error',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              backgroundColor: const Color(0xFF1976D2),
+              foregroundColor: Colors.white,
+              centerTitle: true,
+              toolbarHeight: 70,
+            ),
+            body: const Center(child: Text('Unexpected error occurred')),
           );
         }
       },
+    );
+  }
+
+  Widget _buildPatientDetailsCard(PatientsDb patient) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 5,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Patient Details',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1976D2),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Name: ${patient.username}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            Text(
+              'Email: ${patient.email}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            Text(
+              'Age: ${patient.age}',
+              style: const TextStyle(fontSize: 16),
+            ),
+            Text(
+              'Gender: ${patient.sex}',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppointmentDetailsCard() {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 5,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Appointment Details',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1976D2),
+              ),
+            ),
+            const SizedBox(height: 10),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: fetchDoctors(),
+              builder: (context, doctorSnapshot) {
+                if (doctorSnapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (doctorSnapshot.hasError) {
+                  return const Text('Error fetching doctors');
+                } else if (doctorSnapshot.hasData) {
+                  final doctorList = doctorSnapshot.data!;
+                  return DropdownButton<String>(
+                    hint: const Text(
+                      'Select Doctor',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    value: selectedDoctorUid,
+                    isExpanded: true,
+                    icon: const Icon(
+                      Icons.person,
+                      color: Color(0xFF1976D2),
+                    ),
+                    onChanged: (newValue) {
+                      setState(() {
+                        selectedDoctorUid = newValue;
+                      });
+                    },
+                    items: doctorList.map((doctor) {
+                      return DropdownMenuItem<String>(
+                        value: doctor['uid'],
+                        child: Text(
+                          doctor['username'],
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                } else {
+                  return const Text('No doctors available');
+                }
+              },
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _reasonForVisitController,
+              decoration: InputDecoration(
+                labelText: 'Reason for Visit',
+                labelStyle: const TextStyle(fontSize: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _phoneNumberController,
+              decoration: InputDecoration(
+                labelText: 'Phone Number',
+                labelStyle: const TextStyle(fontSize: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+            buildDropdown<String>(
+              hint: 'Select Appointment Type',
+              value: appointmentType,
+              items: appointmentTypes,
+              onChanged: (newValue) {
+                setState(() {
+                  appointmentType = newValue;
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            buildDropdown<String>(
+              hint: 'Select Urgency Level',
+              value: urgencyLevel,
+              items: urgencyLevels,
+              onChanged: (newValue) {
+                setState(() {
+                  urgencyLevel = newValue;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeSlotCard() {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      elevation: 5,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Available Slots',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1976D2),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Selected Slot:',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    selectedDateAndTime,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        if (selectedDoctorUid != null) {
+                          final result = await navigateToDoctorSlots(selectedDoctorUid!);
+
+                          if (result != null) {
+                            setState(() {
+                              selectedDateAndTime = '${result['day']} at ${result['time']}';
+                            });
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please select a doctor first.'),
+                            ),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.calendar_today),
+                      label: const Text(
+                        'Select Time Slot',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildDropdown<T>({
+    required String hint,
+    required T? value,
+    required List<T> items,
+    required void Function(T?) onChanged,
+  }) {
+    return DropdownButton<T>(
+      hint: Text(
+        hint,
+        style: const TextStyle(fontSize: 16),
+      ),
+      value: value,
+      onChanged: onChanged,
+      isExpanded: true,
+      items: items.map((item) {
+        return DropdownMenuItem<T>(
+          value: item,
+          child: Text(
+            item.toString(),
+            style: const TextStyle(fontSize: 16),
+          ),
+        );
+      }).toList(),
     );
   }
 

@@ -11,9 +11,12 @@ class EditPageHuman extends StatefulWidget {
   _EditPageState createState() => _EditPageState();
 }
 
-class _EditPageState extends State<EditPageHuman> {
+class _EditPageState extends State<EditPageHuman> with SingleTickerProviderStateMixin {
   final User? user = FirebaseAuth.instance.currentUser;
   final _formKey = GlobalKey<FormState>();
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
   // Controllers for TextFormFields
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
@@ -23,6 +26,32 @@ class _EditPageState extends State<EditPageHuman> {
   final TextEditingController _sexController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
+    _animationController.forward();
+
+    if (user != null) {
+      fetchProfile(user!.uid).then((data) {
+        setState(() {
+          _nameController.text = data['name'] ?? '';
+          _usernameController.text = data['username'] ?? '';
+          _bioController.text = data['bio'] ?? '';
+          _bloodgroupController.text = data['bloodgroup'] ?? '';
+          _ageController.text = data['age']?.toString() ?? '';
+          _sexController.text = data['sex'] ?? '';
+        });
+      }).catchError((error) {
+        print('Error fetching profile: $error');
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _usernameController.dispose();
@@ -30,6 +59,7 @@ class _EditPageState extends State<EditPageHuman> {
     _bloodgroupController.dispose();
     _ageController.dispose();
     _sexController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -51,254 +81,415 @@ class _EditPageState extends State<EditPageHuman> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    if (user != null) {
-      fetchProfile(user!.uid).then((data) {
-        setState(() {
-          _nameController.text = data['name'] ?? '';
-          _usernameController.text = data['username'] ?? '';
-          _bioController.text = data['bio'] ?? '';
-          _bloodgroupController.text = data['bloodgroup'] ?? '';
-          _ageController.text = data['age']?.toString() ?? '';
-          _sexController.text = data['sex'] ?? '';
-        });
-      }).catchError((error) {
-        print('Error fetching profile: $error');
-      });
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (user != null) {
-      fetchProfile(user!.uid).then((data) {
-        setState(() {
-          _nameController.text = data['name'] ?? '';
-          _usernameController.text = data['username'] ?? '';
-          _bioController.text = data['bio'] ?? '';
-          _bloodgroupController.text = data['bloodgroup'] ?? '';
-          _ageController.text = data['age']?.toString() ?? '';
-          _sexController.text = data['sex'] ?? '';
-        });
-      }).catchError((error) {
-        print('Error fetching profile: $error');
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        title: Text('Edit Profile'),
+        title: const Text(
+          'Edit Profile',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 2, 93, 98),
+        backgroundColor: const Color(0xFF1976D2),
         foregroundColor: Colors.white,
+        elevation: 0,
+        toolbarHeight: 70,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Profile Header
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 255, 255, 255),
-                  borderRadius: BorderRadius.circular(16.0),
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color.fromARGB(255, 2, 93, 98),
-                      const Color.fromARGB(255, 177, 181, 181)
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: const Color.fromARGB(255, 172, 209, 200),
-                      child: Icon(Icons.person, size: 50, color: Colors.white),
-                    ),
-                    SizedBox(width: 16),
-                    Text(
-                      "Welcome, ${_nameController.text.isEmpty ? 'User' : _nameController.text}",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProfileImageSection(),
+                  const SizedBox(height: 24),
+                  _buildFormSection(),
+                ],
               ),
-              SizedBox(height: 20),
-
-              // Profile Form Fields in Cards
-              _buildFieldCard(
-                title: 'Name',
-                child: TextFormField(
-                  controller: _nameController,
-                  decoration: _inputDecoration('Enter your name'),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Please enter your name'
-                      : null,
-                ),
-              ),
-              _buildFieldCard(
-                title: 'Username',
-                child: TextFormField(
-                  controller: _usernameController,
-                  decoration: _inputDecoration('Enter your username'),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Please enter a username'
-                      : null,
-                ),
-              ),
-              _buildFieldCard(
-                title: 'Age',
-                child: TextFormField(
-                  controller: _ageController,
-                  decoration: _inputDecoration('Enter your age'),
-                  keyboardType: TextInputType.number,
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Please enter your age'
-                      : null,
-                ),
-              ),
-              _buildFieldCard(
-                title: 'Blood Group',
-                child: DropdownButtonFormField<String>(
-                  value: _bloodgroupController.text.isNotEmpty
-                      ? _bloodgroupController.text
-                      : null,
-                  decoration: _inputDecoration('Select your Blood Group'),
-                  items: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-                      .map((bg) => DropdownMenuItem(value: bg, child: Text(bg)))
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) _bloodgroupController.text = value;
-                  },
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Please select your Blood Group'
-                      : null,
-                ),
-              ),
-              _buildFieldCard(
-                title: 'Gender',
-                child: DropdownButtonFormField<String>(
-                  value: _sexController.text.isNotEmpty
-                      ? _sexController.text
-                      : null,
-                  decoration: _inputDecoration('Select your Gender'),
-                  items: ['Male', 'Female']
-                      .map((sex) =>
-                          DropdownMenuItem(value: sex, child: Text(sex)))
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) _sexController.text = value;
-                  },
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Please select your Gender'
-                      : null,
-                ),
-              ),
-              SizedBox(height: 30),
-
-              // Save Button
-              ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState?.validate() ?? false) {
-                    final User? user = FirebaseAuth.instance.currentUser;
-                    if (user != null) {
-                      final patientProfile = PatientsDb(
-                        name: _nameController.text,
-                        username: _usernameController.text,
-                        age: int.tryParse(_ageController.text) ?? 0,
-                        sex: _sexController.text,
-                        email: user.email ?? '',
-                        bloodgroup: _bloodgroupController.text,
-                        uid: user.uid,
-                      );
-
-                      await patientProfile.checkAndSaveProfile();
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Profile saved successfully!')),
-                      );
-
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ViewProfileHumanScreen(),
-                        ),
-                      );
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 2, 93, 98),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 50,
-                    vertical: 15,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  'Save',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFieldCard({required String title, required Widget child}) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black)),
-            SizedBox(height: 10),
-            child,
-          ],
-        ),
+  Widget _buildProfileImageSection() {
+    return Center(
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              CircleAvatar(
+                radius: 60,
+                backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
+                child: Icon(
+                  Icons.person,
+                  size: 60,
+                  color: const Color(0xFF1976D2),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1976D2),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Change Profile Picture',
+            style: TextStyle(
+              color: Color(0xFF1976D2),
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  InputDecoration _inputDecoration(String hintText) {
-    return InputDecoration(
-      hintText: hintText,
-      filled: true,
-      fillColor: const Color.fromARGB(183, 255, 255, 255),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+  Widget _buildFormSection() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildFormField(
+            label: 'Full Name',
+            hint: 'Enter your full name',
+            controller: _nameController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your name';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            label: 'Username',
+            hint: 'Enter your username',
+            controller: _usernameController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a username';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            label: 'Bio',
+            hint: 'Tell something about yourself',
+            controller: _bioController,
+            maxLines: 2,
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            label: 'Age',
+            hint: 'Enter your age',
+            controller: _ageController,
+            keyboardType: TextInputType.number,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your age';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildDropdownField(
+            label: 'Blood Group',
+            value: _bloodgroupController.text.isNotEmpty ? _bloodgroupController.text : null,
+            items: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+            onChanged: (value) {
+              if (value != null) _bloodgroupController.text = value;
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select your Blood Group';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildDropdownField(
+            label: 'Gender',
+            value: _sexController.text.isNotEmpty ? _sexController.text : null,
+            items: ['Male', 'Female'],
+            onChanged: (value) {
+              if (value != null) _sexController.text = value;
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select your Gender';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _saveProfile,
+              icon: const Icon(Icons.save_outlined),
+              label: const Text(
+                'Save Changes',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1976D2),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildFormField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    String? Function(String?)? validator,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+            color: Color(0xFF1976D2),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          validator: validator,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 14,
+            ),
+            filled: true,
+            fillColor: Colors.grey[50],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF1976D2),
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 1,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+          style: const TextStyle(
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String? value,
+    required List<String> items,
+    required void Function(String?) onChanged,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+            color: Color(0xFF1976D2),
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: value,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey[50],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF1976D2),
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 1,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Colors.red,
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+          items: items.map((item) => DropdownMenuItem(
+            value: item,
+            child: Text(item),
+          )).toList(),
+          onChanged: onChanged,
+          validator: validator,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+          dropdownColor: Colors.white,
+          icon: const Icon(
+            Icons.arrow_drop_down,
+            color: Color(0xFF1976D2),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _saveProfile() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      final User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final patientProfile = PatientsDb(
+          name: _nameController.text,
+          username: _usernameController.text,
+          age: int.tryParse(_ageController.text) ?? 0,
+          sex: _sexController.text,
+          email: user.email ?? '',
+          bloodgroup: _bloodgroupController.text,
+          uid: user.uid,
+        );
+
+        await patientProfile.checkAndSaveProfile();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: const [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text('Profile updated successfully!'),
+                ],
+              ),
+              backgroundColor: const Color(0xFF1976D2),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ViewProfileHumanScreen(),
+            ),
+          );
+        }
+      }
+    }
   }
 }

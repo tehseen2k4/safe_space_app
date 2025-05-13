@@ -8,18 +8,24 @@ import 'package:safe_space_app/mobile/pages/petpages/petappointmentbooking.dart'
 import 'package:safe_space_app/mobile/pages/petpages/petdoctordetail.dart';
 
 class Petpatientprofile extends StatefulWidget {
+  const Petpatientprofile({super.key});
+
   @override
   _PetpatientprofileState createState() => _PetpatientprofileState();
 }
 
-class _PetpatientprofileState extends State<Petpatientprofile> {
+class _PetpatientprofileState extends State<Petpatientprofile> with SingleTickerProviderStateMixin {
   final User? user = FirebaseAuth.instance.currentUser;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  int _currentIndex = 0;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
   final double hospitalCardHeight =
       200; // You can change this value to any height you want
   final double hospitalCardWidth = 200; // Set your desired width
   final double doctorCardHeight = 200;
   final double doctorCardWidth = 160;
-
 
   String petName = "Pet Name";
   String age = "**";
@@ -30,16 +36,23 @@ class _PetpatientprofileState extends State<Petpatientprofile> {
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
+    _animationController.forward();
+
     if (user != null) {
       fetchProfileData(user!.uid);
       fetchDoctors();
     }
   }
 
-  Future<void> refreshProfile() async {
-    if (user != null) {
-      await fetchProfileData(user!.uid);
-    }
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchProfileData(String uid) async {
@@ -58,13 +71,12 @@ class _PetpatientprofileState extends State<Petpatientprofile> {
         });
       }
     } catch (e) {
-      // Error fetching profile; default values remain
+      print("Error fetching profile: $e");
     }
   }
 
   Future<void> fetchDoctors() async {
     try {
-      debugPrint('Starting to fetch veterinary doctors...');
       final querySnapshot = await FirebaseFirestore.instance
           .collection('doctors')
           .where('doctorType', isEqualTo: 'Veterinary')
@@ -74,218 +86,548 @@ class _PetpatientprofileState extends State<Petpatientprofile> {
           .map((doc) => doc.data() as Map<String, dynamic>)
           .toList();
 
-      debugPrint('=== Doctor Fetch Results ===');
-      debugPrint('Total doctors fetched: ${fetchedDoctors.length}');
-      for (var doctor in fetchedDoctors) {
-        debugPrint('Doctor Details:');
-        debugPrint('- Name: ${doctor['name']}');
-        debugPrint('- Type: ${doctor['doctorType']}');
-        debugPrint('- Specialization: ${doctor['specialization']}');
-        debugPrint('------------------------');
-      }
-
       setState(() {
         doctorList = fetchedDoctors;
       });
     } catch (e) {
-      debugPrint('Error fetching doctors: $e');
+      print('Error fetching doctors: $e');
+    }
+  }
+
+  void _onBottomNavTap(int index) async {
+    if (index == 3) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ViewProfileScreen(),
+        ),
+      );
+      if (user != null) {
+        fetchProfileData(user!.uid);
+      }
+      setState(() {
+        _currentIndex = 0;
+      });
+    } else if (index == 1) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PetAppointmentsListPage(),
+        ),
+      );
+      setState(() {
+        _currentIndex = 0;
+      });
+    } else {
+      setState(() {
+        _currentIndex = index;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white, // Background color
-      appBar: AppBar(
-        title: Text('SAFE-SPACE'),
-        centerTitle: true,
-        backgroundColor:
-            const Color.fromARGB(255, 225, 118, 82), // Teal color theme
-        foregroundColor: Colors.white,
-        elevation: 1,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey[300],
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: CircleAvatar(
-                          radius: 15,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.add,
-                            size: 20,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        petName,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text('Age: $age'),
-                      Text('Sex: $sex'),
-                    ],
-                  ),
-                ],
-              ),
+    return WillPopScope(
+      onWillPop: () async {
+        bool? shouldLogout = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            Divider(thickness: 1),
-            GridView.count(
-              padding: const EdgeInsets.all(16.0),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+            titlePadding: const EdgeInsets.only(top: 24),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            actionsPadding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
+            title: Column(
               children: [
-                _buildCard(
-                  title: 'Online Consultations',
-                  icon: Icons.video_call,
-                  onTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(builder: (context) => OnlineConsultationPage()),
-                    // );
-                  },
+                CircleAvatar(
+                  backgroundColor: const Color(0xFFE17652).withOpacity(0.1),
+                  radius: 28,
+                  child: const Icon(Icons.logout, color: Color(0xFFE17652), size: 32),
                 ),
-                _buildCard(
-                  title: 'Book Appointment',
-                  icon: Icons.local_hospital,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => BookAppointmentPetPage()),
-                    );
-                  },
+                const SizedBox(height: 16),
+                const Text(
+                  'Logout Confirmation',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: Color(0xFFE17652),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
-            SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            content: const Text(
+              'Are you sure you want to log out?',
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Row(
                 children: [
-                  Text(
-                    'Doctors',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFE17652),
+                        side: const BorderSide(color: Color(0xFFE17652)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PetDoctorDetail(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE17652),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      );
-                    },
-                    child: Text(
-                      'View all',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: const Color.fromARGB(255, 225, 118, 82),
                       ),
+                      onPressed: () async {
+                        await _auth.signOut();
+                        Navigator.of(context).pop(true);
+                      },
+                      child: const Text('Logout'),
                     ),
                   ),
                 ],
               ),
+            ],
+          ),
+        );
+        return shouldLogout ?? false;
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F6FA),
+        appBar: AppBar(
+          title: const Text(
+            'SAFE-SPACE',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
             ),
-            SizedBox(height: 8),
-            Container(
-              height: doctorCardHeight,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: doctorList.length,
-                itemBuilder: (context, index) {
-                  final doctor = doctorList[index];
-                  if (doctor['doctorType'].toString().toLowerCase() == 'veterinary') {
-                    return _buildDoctorCard(
-                      name: doctor['name'] ?? 'Unknown',
-                      specialty: doctor['specialization'] ?? 'Specialty Not Available',
-                      experience: doctor['experience'] ?? '0',
-                      height: doctorCardHeight,
-                      width: doctorCardWidth,
-                    );
-                  }
-                  return SizedBox.shrink(); // Return empty widget for non-veterinary doctors
-                },
+          ),
+          centerTitle: true,
+          elevation: 0,
+          backgroundColor: const Color(0xFFE17652),
+          foregroundColor: Colors.white,
+          toolbarHeight: 70,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.notifications),
+              onPressed: () {
+                // TODO: Implement notifications
+              },
+            ),
+          ],
+        ),
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProfileSection(),
+                  const SizedBox(height: 24),
+                  _buildQuickActionsSection(),
+                  const SizedBox(height: 24),
+                  _buildDoctorsSection(),
+                  const SizedBox(height: 24),
+                  _buildHospitalsSection(),
+                ],
               ),
             ),
-            SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Hospitals',
-                  style: TextStyle(
-                    fontSize: 18,
+          ),
+        ),
+        bottomNavigationBar: _buildBottomNavigationBar(),
+      ),
+    );
+  }
+
+  Widget _buildProfileSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: 100,
+            width: 100,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: const DecorationImage(
+                image: NetworkImage('https://placekitten.com/200/200'),
+                fit: BoxFit.cover,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  petName,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
+                    fontSize: 22,
                   ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Age: $age',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Sex: $sex',
+                  style: const TextStyle(
+                    color: Color(0xFFE17652),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Quick Actions',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          children: [
+            _buildActionCard(
+              'Book Appointment',
+              Icons.calendar_today,
+              const Color(0xFFE17652),
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => BookAppointmentPetPage()),
+                );
+              },
+            ),
+            _buildActionCard(
+              'Online Consultation',
+              Icons.video_call,
+              Colors.blue,
+              () {
+                // TODO: Implement online consultation
+              },
+            ),
+            _buildActionCard(
+              'Medical Records',
+              Icons.medical_services,
+              Colors.purple,
+              () {
+                // TODO: Implement medical records
+              },
+            ),
+            _buildActionCard(
+              'Emergency',
+              Icons.emergency,
+              Colors.red,
+              () {
+                // TODO: Implement emergency
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 32, color: color),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDoctorsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Available Veterinarians',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PetDoctorDetail()),
+                );
+              },
+              child: const Text(
+                'View All',
+                style: TextStyle(
+                  color: Color(0xFFE17652),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            SizedBox(height: 8),
-            Container(
-              height: hospitalCardHeight,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: 10,
-                itemBuilder: (context, index) {
-                  return _buildHospitalCard(
-                    'Hospital ${index + 1}',
-                    height: hospitalCardHeight,
-                    width: 150,
-                  );
-                },
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: doctorList.length,
+            itemBuilder: (context, index) {
+              final doctor = doctorList[index];
+              return _buildDoctorCard(
+                name: doctor['name'] ?? 'Unknown',
+                specialty: doctor['specialization'] ?? 'Specialty Not Available',
+                experience: doctor['experience'] ?? '0',
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDoctorCard({
+    required String name,
+    required String specialty,
+    required String experience,
+  }) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: const Color(0xFFE17652).withOpacity(0.1),
+              child: const Icon(Icons.person, color: Color(0xFFE17652), size: 30),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              name,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              specialty,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '$experience Years Experience',
+              style: const TextStyle(
+                color: Color(0xFFE17652),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0, // Highlight the current tab (Home as default)
-        onTap: (index) {
-          if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ViewProfileScreen()),
-            ).then((_) => refreshProfile());
-          } else if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => PetAppointmentsListPage()),
-            );
-          }
-        },
-        items: [
+    );
+  }
+
+  Widget _buildHospitalsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Nearby Veterinary Hospitals',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 200,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: 5,
+            itemBuilder: (context, index) {
+              return _buildHospitalCard('Vet Hospital ${index + 1}');
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHospitalCard(String name) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 100,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE17652).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.local_hospital,
+                  size: 40,
+                  color: Color(0xFFE17652),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              name,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '24/7 Emergency Care',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: const Color(0xFFE17652),
+        unselectedItemColor: Colors.grey,
+        currentIndex: _currentIndex,
+        onTap: _onBottomNavTap,
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
@@ -300,125 +642,9 @@ class _PetpatientprofileState extends State<Petpatientprofile> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.menu),
-            label: 'Menu',
+            label: 'More',
           ),
         ],
-        selectedItemColor:
-            const Color.fromARGB(255, 225, 118, 82), // Teal color theme
-        unselectedItemColor: Colors.grey,
-      ),
-    );
-  }
-
-  Widget _buildCard(
-      {required String title,
-      required IconData icon,
-      required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 2,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon,
-                size: 40, color: const Color.fromARGB(255, 225, 118, 82)),
-            SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHospitalCard(String hospitalName,
-      {required double height, required double width}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 2,
-        child: Container(
-          height: height,
-          width: width,
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.local_hospital,
-                size: 40,
-                color: const Color.fromARGB(255, 225, 118, 82),
-              ),
-              SizedBox(height: 8),
-              Text(
-                hospitalName,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
-  Widget _buildDoctorCard({
-    required String name,
-    required String specialty,
-    required String experience,
-    required double height,
-    required double width,
-  }) {
-    return Card(
-      margin: EdgeInsets.all(13),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      elevation: 4,
-      child: Container(
-        width: width,
-        height: height,
-        padding: EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.person,
-                size: 40,
-                color:
-                    const Color.fromARGB(255, 225, 118, 82)), // Teal color theme
-            SizedBox(height: 8),
-            Text(
-              name,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            Text(
-              specialty,
-              style: TextStyle(color: Colors.grey),
-            ),
-            SizedBox(height: 8),
-            Text(
-              '$experience Years Experience',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
-        ),
       ),
     );
   }
