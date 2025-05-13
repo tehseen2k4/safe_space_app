@@ -3,6 +3,8 @@ import 'package:safe_space_app/services/auth_service.dart';
 import 'package:safe_space_app/models/users_db.dart';
 import 'package:safe_space_app/web/pages/doctor/doctor_dashboard.dart';
 import 'dart:developer' as developer;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class DoctorAuthPage extends StatefulWidget {
   const DoctorAuthPage({Key? key}) : super(key: key);
@@ -19,6 +21,31 @@ class _DoctorAuthPageState extends State<DoctorAuthPage> {
   final _passwordController = TextEditingController();
   final _usernameController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _verifyFirebaseConfig();
+  }
+
+  Future<void> _verifyFirebaseConfig() async {
+    try {
+      developer.log("=== Verifying Firebase Configuration ===");
+      final app = Firebase.app();
+      developer.log("Firebase app name: ${app.name}");
+      developer.log("Firebase options: ${app.options}");
+      
+      // Check if auth is initialized
+      final auth = FirebaseAuth.instance;
+      developer.log("Firebase Auth instance: ${auth.app.name}");
+      
+      // Check current user
+      final currentUser = auth.currentUser;
+      developer.log("Current user: ${currentUser?.email ?? 'none'}");
+    } catch (e) {
+      developer.log("Firebase configuration error: $e");
+    }
+  }
 
   @override
   void dispose() {
@@ -70,35 +97,74 @@ class _DoctorAuthPageState extends State<DoctorAuthPage> {
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       try {
+        developer.log("=== Web Login Attempt ===");
+        developer.log("Email: ${_emailController.text}");
+        developer.log("Password length: ${_passwordController.text.length}");
+        
         final user = await _auth.loginUserWithEmailAndPassword(
             _emailController.text, _passwordController.text);
+        
+        developer.log("Login response received: ${user?.email ?? 'null'}");
+        developer.log("User UID: ${user?.uid ?? 'null'}");
+        
         if (user != null) {
           developer.log("User logged in successfully: ${user.email}");
+          developer.log("Fetching user type for UID: ${user.uid}");
+          
           final userType = await UsersDb.getUserTypeByUid(user.uid);
+          developer.log("User type received: $userType");
+          
           if (userType == 'doctor') {
+            developer.log("User type verified as doctor");
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Doctor Login Successful!')),
             );
             // Navigate to doctor dashboard
             if (mounted) {
+              developer.log("Navigating to doctor dashboard");
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const DoctorDashboard()),
               );
             }
           } else {
+            developer.log("Login failed: Invalid user type - $userType");
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Login failed. Invalid UserType.')),
             );
           }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User login failed. Please try again.')),
-          );
         }
+      } on FirebaseAuthException catch (e) {
+        developer.log("=== Firebase Auth Error ===");
+        developer.log("Error Code: ${e.code}");
+        developer.log("Error Message: ${e.message}");
+        developer.log("Stack Trace: ${e.stackTrace}");
+        
+        String message;
+        switch (e.code) {
+          case 'user-not-found':
+            message = 'No user found with this email.';
+            break;
+          case 'wrong-password':
+            message = 'Wrong password provided.';
+            break;
+          case 'invalid-email':
+            message = 'The email address is not valid.';
+            break;
+          case 'user-disabled':
+            message = 'This user has been disabled.';
+            break;
+          default:
+            message = 'An error occurred during login: ${e.message}';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
       } catch (e, stacktrace) {
-        developer.log("Error during login: $e", stackTrace: stacktrace);
-        _showErrorDialog("An error occurred during login. Please try again.");
+        developer.log("=== General Error ===");
+        developer.log("Error: $e");
+        developer.log("Stack Trace: $stacktrace");
+        _showErrorDialog("An error occurred during login: $e");
       }
     }
   }

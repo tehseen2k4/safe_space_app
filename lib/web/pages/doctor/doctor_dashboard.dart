@@ -5,6 +5,8 @@ import 'package:safe_space_app/models/humanappointment_db.dart';
 import 'package:safe_space_app/models/petappointment_db.dart';
 import 'package:safe_space_app/web/pages/doctor/doctor_profile_page.dart';
 import 'myappointmentsdoctorpage.dart';
+import 'package:safe_space_app/web/pages/auth/auth_selection_page.dart';
+import 'package:safe_space_app/models/users_db.dart';
 
 class DoctorDashboard extends StatefulWidget {
   const DoctorDashboard({Key? key}) : super(key: key);
@@ -24,39 +26,88 @@ class _DoctorDashboardState extends State<DoctorDashboard> {
   @override
   void initState() {
     super.initState();
-    _loadMockData();
+    _checkAuthState();
   }
 
-  void _loadMockData() {
-    // Simulate network delay
-    Future.delayed(const Duration(seconds: 1), () {
+  Future<void> _checkAuthState() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AuthSelectionPage(),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Check if user is a doctor
+    final userType = await UsersDb.getUserTypeByUid(user.uid);
+    if (userType != 'doctor') {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Access denied. Doctor account required.')),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AuthSelectionPage(),
+          ),
+        );
+      }
+      return;
+    }
+
+    _loadDoctorData();
+  }
+
+  Future<void> _loadDoctorData() async {
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final docSnapshot = await _firestore.collection('users').doc(user.uid).get();
+        if (docSnapshot.exists) {
+          setState(() {
+            _doctorData = docSnapshot.data();
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Doctor profile not found')),
+          );
+        }
+      }
+    } catch (e) {
       setState(() {
-        _doctorData = {
-          'name': 'John Smith',
-          'email': 'john.smith@example.com',
-          'phone': '+1 (555) 123-4567',
-          'dob': '1985-05-15',
-          'gender': 'Male',
-          'clinicName': 'Safe Space Medical Center',
-          'address': '123 Medical Plaza',
-          'city': 'New York',
-          'state': 'NY',
-          'pincode': '10001',
-          'specialization': 'General Medicine',
-          'qualification': 'MBBS, MD',
-          'experience': '10',
-          'licenseNumber': 'MD123456',
-          'registrationNumber': 'REG789012',
-          'bio': 'Dr. John Smith is a highly experienced general physician with over 10 years of practice. He specializes in preventive care and chronic disease management. His approach focuses on building long-term relationships with patients and providing comprehensive healthcare solutions.',
-        };
         _isLoading = false;
       });
-    });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading doctor data: $e')),
+      );
+    }
   }
 
-  void _handleLogout() {
-    // TODO: Implement logout functionality
-    print('Logout clicked');
+  void _handleLogout() async {
+    try {
+      await _auth.signOut();
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AuthSelectionPage(),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error signing out: $e')),
+      );
+    }
   }
 
   @override

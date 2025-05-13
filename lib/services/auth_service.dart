@@ -26,14 +26,35 @@ class AuthService {
           email: email, password: password);
       return cred.user;
     } catch (e) {
-      log("Something went wrong: $e"); // Use 'developer.log' explicitly
-      return null; // Add return statement to handle nullable return type
+      log("Login error: $e");
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case 'user-not-found':
+            log('No user found for that email.');
+            break;
+          case 'wrong-password':
+            log('Wrong password provided.');
+            break;
+          case 'invalid-email':
+            log('The email address is not valid.');
+            break;
+          case 'user-disabled':
+            log('This user has been disabled.');
+            break;
+          default:
+            log('Unknown error: ${e.code}');
+        }
+      }
+      rethrow; // Rethrow to handle in the UI
     }
   }
 
   Future<void> signout() async {
-    try {} catch (e) {
+    try {
       await _auth.signOut();
+    } catch (e) {
+      log("Error during signout: $e");
+      rethrow;
     }
   }
 }

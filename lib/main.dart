@@ -13,12 +13,12 @@ void main() async {
   if (kIsWeb) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID",
+        apiKey: "AIzaSyD4_qs2Q_Q0KJxcZMuHwjF-xcaozcAXDKI",
+        authDomain: "safe-space-app-ceef4.firebaseapp.com",
+        projectId: "safe-space-app-ceef4",
+        storageBucket: "safe-space-app-ceef4.appspot.com",
+        messagingSenderId: "857512628788",
+        appId: "1:857512628788:web:b09ce361ffcfec644ff061",
       ),
     );
   } else {
