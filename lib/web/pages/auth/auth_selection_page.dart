@@ -282,4 +282,4 @@ class _AuthSelectionPageState extends State<AuthSelectionPage> with SingleTicker
       ),
     );
   }
-} 
+}

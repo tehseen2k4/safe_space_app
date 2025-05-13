@@ -14,45 +14,15 @@ class WebLayout extends StatefulWidget {
   State<WebLayout> createState() => _WebLayoutState();
 }
 
-class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMixin {
+class _WebLayoutState extends State<WebLayout> {
   int _selectedIndex = 0;
-  bool _isSidebarExpanded = true;
-  bool _isSidebarVisible = true;
   bool _isAuthenticated = false;
-  late AnimationController _animationController;
-  late Animation<double> _animation;
   final TextEditingController _searchController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _animation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
-  }
-
-  @override
   void dispose() {
-    _animationController.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _toggleSidebar() {
-    setState(() {
-      _isSidebarVisible = !_isSidebarVisible;
-      if (_isSidebarVisible) {
-        _isSidebarExpanded = true;
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    });
   }
 
   void _handleAuthentication() {
@@ -64,108 +34,140 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
+      body: Column(
         children: [
-          // Modern Sidebar
-          AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              return Container(
-                width: _isSidebarVisible
-                    ? (_isSidebarExpanded ? 280 : 80) * _animation.value
-                    : 0,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 0),
-                    ),
-                  ],
+          // Top Navigation Bar
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
-                child: child,
-              );
-            },
+              ],
+            ),
             child: Column(
               children: [
-                // Logo and Title Section
+                // Top Bar with Logo and Actions
                 Container(
-                  padding: const EdgeInsets.all(24.0),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2196F3).withOpacity(0.1),
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   child: Row(
                     children: [
-                      const Icon(
-                        Icons.health_and_safety,
-                        color: Color(0xFF2196F3),
-                        size: 32,
+                      // Logo and Title
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Colors.teal,
+                                  Colors.teal.withOpacity(0.8),
+                                ],
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.teal.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.health_and_safety,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Safe Space',
+                                style: TextStyle(
+                                  color: Colors.teal,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Healthcare',
+                                style: TextStyle(
+                                  color: Colors.teal,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      if (_isSidebarExpanded) ...[
-                        const SizedBox(width: 12),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Safe Space',
-                              style: TextStyle(
-                                color: Color(0xFF2196F3),
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
+                      const SizedBox(width: 32),
+                      // Search Bar
+                      Expanded(
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[50],
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.teal.withOpacity(0.2),
+                              width: 1,
                             ),
-                            Text(
-                              'Healthcare',
-                              style: TextStyle(
-                                color: Color(0xFF2196F3),
-                                fontSize: 16,
-                              ),
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Search...',
+                              hintStyle: TextStyle(color: Colors.grey[400]),
+                              prefixIcon: const Icon(Icons.search, color: Colors.teal, size: 20),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(vertical: 8),
                             ),
-                          ],
+                          ),
                         ),
+                      ),
+                      const SizedBox(width: 24),
+                      // Quick Actions
+                      if (_isAuthenticated) ...[
+                        _buildActionButton(
+                          icon: Icons.notifications,
+                          badge: '3',
+                          onTap: () {},
+                        ),
+                        _buildActionButton(
+                          icon: Icons.help_outline,
+                          onTap: () {},
+                        ),
+                        const SizedBox(width: 16),
+                        _buildProfileButton(),
+                      ] else ...[
+                        _buildAuthButton('Sign In', true),
+                        const SizedBox(width: 12),
+                        _buildAuthButton('Sign Up', false),
                       ],
                     ],
                   ),
                 ),
-                // Search Bar
-                if (_isSidebarExpanded)
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Search...',
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide.none,
+                // Navigation Menu
+                if (_isAuthenticated)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: Colors.grey[200]!,
+                          width: 1,
                         ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
                       ),
                     ),
-                  ),
-                // Navigation Items
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    children: [
-                      if (!_isAuthenticated) ...[
-                        _buildNavItem(
-                          icon: Icons.login,
-                          title: 'Sign In',
-                          index: -1,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const AuthSelectionPage(),
-                              ),
-                            );
-                          },
-                        ),
-                      ] else ...[
+                    child: Row(
+                      children: [
                         _buildNavItem(
                           icon: Icons.dashboard,
                           title: 'Dashboard',
@@ -196,12 +198,12 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
                           title: 'Community',
                           index: 5,
                         ),
+                        const Spacer(),
                         _buildNavItem(
                           icon: Icons.person,
                           title: 'Profile',
                           index: 6,
                         ),
-                        const Divider(height: 32),
                         _buildNavItem(
                           icon: Icons.settings,
                           title: 'Settings',
@@ -219,113 +221,16 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
                           onTap: _handleAuthentication,
                         ),
                       ],
-                    ],
-                  ),
-                ),
-                // Toggle Button
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: IconButton(
-                    icon: Icon(
-                      _isSidebarExpanded ? Icons.chevron_left : Icons.chevron_right,
-                      color: const Color(0xFF2196F3),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _isSidebarExpanded = !_isSidebarExpanded;
-                      });
-                    },
                   ),
-                ),
               ],
             ),
           ),
           // Main Content
           Expanded(
-            child: Stack(
-              children: [
-                Container(
-                  color: Colors.grey[50],
-                  child: widget.child,
-                ),
-                // Top Bar
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        // Sidebar Toggle Button
-                        IconButton(
-                          icon: Icon(
-                            _isSidebarVisible ? Icons.menu_open : Icons.menu,
-                            color: const Color(0xFF2196F3),
-                          ),
-                          onPressed: _toggleSidebar,
-                        ),
-                        const SizedBox(width: 16),
-                        // Breadcrumb
-                        if (_isAuthenticated)
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Dashboard',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                if (_selectedIndex > 0) ...[
-                                  const Icon(Icons.chevron_right, size: 16),
-                                  Text(
-                                    _getPageTitle(_selectedIndex),
-                                    style: const TextStyle(
-                                      color: Color(0xFF2196F3),
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        // Quick Actions
-                        if (_isAuthenticated)
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.notifications),
-                                onPressed: () {},
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.help_outline),
-                                onPressed: () {},
-                              ),
-                              const SizedBox(width: 16),
-                              CircleAvatar(
-                                backgroundColor: Colors.grey[200],
-                                child: const Icon(Icons.person),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            child: Container(
+              color: Colors.grey[50],
+              child: widget.child,
             ),
           ),
         ],
@@ -333,29 +238,92 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
     );
   }
 
-  String _getPageTitle(int index) {
-    switch (index) {
-      case 0:
-        return 'Dashboard';
-      case 1:
-        return 'Appointments';
-      case 2:
-        return 'Services';
-      case 3:
-        return 'Doctors';
-      case 4:
-        return 'Chat';
-      case 5:
-        return 'Community';
-      case 6:
-        return 'Profile';
-      case 7:
-        return 'Settings';
-      case 8:
-        return 'Help';
-      default:
-        return '';
-    }
+  Widget _buildAuthButton(String text, bool isPrimary) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AuthSelectionPage(),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          decoration: BoxDecoration(
+            color: isPrimary ? Colors.teal : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.teal,
+              width: 1,
+            ),
+          ),
+          child: Text(
+            text,
+            style: TextStyle(
+              color: isPrimary ? Colors.white : Colors.teal,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    String? badge,
+    required VoidCallback onTap,
+  }) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.teal.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            icon: Icon(icon, color: Colors.teal, size: 20),
+            onPressed: onTap,
+          ),
+        ),
+        if (badge != null)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                badge,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildProfileButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.teal.withOpacity(0.1),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: const Icon(Icons.person, color: Colors.teal, size: 20),
+        onPressed: () {},
+      ),
+    );
   }
 
   Widget _buildNavItem({
@@ -365,27 +333,40 @@ class _WebLayoutState extends State<WebLayout> with SingleTickerProviderStateMix
     VoidCallback? onTap,
   }) {
     final isSelected = _selectedIndex == index;
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isSelected ? const Color(0xFF2196F3) : Colors.grey[600],
-      ),
-      title: _isSidebarExpanded
-          ? Text(
-              title,
-              style: TextStyle(
-                color: isSelected ? const Color(0xFF2196F3) : Colors.grey[600],
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap ?? () {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.teal.withOpacity(0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? Colors.teal : Colors.grey[600],
               ),
-            )
-          : null,
-      selected: isSelected,
-      onTap: onTap ?? () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      hoverColor: const Color(0xFF2196F3).withOpacity(0.1),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  color: isSelected ? Colors.teal : Colors.grey[600],
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
-} 
+}

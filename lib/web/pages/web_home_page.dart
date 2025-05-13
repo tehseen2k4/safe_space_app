@@ -1,19 +1,55 @@
 import 'package:flutter/material.dart';
 import 'auth/auth_selection_page.dart';
 
-class WebHomePage extends StatelessWidget {
+class WebHomePage extends StatefulWidget {
   const WebHomePage({Key? key}) : super(key: key);
+
+  @override
+  State<WebHomePage> createState() => _WebHomePageState();
+}
+
+class _WebHomePageState extends State<WebHomePage> with SingleTickerProviderStateMixin {
+  late ScrollController _scrollController;
+  bool _isScrolled = false;
+  final List<Map<String, dynamic>> _stats = [
+    {'value': '50+', 'label': 'Expert Doctors', 'icon': Icons.people},
+    {'value': '10k+', 'label': 'Happy Patients', 'icon': Icons.favorite},
+    {'value': '24/7', 'label': 'Medical Support', 'icon': Icons.support_agent},
+    {'value': '15+', 'label': 'Years Experience', 'icon': Icons.work},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.offset > 50 && !_isScrolled) {
+      setState(() => _isScrolled = true);
+    } else if (_scrollController.offset <= 50 && _isScrolled) {
+      setState(() => _isScrolled = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           children: [
-            // Hero Section
+            // Hero Section with Parallax Effect
             Container(
-              height: 600,
+              height: 700,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -24,182 +60,221 @@ class WebHomePage extends StatelessWidget {
                   ],
                 ),
               ),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Welcome to Safe Space',
-                        style: TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.teal,
-                        ),
+              child: Stack(
+                children: [
+                  // Background Pattern
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: 0.1,
+                      child: CustomPaint(
+                        painter: PatternPainter(),
                       ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Your trusted healthcare companion for mental and physical well-being',
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 48),
-                      Row(
+                    ),
+                  ),
+                  // Content
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const AuthSelectionPage(),
+                          // Logo Animation
+                          TweenAnimationBuilder(
+                            tween: Tween<double>(begin: 0, end: 1),
+                            duration: const Duration(seconds: 1),
+                            builder: (context, double value, child) {
+                              return Transform.scale(
+                                scale: value,
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Colors.teal,
+                                        Colors.teal.withOpacity(0.8),
+                                      ],
+                                    ),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.teal.withOpacity(0.3),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.health_and_safety,
+                                    color: Colors.white,
+                                    size: 60,
+                                  ),
                                 ),
                               );
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.teal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 48,
-                                vertical: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          // Title with Fade Animation
+                          AnimatedOpacity(
+                            duration: const Duration(milliseconds: 500),
+                            opacity: _isScrolled ? 0.0 : 1.0,
                             child: const Text(
-                              'Sign In',
+                              'Welcome to Safe Space',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 56,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Colors.teal,
+                                letterSpacing: 1.2,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          OutlinedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const AuthSelectionPage(),
-                                ),
-                              );
-                            },
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 48,
-                                vertical: 16,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              side: const BorderSide(
-                                color: Colors.teal,
-                                width: 2,
-                              ),
-                            ),
+                          const SizedBox(height: 24),
+                          // Subtitle with Slide Animation
+                          AnimatedOpacity(
+                            duration: const Duration(milliseconds: 500),
+                            opacity: _isScrolled ? 0.0 : 1.0,
                             child: const Text(
-                              'Sign Up',
+                              'Your trusted healthcare companion for mental and physical well-being',
                               style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.teal,
+                                fontSize: 24,
+                                color: Colors.black87,
+                                height: 1.5,
                               ),
+                              textAlign: TextAlign.center,
                             ),
+                          ),
+                          const SizedBox(height: 48),
+                          // Action Buttons
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildAnimatedButton(
+                                'Get Started',
+                                Colors.teal,
+                                true,
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const AuthSelectionPage(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 24),
+                              _buildAnimatedButton(
+                                'Learn More',
+                                Colors.teal,
+                                false,
+                                () {},
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
+                ],
+              ),
+            ),
+
+            // Stats Section
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 80),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, -10),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _stats.map((stat) => _buildStatCard(stat)).toList(),
+              ),
+            ),
+
+            // Services Section with Cards
+            _buildSection(
+              'Our Services',
+              'Comprehensive healthcare solutions for your well-being',
+              [
+                _buildServiceCard(
+                  icon: Icons.medical_services,
+                  title: 'Medical Services',
+                  description: 'Access to qualified healthcare professionals',
+                  features: [
+                    'Online Consultations',
+                    'Prescription Management',
+                    'Health Records',
+                    'Emergency Support',
+                  ],
                 ),
-              ),
+                _buildServiceCard(
+                  icon: Icons.psychology,
+                  title: 'Mental Health',
+                  description: 'Professional counseling and therapy services',
+                  features: [
+                    'Virtual Therapy Sessions',
+                    'Support Groups',
+                    'Wellness Programs',
+                    'Stress Management',
+                  ],
+                ),
+                _buildServiceCard(
+                  icon: Icons.people,
+                  title: 'Community Support',
+                  description: 'Connect with others in a safe environment',
+                  features: [
+                    'Peer Support',
+                    'Discussion Forums',
+                    'Resource Sharing',
+                    'Success Stories',
+                  ],
+                ),
+              ],
             ),
 
-            // Services Section
-            Padding(
-              padding: const EdgeInsets.all(48.0),
-              child: Column(
-                children: [
-                  const Text(
-                    'Our Services',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildServiceCard(
-                        icon: Icons.medical_services,
-                        title: 'Medical Services',
-                        description: 'Access to qualified healthcare professionals',
-                      ),
-                      _buildServiceCard(
-                        icon: Icons.psychology,
-                        title: 'Mental Health',
-                        description: 'Professional counseling and therapy services',
-                      ),
-                      _buildServiceCard(
-                        icon: Icons.people,
-                        title: 'Community Support',
-                        description: 'Connect with others in a safe environment',
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            // Featured Doctors Section
+            _buildSection(
+              'Our Expert Doctors',
+              'Meet our team of experienced healthcare professionals',
+              [
+                _buildDoctorCard(
+                  name: 'Dr. Sarah Johnson',
+                  specialty: 'Psychiatrist',
+                  imageUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                  rating: 4.9,
+                  experience: '15 years',
+                  availability: 'Mon-Fri, 9AM-5PM',
+                ),
+                _buildDoctorCard(
+                  name: 'Dr. Michael Chen',
+                  specialty: 'General Physician',
+                  imageUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                  rating: 4.8,
+                  experience: '12 years',
+                  availability: 'Mon-Sat, 8AM-6PM',
+                ),
+                _buildDoctorCard(
+                  name: 'Dr. Emily Brown',
+                  specialty: 'Therapist',
+                  imageUrl: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                  rating: 4.7,
+                  experience: '10 years',
+                  availability: 'Mon-Fri, 10AM-7PM',
+                ),
+              ],
             ),
 
-            // Doctors Section
+            // Testimonials Section with Carousel
             Container(
-              padding: const EdgeInsets.all(48.0),
+              padding: const EdgeInsets.symmetric(vertical: 80),
               color: Colors.grey[50],
-              child: Column(
-                children: [
-                  const Text(
-                    'Our Doctors',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal,
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildDoctorCard(
-                        name: 'Dr. Sarah Johnson',
-                        specialty: 'Psychiatrist',
-                        imageUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                      ),
-                      _buildDoctorCard(
-                        name: 'Dr. Michael Chen',
-                        specialty: 'General Physician',
-                        imageUrl: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                      ),
-                      _buildDoctorCard(
-                        name: 'Dr. Emily Brown',
-                        specialty: 'Therapist',
-                        imageUrl: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Testimonials Section
-            Container(
-              padding: const EdgeInsets.all(48.0),
-              color: Colors.white,
               child: Column(
                 children: [
                   const Text(
@@ -210,35 +285,61 @@ class WebHomePage extends StatelessWidget {
                       color: Colors.teal,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Real experiences from our valued patients',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey[600],
+                    ),
+                  ),
                   const SizedBox(height: 48),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildTestimonialCard(
-                        name: 'John Doe',
-                        role: 'Patient',
-                        testimonial: 'Safe Space has been a game-changer for my mental health journey.',
-                      ),
-                      _buildTestimonialCard(
-                        name: 'Jane Smith',
-                        role: 'Patient',
-                        testimonial: 'The community support here is incredible. I\'ve never felt more understood.',
-                      ),
-                      _buildTestimonialCard(
-                        name: 'Mike Johnson',
-                        role: 'Patient',
-                        testimonial: 'Professional and caring doctors. Highly recommended!',
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        _buildTestimonialCard(
+                          name: 'John Doe',
+                          role: 'Patient',
+                          testimonial: 'Safe Space has been a game-changer for my mental health journey. The support and care I\'ve received are exceptional.',
+                          rating: 5,
+                          imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                        ),
+                        _buildTestimonialCard(
+                          name: 'Jane Smith',
+                          role: 'Patient',
+                          testimonial: 'The community support here is incredible. I\'ve never felt more understood and supported in my healthcare journey.',
+                          rating: 5,
+                          imageUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                        ),
+                        _buildTestimonialCard(
+                          name: 'Mike Johnson',
+                          role: 'Patient',
+                          testimonial: 'Professional and caring doctors. The online consultation feature is a lifesaver for busy professionals like me.',
+                          rating: 5,
+                          imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
 
-            // Contact Section
+            // Contact Section with Map
             Container(
-              padding: const EdgeInsets.all(48.0),
-              color: Colors.teal,
+              padding: const EdgeInsets.all(80.0),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.teal,
+                    Colors.teal.withOpacity(0.8),
+                  ],
+                ),
+              ),
               child: Column(
                 children: [
                   const Text(
@@ -249,6 +350,14 @@ class WebHomePage extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'We\'re here to help and answer any questions you might have',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
                   const SizedBox(height: 48),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -257,18 +366,86 @@ class WebHomePage extends StatelessWidget {
                         icon: Icons.email,
                         title: 'Email',
                         content: 'support@safespace.com',
+                        onTap: () {},
                       ),
                       _buildContactInfo(
                         icon: Icons.phone,
                         title: 'Phone',
                         content: '+1 (555) 123-4567',
+                        onTap: () {},
                       ),
                       _buildContactInfo(
                         icon: Icons.location_on,
                         title: 'Address',
                         content: '123 Healthcare Street, Medical City, MC 12345',
+                        onTap: () {},
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 48),
+                  // Newsletter Subscription
+                  Container(
+                    width: 600,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Subscribe to Our Newsletter',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.teal,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Stay updated with the latest healthcare news and tips',
+                          style: TextStyle(
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  hintText: 'Enter your email',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.grey[100],
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            _buildAnimatedButton(
+                              'Subscribe',
+                              Colors.teal,
+                              true,
+                              () {},
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -279,20 +456,16 @@ class WebHomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildServiceCard({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
+  Widget _buildStatCard(Map<String, dynamic> stat) {
     return Container(
-      width: 300,
-      padding: const EdgeInsets.all(24.0),
+      width: 200,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -301,26 +474,206 @@ class WebHomePage extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            icon,
+            stat['icon'] as IconData,
             size: 48,
             color: Colors.teal,
           ),
           const SizedBox(height: 16),
           Text(
-            title,
+            stat['value'] as String,
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 36,
               fontWeight: FontWeight.bold,
+              color: Colors.teal,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            description,
-            textAlign: TextAlign.center,
+            stat['label'] as String,
             style: TextStyle(
+              fontSize: 16,
               color: Colors.grey[600],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, String subtitle, List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(80.0),
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.teal,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 48),
+          Wrap(
+            spacing: 24,
+            runSpacing: 24,
+            alignment: WrapAlignment.center,
+            children: children,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnimatedButton(
+    String text,
+    Color color,
+    bool isFilled,
+    VoidCallback onPressed,
+  ) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 32,
+            vertical: 16,
+          ),
+          decoration: BoxDecoration(
+            color: isFilled ? color : Colors.transparent,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: color,
+              width: 2,
+            ),
+            boxShadow: isFilled
+                ? [
+                    BoxShadow(
+                      color: color.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isFilled ? Colors.white : color,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceCard({
+    required IconData icon,
+    required String title,
+    required String description,
+    required List<String> features,
+  }) {
+    return Container(
+      width: 350,
+      padding: const EdgeInsets.all(32.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.teal,
+                  Colors.teal.withOpacity(0.8),
+                ],
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.teal.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Icon(
+              icon,
+              size: 48,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            description,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ...features.map((feature) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.teal.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.teal,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        feature,
+                        style: const TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
         ],
       ),
     );
@@ -330,17 +683,20 @@ class WebHomePage extends StatelessWidget {
     required String name,
     required String specialty,
     required String imageUrl,
+    required double rating,
+    required String experience,
+    required String availability,
   }) {
     return Container(
-      width: 300,
+      width: 350,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -350,19 +706,19 @@ class WebHomePage extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: Image.network(
               imageUrl,
-              height: 200,
+              height: 250,
               width: double.infinity,
               fit: BoxFit.cover,
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               children: [
                 Text(
                   name,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -370,21 +726,95 @@ class WebHomePage extends StatelessWidget {
                 Text(
                   specialty,
                   style: TextStyle(
+                    fontSize: 18,
                     color: Colors.grey[600],
                   ),
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _buildInfoChip(
+                      Icons.star,
+                      rating.toString(),
+                      Colors.amber,
                     ),
+                    const SizedBox(width: 16),
+                    _buildInfoChip(
+                      Icons.work,
+                      experience,
+                      Colors.teal,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                  child: const Text('Book Appointment'),
+                  decoration: BoxDecoration(
+                    color: Colors.teal.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        color: Colors.teal,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        availability,
+                        style: const TextStyle(
+                          color: Colors.teal,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                _buildAnimatedButton(
+                  'Book Appointment',
+                  Colors.teal,
+                  true,
+                  () {},
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -396,50 +826,72 @@ class WebHomePage extends StatelessWidget {
     required String name,
     required String role,
     required String testimonial,
+    required int rating,
+    required String imageUrl,
   }) {
     return Container(
-      width: 300,
-      padding: const EdgeInsets.all(24.0),
+      width: 400,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(32.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.format_quote,
-            size: 48,
-            color: Colors.teal,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            testimonial,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[800],
-              fontStyle: FontStyle.italic,
-            ),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundImage: NetworkImage(imageUrl),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      role,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: List.generate(
+                  rating,
+                  (index) => const Icon(
+                    Icons.star,
+                    color: Colors.amber,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           Text(
-            name,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Text(
-            role,
+            testimonial,
             style: TextStyle(
-              color: Colors.grey[600],
+              fontSize: 16,
+              color: Colors.grey[800],
+              height: 1.5,
             ),
           ),
         ],
@@ -451,31 +903,69 @@ class WebHomePage extends StatelessWidget {
     required IconData icon,
     required String title,
     required String content,
+    required VoidCallback onTap,
   }) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          size: 48,
-          color: Colors.white,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 48,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                content,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        Text(
-          content,
-          style: const TextStyle(
-            color: Colors.white70,
-          ),
-        ),
-      ],
+      ),
     );
   }
+}
+
+class PatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.teal
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    const spacing = 30.0;
+    for (var i = 0; i < size.width; i += spacing.toInt()) {
+      for (var j = 0; j < size.height; j += spacing.toInt()) {
+        canvas.drawCircle(Offset(i.toDouble(), j.toDouble()), 1, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 } 
