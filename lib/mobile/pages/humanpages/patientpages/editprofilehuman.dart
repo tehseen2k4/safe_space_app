@@ -19,11 +19,21 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
 
   // Controllers for TextFormFields
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _bloodgroupController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _sexController = TextEditingController();
+  final TextEditingController _phonenumberController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _emergencyContactController = TextEditingController();
+  final TextEditingController _maritalStatusController = TextEditingController();
+  final TextEditingController _occupationController = TextEditingController();
+  final TextEditingController _preferredLanguageController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _smokingStatusController = TextEditingController();
+  List<String> _selectedDietaryRestrictions = [];
+  List<String> _selectedAllergies = [];
 
   @override
   void initState() {
@@ -39,11 +49,21 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
       fetchProfile(user!.uid).then((data) {
         setState(() {
           _nameController.text = data['name'] ?? '';
-          _usernameController.text = data['username'] ?? '';
           _bioController.text = data['bio'] ?? '';
           _bloodgroupController.text = data['bloodgroup'] ?? '';
           _ageController.text = data['age']?.toString() ?? '';
           _sexController.text = data['sex'] ?? '';
+          _phonenumberController.text = data['phonenumber'] ?? '';
+          _addressController.text = data['address'] ?? '';
+          _emergencyContactController.text = data['emergencyContact'] ?? '';
+          _maritalStatusController.text = data['maritalStatus'] ?? '';
+          _occupationController.text = data['occupation'] ?? '';
+          _preferredLanguageController.text = data['preferredLanguage'] ?? '';
+          _heightController.text = data['height']?.toString() ?? '';
+          _weightController.text = data['weight']?.toString() ?? '';
+          _smokingStatusController.text = data['smokingStatus'] ?? '';
+          _selectedDietaryRestrictions = List<String>.from(data['dietaryRestrictions'] ?? []);
+          _selectedAllergies = List<String>.from(data['allergies'] ?? []);
         });
       }).catchError((error) {
         print('Error fetching profile: $error');
@@ -54,11 +74,19 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
   @override
   void dispose() {
     _nameController.dispose();
-    _usernameController.dispose();
     _bioController.dispose();
     _bloodgroupController.dispose();
     _ageController.dispose();
     _sexController.dispose();
+    _phonenumberController.dispose();
+    _addressController.dispose();
+    _emergencyContactController.dispose();
+    _maritalStatusController.dispose();
+    _occupationController.dispose();
+    _preferredLanguageController.dispose();
+    _heightController.dispose();
+    _weightController.dispose();
+    _smokingStatusController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -188,6 +216,7 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildSectionHeader('Basic Information'),
           _buildFormField(
             label: 'Full Name',
             hint: 'Enter your full name',
@@ -195,18 +224,6 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your name';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            label: 'Username',
-            hint: 'Enter your username',
-            controller: _usernameController,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a username';
               }
               return null;
             },
@@ -239,12 +256,6 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
             onChanged: (value) {
               if (value != null) _bloodgroupController.text = value;
             },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please select your Blood Group';
-              }
-              return null;
-            },
           ),
           const SizedBox(height: 16),
           _buildDropdownField(
@@ -254,11 +265,172 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
             onChanged: (value) {
               if (value != null) _sexController.text = value;
             },
+          ),
+          const SizedBox(height: 24),
+          
+          _buildSectionHeader('Contact Information'),
+          _buildFormField(
+            label: 'Phone Number',
+            hint: 'Enter your phone number',
+            controller: _phonenumberController,
+            keyboardType: TextInputType.phone,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please select your Gender';
+                return 'Please enter your phone number';
               }
               return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            label: 'Address',
+            hint: 'Enter your address',
+            controller: _addressController,
+            maxLines: 2,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your address';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            label: 'Emergency Contact',
+            hint: 'Enter emergency contact number',
+            controller: _emergencyContactController,
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter emergency contact';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 24),
+
+          _buildSectionHeader('Personal Information'),
+          _buildDropdownField(
+            label: 'Marital Status',
+            value: _maritalStatusController.text.isNotEmpty ? _maritalStatusController.text : null,
+            items: ['Single', 'Married', 'Divorced', 'Widowed'],
+            onChanged: (value) {
+              if (value != null) _maritalStatusController.text = value;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildFormField(
+            label: 'Occupation',
+            hint: 'Enter your occupation',
+            controller: _occupationController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your occupation';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildDropdownField(
+            label: 'Preferred Language',
+            value: _preferredLanguageController.text.isNotEmpty ? _preferredLanguageController.text : null,
+            items: ['English', 'Hindi', 'Spanish', 'French', 'German', 'Chinese', 'Japanese', 'Arabic'],
+            onChanged: (value) {
+              if (value != null) _preferredLanguageController.text = value;
+            },
+          ),
+          const SizedBox(height: 24),
+
+          _buildSectionHeader('Physical Information'),
+          Row(
+            children: [
+              Expanded(
+                child: _buildFormField(
+                  label: 'Height (cm)',
+                  hint: 'Enter height',
+                  controller: _heightController,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter height';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildFormField(
+                  label: 'Weight (kg)',
+                  hint: 'Enter weight',
+                  controller: _weightController,
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter weight';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          _buildSectionHeader('Medical Information'),
+          _buildDropdownField(
+            label: 'Smoking Status',
+            value: _smokingStatusController.text.isNotEmpty ? _smokingStatusController.text : null,
+            items: ['Never Smoked', 'Former Smoker', 'Current Smoker'],
+            onChanged: (value) {
+              if (value != null) _smokingStatusController.text = value;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildMultiSelectField(
+            label: 'Dietary Restrictions',
+            selectedItems: _selectedDietaryRestrictions,
+            items: [
+              'Vegetarian',
+              'Vegan',
+              'Gluten-Free',
+              'Lactose-Free',
+              'Halal',
+              'Kosher',
+              'No Nuts',
+              'No Shellfish',
+              'No Eggs',
+              'No Dairy',
+            ],
+            onChanged: (items) {
+              setState(() {
+                _selectedDietaryRestrictions = items;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildMultiSelectField(
+            label: 'Allergies',
+            selectedItems: _selectedAllergies,
+            items: [
+              'None',
+              'Pollen',
+              'Dust',
+              'Pet Dander',
+              'Peanuts',
+              'Shellfish',
+              'Dairy',
+              'Eggs',
+              'Soy',
+              'Wheat',
+              'Latex',
+              'Penicillin',
+              'Other',
+            ],
+            onChanged: (items) {
+              setState(() {
+                _selectedAllergies = items;
+              });
             },
           ),
           const SizedBox(height: 32),
@@ -285,6 +457,20 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF1976D2),
+        ),
       ),
     );
   }
@@ -448,18 +634,100 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
     );
   }
 
+  Widget _buildMultiSelectField({
+    required String label,
+    required List<String> selectedItems,
+    required List<String> items,
+    required void Function(List<String>) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+            color: Color(0xFF1976D2),
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () async {
+            final result = await showDialog<List<String>>(
+              context: context,
+              builder: (context) => MultiSelectDialog(
+                title: label,
+                items: items,
+                selectedItems: selectedItems,
+              ),
+            );
+            if (result != null) {
+              onChanged(result);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    selectedItems.isEmpty
+                        ? 'Select $label'
+                        : selectedItems.join(', '),
+                    style: TextStyle(
+                      color: selectedItems.isEmpty ? Colors.grey[400] : Colors.black87,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_drop_down,
+                  color: Color(0xFF1976D2),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   void _saveProfile() async {
     if (_formKey.currentState?.validate() ?? false) {
       final User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        // Calculate BMI
+        double height = double.tryParse(_heightController.text) ?? 0;
+        double weight = double.tryParse(_weightController.text) ?? 0;
+        double bmi = height > 0 ? weight / ((height / 100) * (height / 100)) : 0;
+
         final patientProfile = PatientsDb(
           name: _nameController.text,
-          username: _usernameController.text,
           age: int.tryParse(_ageController.text) ?? 0,
           sex: _sexController.text,
           email: user.email ?? '',
           bloodgroup: _bloodgroupController.text,
           uid: user.uid,
+          phonenumber: _phonenumberController.text,
+          address: _addressController.text,
+          emergencyContact: _emergencyContactController.text,
+          maritalStatus: _maritalStatusController.text,
+          occupation: _occupationController.text,
+          preferredLanguage: _preferredLanguageController.text,
+          height: height,
+          weight: weight,
+          bmi: bmi,
+          smokingStatus: _smokingStatusController.text,
+          dietaryRestrictions: _selectedDietaryRestrictions,
+          allergies: _selectedAllergies,
+          bio: _bioController.text,
         );
 
         await patientProfile.checkAndSaveProfile();
@@ -491,5 +759,68 @@ class _EditPageState extends State<EditPageHuman> with SingleTickerProviderState
         }
       }
     }
+  }
+}
+
+class MultiSelectDialog extends StatefulWidget {
+  final String title;
+  final List<String> items;
+  final List<String> selectedItems;
+
+  const MultiSelectDialog({
+    Key? key,
+    required this.title,
+    required this.items,
+    required this.selectedItems,
+  }) : super(key: key);
+
+  @override
+  _MultiSelectDialogState createState() => _MultiSelectDialogState();
+}
+
+class _MultiSelectDialogState extends State<MultiSelectDialog> {
+  late List<String> _selectedItems;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedItems = List.from(widget.selectedItems);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: widget.items.map((item) {
+            return CheckboxListTile(
+              title: Text(item),
+              value: _selectedItems.contains(item),
+              onChanged: (bool? value) {
+                setState(() {
+                  if (value == true) {
+                    _selectedItems.add(item);
+                  } else {
+                    _selectedItems.remove(item);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, _selectedItems),
+          child: const Text('OK'),
+        ),
+      ],
+    );
   }
 }

@@ -307,7 +307,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Dr. $doctorName',
+                  'Dr. ${doctor['name'] ?? "Name"}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 22,
@@ -315,7 +315,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  specialization,
+                  doctor['specialization'] ?? "Specialization",
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 16,
@@ -324,7 +324,7 @@ class _DoctorloginState extends State<Doctorlogin> with SingleTickerProviderStat
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  qualification,
+                  doctor['doctorType'] ?? "Doctor Type",
                   style: const TextStyle(
                     color: Colors.teal,
                     fontSize: 14,

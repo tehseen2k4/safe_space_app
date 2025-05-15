@@ -10,7 +10,7 @@ class ViewProfileApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Edit Profile',
+      title: 'View Profile',
       theme: ThemeData(
         primaryColor: Colors.teal,
         scaffoldBackgroundColor: const Color(0xFFF5F6FA),
@@ -223,6 +223,7 @@ class _ViewProfileDoctorScreenState extends State<ViewProfileDoctorScreen> with 
             title: 'Professional Information',
             children: [
               _buildInfoRow('Qualification', doctor['qualification'] ?? ''),
+              _buildInfoRow('License Number', doctor['licenseNumber'] ?? ''),
               _buildInfoRow('Experience', doctor['experience'] ?? ''),
               _buildInfoRow('Doctor Type', doctor['doctorType'] ?? ''),
               _buildInfoRow('Fees', '₹${doctor['fees'] ?? ''}'),
@@ -390,7 +391,7 @@ class _ViewProfileDoctorScreenState extends State<ViewProfileDoctorScreen> with 
             ),
             const SizedBox(height: 20),
             Text(
-              'Error loading profile: $error',
+              'Profile not found. Please contact support.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.red[400],
@@ -399,22 +400,7 @@ class _ViewProfileDoctorScreenState extends State<ViewProfileDoctorScreen> with 
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () async {
-                try {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => EditPageDoctor()),
-                  );
-                  setState(() {});
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error navigating to edit page: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
+              onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 40,
@@ -426,7 +412,7 @@ class _ViewProfileDoctorScreenState extends State<ViewProfileDoctorScreen> with 
                 ),
               ),
               child: const Text(
-                'Create Profile',
+                'Go Back',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

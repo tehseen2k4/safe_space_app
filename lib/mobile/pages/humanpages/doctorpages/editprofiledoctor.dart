@@ -31,6 +31,7 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
   final TextEditingController _doctorTypeController = TextEditingController();
   final TextEditingController _experienceController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _licenseNumberController = TextEditingController();
 
   final Map<String, bool> _selectedDays = {
     'Monday': false,
@@ -192,6 +193,7 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
     _experienceController.dispose();
     _doctorTypeController.dispose();
     _emailController.dispose();
+    _licenseNumberController.dispose();
     super.dispose();
   }
 
@@ -221,6 +223,7 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
         _contactNumberClinicController.text = data['contactNumberClinic'] ?? '';
         _feesController.text = data['fees']?.toString() ?? '';
         _experienceController.text = data['experience'] ?? '';
+        _licenseNumberController.text = data['licenseNumber'] ?? '';
         
         // Set doctor type and initialize related fields
         _doctorTypeController.text = data['doctorType'] ?? 'Human';
@@ -362,6 +365,7 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
                   _buildDropdown('Doctor Type', _doctorTypeController, ['Human', 'Veterinary']),
                   _buildDropdown('Qualification', _qualificationController, _availableQualifications),
                   _buildDropdown('Specialization', _specializationController, _availableSpecializations),
+                  _buildTextField('License Number', _licenseNumberController, 'Enter your medical license number'),
                   _buildTextField('Experience', _experienceController, 'Years of experience'),
                   _buildTextField('Clinic Name', _clinicNameController, 'Enter clinic name'),
                   _buildTextField('Clinic Contact Number', _contactNumberClinicController, 'Enter clinic contact number'),
@@ -476,22 +480,50 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
             });
           }
         },
-        style: const TextStyle(fontSize: 16),
+        style: const TextStyle(
+          fontSize: 16,
+          color: Colors.black87,
+        ),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(fontSize: 16),
+          labelStyle: const TextStyle(
+            fontSize: 16,
+            color: Colors.teal,
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.teal, width: 2),
           ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 12,
           ),
         ),
+        dropdownColor: Colors.white,
+        icon: const Icon(
+          Icons.arrow_drop_down,
+          color: Colors.teal,
+        ),
         items: items.map((item) {
           return DropdownMenuItem<String>(
             value: item,
-            child: Text(item),
+            child: Text(
+              item,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 16,
+              ),
+            ),
           );
         }).toList(),
         validator: (value) {
@@ -604,6 +636,7 @@ class _EditPageDoctorState extends State<EditPageDoctor> {
           'sex': _sexController.text,
           'specialization': _specializationController.text,
           'qualification': _qualificationController.text,
+          'licenseNumber': _licenseNumberController.text,
           'phonenumber': _phonenumberController.text,
           'clinicName': _clinicNameController.text,
           'contactNumberClinic': _contactNumberClinicController.text,

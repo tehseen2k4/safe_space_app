@@ -256,7 +256,7 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> with Si
                             }
 
                             final appointmentData = PetAppointmentDb(
-                              username: petpatient.username,
+                              username: petpatient.name,
                               age: petpatient.age.toString(),
                               gender: petpatient.sex,
                               email: petpatient.email,
@@ -377,10 +377,14 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> with Si
               ],
             ),
             const SizedBox(height: 16),
-            _buildDetailRow('Name', petpatient.username),
-            _buildDetailRow('Email', petpatient.email),
-            _buildDetailRow('Age', petpatient.age.toString()),
+            _buildDetailRow('Name', petpatient.name),
+            _buildDetailRow('Type', petpatient.type),
+            _buildDetailRow('Breed', petpatient.breed),
+            _buildDetailRow('Age', '${petpatient.age} years'),
             _buildDetailRow('Gender', petpatient.sex),
+            _buildDetailRow('Owner', petpatient.ownerName),
+            _buildDetailRow('Contact', petpatient.ownerPhone),
+            _buildDetailRow('Email', petpatient.email),
           ],
         ),
       ),

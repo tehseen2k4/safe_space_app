@@ -204,7 +204,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                             }
 
                             final appointmentData = HumanAppointmentDb(
-                              username: patient.username,
+                              username: patient.name,
                               age: patient.age.toString(),
                               gender: patient.sex,
                               email: patient.email,
@@ -308,7 +308,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Name: ${patient.username}',
+              'Name: ${patient.name}',
               style: const TextStyle(fontSize: 16),
             ),
             Text(

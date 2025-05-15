@@ -3,7 +3,7 @@ import 'package:safe_space_app/services/auth_service.dart';
 import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/doctorlogin.dart'; // Import for the log function
 import 'package:safe_space_app/models/users_db.dart';
 import 'package:safe_space_app/services/database_service.dart';
-import 'package:safe_space_app/models/users_db.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/doctorpages/createprofiledoctor.dart';
 import 'dart:developer' as developer;
 
 class SignupPage extends StatefulWidget {
@@ -268,7 +268,16 @@ class _SigninPageState extends State<SignupPage> {
           _emailController.clear();
           _passwordController.clear();
           _confirmPasswordController.clear();
-          _gotodoctorlogin(context);
+          
+          // Navigate to create profile instead of login
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CreateProfileDoctor(),
+              ),
+            );
+          }
         }
       } catch (e, stacktrace) {
         developer.log("Error during signup: $e", stackTrace: stacktrace);

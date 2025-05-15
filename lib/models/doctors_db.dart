@@ -10,6 +10,7 @@ class DoctorsDb {
   int age;
   String sex;
   String uid;
+  String licenseNumber; // Added license number field
   List<String>? availableDays; // New field for selected days
   String? startTime; // New field for start time
   String? endTime; // New field for end time
@@ -30,6 +31,7 @@ class DoctorsDb {
       required this.age,
       required this.sex,
       required this.uid,
+      required this.licenseNumber,
       this.availableDays,
       this.startTime,
       this.endTime,
@@ -51,6 +53,7 @@ class DoctorsDb {
         age: json['age'] as int,
         sex: json['sex'] as String,
         uid: json['uid'] as String,
+        licenseNumber: json['licenseNumber'] as String,
         availableDays:
             (json['availableDays'] as List<dynamic>?)?.cast<String>(),
         startTime: json['startTime'] as String?,
@@ -73,6 +76,7 @@ class DoctorsDb {
       int? age,
       String? sex,
       String? uid,
+      String? licenseNumber,
       List<String>? availableDays,
       String? startTime,
       String? endTime,
@@ -92,6 +96,7 @@ class DoctorsDb {
         age: age ?? this.age,
         sex: sex ?? this.sex,
         uid: uid ?? this.uid,
+        licenseNumber: licenseNumber ?? this.licenseNumber,
         availableDays: availableDays ?? this.availableDays,
         startTime: startTime ?? this.startTime,
         endTime: endTime ?? this.endTime,
@@ -114,6 +119,7 @@ class DoctorsDb {
       'age': age,
       'sex': sex,
       'uid': uid,
+      'licenseNumber': licenseNumber,
       'availableDays': availableDays, // Store as list of selected days
       'startTime': startTime, // Store start time as string (e.g., '09:00')
       'endTime': endTime, // Store end time as string (e.g., '17:00')

@@ -95,7 +95,10 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> with SingleTicker
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: _buildInfoSection(pet),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildInfoSection(pet),
+                  ),
                 ),
               ],
             );
@@ -151,29 +154,6 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> with SingleTicker
                   ),
                 ),
               ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    size: 20,
-                    color: Color(0xFFE17652),
-                  ),
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -190,7 +170,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> with SingleTicker
           ),
           const SizedBox(height: 5),
           Text(
-            pet.username,
+            '${pet.type} - ${pet.breed}',
             style: TextStyle(
               fontSize: 16,
               color: Colors.white.withOpacity(0.8),
@@ -203,55 +183,86 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> with SingleTicker
   }
 
   Widget _buildInfoSection(PetpatientDb pet) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          _buildInfoCard(
-            icon: Icons.pets,
-            title: 'Pet Details',
-            children: [
-              _buildInfoRow('Age', '${pet.age} years'),
-              _buildInfoRow('Sex', pet.sex),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildInfoCard(
-            icon: Icons.email,
-            title: 'Contact Information',
-            children: [
-              _buildInfoRow('Email', pet.email),
-            ],
-          ),
-          const SizedBox(height: 30),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        _buildInfoCard(
+          icon: Icons.pets,
+          title: 'Basic Information',
+          children: [
+            _buildInfoRow('Type', pet.type),
+            _buildInfoRow('Breed', pet.breed),
+            _buildInfoRow('Age', '${pet.age} years'),
+            _buildInfoRow('Gender', pet.sex),
+            _buildInfoRow('Date of Birth', '${pet.dateOfBirth.day}/${pet.dateOfBirth.month}/${pet.dateOfBirth.year}'),
+            _buildInfoRow('Weight', '${pet.weight} kg'),
+            _buildInfoRow('Neuter Status', pet.neuterStatus),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _buildInfoCard(
+          icon: Icons.person,
+          title: 'Owner Information',
+          children: [
+            _buildInfoRow('Owner Name', pet.ownerName),
+            _buildInfoRow('Owner Phone', pet.ownerPhone),
+            _buildInfoRow('Emergency Contact', pet.emergencyContact),
+            _buildInfoRow('Email', pet.email),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _buildInfoCard(
+          icon: Icons.medical_services_outlined,
+          title: 'Medical Information',
+          children: [
+            _buildInfoRow('Last Vaccination', '${pet.lastVaccination.day}/${pet.lastVaccination.month}/${pet.lastVaccination.year}'),
+            _buildInfoRow('Training Status', pet.trainingStatus),
+            _buildInfoRow('Allergies', pet.allergies.isEmpty ? 'None' : pet.allergies.join(', ')),
+            _buildInfoRow('Special Needs', pet.specialNeeds.isEmpty ? 'None' : pet.specialNeeds.join(', ')),
+            _buildInfoRow('Dietary Requirements', pet.dietaryRequirements.isEmpty ? 'None' : pet.dietaryRequirements.join(', ')),
+            _buildInfoRow('Grooming Needs', pet.groomingNeeds.isEmpty ? 'None' : pet.groomingNeeds.join(', ')),
+          ],
+        ),
+        const SizedBox(height: 30),
+        ElevatedButton(
+          onPressed: () async {
+            try {
+              await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => EditPagePet()),
-              ).then((_) => setState(() {}));
-            },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-              backgroundColor: const Color(0xFFE17652),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 2,
+                MaterialPageRoute(builder: (context) => const EditPagePet()),
+              );
+              setState(() {});
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error navigating to edit page: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 40,
+              vertical: 15,
             ),
-            child: const Text(
-              'Edit Profile',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            backgroundColor: const Color(0xFFE17652),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 2,
+          ),
+          child: const Text(
+            'Edit Profile',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 30),
-        ],
-      ),
+        ),
+        const SizedBox(height: 30),
+      ],
     );
   }
 
@@ -290,7 +301,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> with SingleTicker
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Color(0xFFE17652),
                   ),
                 ),
               ],
@@ -307,21 +318,28 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> with SingleTicker
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF666666),
+              ),
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
+          Expanded(
+            flex: 3,
+            child: Text(
+              value.isEmpty ? 'Not specified' : value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFFE17652),
+              ),
+              textAlign: TextAlign.right,
             ),
           ),
         ],
@@ -343,7 +361,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> with SingleTicker
             ),
             const SizedBox(height: 20),
             Text(
-              'Error loading profile: $error',
+              'Profile not found. Please contact support.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.red[400],
@@ -353,10 +371,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> with SingleTicker
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => EditPagePet()),
-                ).then((_) => setState(() {}));
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
@@ -366,7 +381,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> with SingleTicker
                 ),
               ),
               child: const Text(
-                'Create Profile',
+                'Go Back',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

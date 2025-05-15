@@ -3,6 +3,8 @@ import 'package:safe_space_app/services/auth_service.dart';
 import 'package:safe_space_app/models/users_db.dart';
 import 'package:safe_space_app/services/database_service.dart';
 import 'package:safe_space_app/mobile/pages/humanpages/patientpages/patientlogin.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/createprofilepatienthuman.dart';
+import 'package:safe_space_app/mobile/pages/petpages/createprofilepatientpet.dart';
 import 'dart:developer' as developer;
 
 class SignupPagep extends StatefulWidget {
@@ -284,7 +286,11 @@ class _SigninPageState extends State<SignupPagep> with SingleTickerProviderState
           _emailController.clear();
           _passwordController.clear();
           _confirmPasswordController.clear();
-          _gotopatientlogin(context);
+
+          // Show profile creation dialog
+          if (mounted) {
+            _showHumanProfileDialog(context);
+          }
         }
       } catch (e, stacktrace) {
         developer.log("Error during signup: $e", stackTrace: stacktrace);
@@ -301,26 +307,176 @@ class _SigninPageState extends State<SignupPagep> with SingleTickerProviderState
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: const Text(
-            "Error",
-            style: TextStyle(
-              color: Color(0xFF1976D2),
-              fontWeight: FontWeight.bold,
-            ),
+          titlePadding: const EdgeInsets.only(top: 24),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          actionsPadding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
+          title: Column(
+            children: [
+              CircleAvatar(
+                backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
+                radius: 28,
+                child: const Icon(Icons.error_outline, color: Color(0xFF1976D2), size: 32),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Error',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Color(0xFF1976D2),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
           content: Text(
             message,
             style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "OK",
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1976D2),
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        'OK',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showHumanProfileDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          titlePadding: const EdgeInsets.only(top: 24),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          actionsPadding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
+          title: Column(
+            children: [
+              CircleAvatar(
+                backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
+                radius: 28,
+                child: const Icon(Icons.person_add_rounded, color: Color(0xFF1976D2), size: 32),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Create Profile',
                 style: TextStyle(
-                  color: Color(0xFF1976D2),
                   fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Color(0xFF1976D2),
                 ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          content: const Text(
+            'Would you like to create your profile now?',
+            style: TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF1976D2),
+                        side: const BorderSide(color: Color(0xFF1976D2)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // Navigate to login page
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const LoginPage()),
+                        );
+                      },
+                      child: const Text(
+                        'Skip',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1976D2),
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        // Navigate to human profile creation
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const EditPageHuman()),
+                        ).then((_) {
+                          // After human profile creation, go to login page
+                          if (mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => const LoginPage()),
+                            );
+                          }
+                        });
+                      },
+                      child: const Text(
+                        'Create',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

@@ -30,6 +30,8 @@ class _PetpatientprofileState extends State<Petpatientprofile> with SingleTicker
   String petName = "Pet Name";
   String age = "**";
   String sex = "***";
+  String type = "Not specified";
+  String breed = "Not specified";
 
   List<Map<String, dynamic>> doctorList = [];
 
@@ -68,6 +70,8 @@ class _PetpatientprofileState extends State<Petpatientprofile> with SingleTicker
           petName = data['name'] ?? "Pet Name";
           age = data['age']?.toString() ?? "**";
           sex = data['sex'] ?? "***";
+          type = data['type'] ?? "Not specified";
+          breed = data['breed'] ?? "Not specified";
         });
       }
     } catch (e) {
@@ -267,23 +271,10 @@ class _PetpatientprofileState extends State<Petpatientprofile> with SingleTicker
       ),
       child: Row(
         children: [
-          Container(
-            height: 100,
-            width: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: const DecorationImage(
-                image: NetworkImage('https://placekitten.com/200/200'),
-                fit: BoxFit.cover,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: const Color(0xFFE17652).withOpacity(0.1),
+            child: const Icon(Icons.pets, size: 40, color: Color(0xFFE17652)),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -299,7 +290,7 @@ class _PetpatientprofileState extends State<Petpatientprofile> with SingleTicker
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Age: $age',
+                  '$type - $breed',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 16,
@@ -308,7 +299,7 @@ class _PetpatientprofileState extends State<Petpatientprofile> with SingleTicker
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Sex: $sex',
+                  'Age: $age years',
                   style: const TextStyle(
                     color: Color(0xFFE17652),
                     fontSize: 14,

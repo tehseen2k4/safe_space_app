@@ -196,31 +196,79 @@ class _ViewProfileHumanScreenState extends State<ViewProfileHumanScreen> with Si
         const SizedBox(height: 20),
         _buildInfoCard(
           icon: Icons.person,
-          title: 'Personal Information',
+          title: 'Basic Information',
           children: [
+            _buildInfoRow('Name', patient.name),
             _buildInfoRow('Age', '${patient.age} years'),
             _buildInfoRow('Sex', patient.sex),
             _buildInfoRow('Blood Group', patient.bloodgroup),
+            _buildInfoRow('Bio', patient.bio),
           ],
         ),
         const SizedBox(height: 20),
         _buildInfoCard(
-          icon: Icons.email,
+          icon: Icons.contact_phone,
           title: 'Contact Information',
           children: [
             _buildInfoRow('Email', patient.email),
+            _buildInfoRow('Phone Number', patient.phonenumber),
+            _buildInfoRow('Address', patient.address),
+            _buildInfoRow('Emergency Contact', patient.emergencyContact),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _buildInfoCard(
+          icon: Icons.person_outline,
+          title: 'Personal Information',
+          children: [
+            _buildInfoRow('Marital Status', patient.maritalStatus),
+            _buildInfoRow('Occupation', patient.occupation),
+            _buildInfoRow('Preferred Language', patient.preferredLanguage),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _buildInfoCard(
+          icon: Icons.monitor_weight_outlined,
+          title: 'Physical Information',
+          children: [
+            _buildInfoRow('Height', '${patient.height} cm'),
+            _buildInfoRow('Weight', '${patient.weight} kg'),
+            _buildInfoRow('BMI', patient.bmi.toStringAsFixed(1)),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _buildInfoCard(
+          icon: Icons.medical_services_outlined,
+          title: 'Medical Information',
+          children: [
+            _buildInfoRow('Smoking Status', patient.smokingStatus),
+            _buildInfoRow('Dietary Restrictions', patient.dietaryRestrictions.join(', ')),
+            _buildInfoRow('Allergies', patient.allergies.join(', ')),
           ],
         ),
         const SizedBox(height: 30),
         ElevatedButton(
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const EditPageHuman()),
-            );
+          onPressed: () async {
+            try {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EditPageHuman()),
+              );
+              setState(() {});
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error navigating to edit page: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           },
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 40,
+              vertical: 15,
+            ),
             backgroundColor: const Color(0xFF1976D2),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -293,21 +341,28 @@ class _ViewProfileHumanScreenState extends State<ViewProfileHumanScreen> with Si
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Color(0xFF666666),
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF666666),
+              ),
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1976D2),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value.isEmpty ? 'Not specified' : value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF1976D2),
+              ),
+              textAlign: TextAlign.right,
             ),
           ),
         ],
@@ -329,7 +384,7 @@ class _ViewProfileHumanScreenState extends State<ViewProfileHumanScreen> with Si
             ),
             const SizedBox(height: 20),
             Text(
-              'Error loading profile: $error',
+              'Profile not found. Please contact support.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.red[400],
@@ -341,7 +396,7 @@ class _ViewProfileHumanScreenState extends State<ViewProfileHumanScreen> with Si
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const EditPageHuman()),
+                  MaterialPageRoute(builder: (context) => const HumanPatientProfile()),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -352,7 +407,7 @@ class _ViewProfileHumanScreenState extends State<ViewProfileHumanScreen> with Si
                 ),
               ),
               child: const Text(
-                'Create Profile',
+                'Go Back',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

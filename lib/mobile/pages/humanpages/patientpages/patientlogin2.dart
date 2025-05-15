@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:safe_space_app/mobile/pages/humanpages/patientpages/humanpatientprofile.dart';
 import 'package:safe_space_app/mobile/pages/petpages/petpatientprofile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:safe_space_app/mobile/pages/petpages/createprofilepatientpet.dart';
+import 'package:safe_space_app/mobile/pages/humanpages/patientpages/createprofilepatienthuman.dart';
 
-class PatientLogin extends StatelessWidget {
+class PatientLogin extends StatefulWidget {
   const PatientLogin({super.key});
 
+  @override
+  State<PatientLogin> createState() => _PatientLoginState();
+}
+
+class _PatientLoginState extends State<PatientLogin> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -120,13 +129,163 @@ class PatientLogin extends StatelessWidget {
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 30),
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const HumanPatientProfile(),
-                            ),
-                          );
+                        onPressed: () async {
+                          print("Human button pressed");
+                          final user = FirebaseAuth.instance.currentUser;
+                          print("Current user: ${user?.uid}");
+                          
+                          if (user != null) {
+                            try {
+                              print("Starting Firestore query for human profile...");
+                              final querySnapshot = await FirebaseFirestore.instance
+                                  .collection('humanpatients')
+                                  .where('uid', isEqualTo: user.uid)
+                                  .get();
+
+                              print("Query completed. Documents found: ${querySnapshot.docs.length}");
+                              
+                              // Print all documents for debugging
+                              for (var doc in querySnapshot.docs) {
+                                print("Document ID: ${doc.id}");
+                                print("Document data: ${doc.data()}");
+                              }
+
+                              if (querySnapshot.docs.isNotEmpty) {
+                                print("Found human profile, navigating to HumanPatientProfile");
+                                if (mounted) {
+                                  await Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const HumanPatientProfile(),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                print("No human profile found, showing create profile dialog");
+                                if (mounted) {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        titlePadding: const EdgeInsets.only(top: 24),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        actionsPadding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
+                                        title: Column(
+                                          children: [
+                                            CircleAvatar(
+                                              backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
+                                              radius: 28,
+                                              child: const Icon(Icons.person_outline, color: Color(0xFF1976D2), size: 32),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            const Text(
+                                              'Create Profile',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                                color: Color(0xFF1976D2),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                        content: const Text(
+                                          'You need to create a profile first to access human healthcare services.',
+                                          style: TextStyle(fontSize: 16),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        actions: [
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                Expanded(
+                                                  child: OutlinedButton(
+                                                    style: OutlinedButton.styleFrom(
+                                                      foregroundColor: const Color(0xFF1976D2),
+                                                      side: const BorderSide(color: Color(0xFF1976D2)),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                                    ),
+                                                    onPressed: () => Navigator.pop(context),
+                                                    child: const Text(
+                                                      'Cancel',
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.w800,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 16),
+                                                Expanded(
+                                                  child: ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: const Color(0xFF1976D2),
+                                                      foregroundColor: Colors.white,
+                                                      elevation: 2,
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                                    ),
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) => const EditPageHuman(),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: const Text(
+                                                      'Create',
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.w800,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }
+                              }
+                            } catch (e, stackTrace) {
+                              print("Error checking human profile: $e");
+                              print("Stack trace: $stackTrace");
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error checking human profile: ${e.toString()}'),
+                                    backgroundColor: const Color(0xFF1976D2),
+                                  ),
+                                );
+                              }
+                            }
+                          } else {
+                            print("No user found");
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please sign in to access human services'),
+                                  backgroundColor: Color(0xFF1976D2),
+                                ),
+                              );
+                            }
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1976D2),
@@ -173,13 +332,163 @@ class PatientLogin extends StatelessWidget {
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 30),
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>  Petpatientprofile(),
-                            ),
-                          );
+                        onPressed: () async {
+                          print("Pet button pressed");
+                          final user = FirebaseAuth.instance.currentUser;
+                          print("Current user: ${user?.uid}");
+                          
+                          if (user != null) {
+                            try {
+                              print("Starting Firestore query...");
+                              final querySnapshot = await FirebaseFirestore.instance
+                                  .collection('pets')
+                                  .where('uid', isEqualTo: user.uid)
+                                  .get();
+
+                              print("Query completed. Documents found: ${querySnapshot.docs.length}");
+                              
+                              // Print all documents for debugging
+                              for (var doc in querySnapshot.docs) {
+                                print("Document ID: ${doc.id}");
+                                print("Document data: ${doc.data()}");
+                              }
+
+                              if (querySnapshot.docs.isNotEmpty) {
+                                print("Found pet profile, navigating to Petpatientprofile");
+                                if (mounted) {
+                                  await Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const Petpatientprofile(),
+                                    ),
+                                  );
+                                }
+                              } else {
+                                print("No pet profile found, showing create profile dialog");
+                                if (mounted) {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        titlePadding: const EdgeInsets.only(top: 24),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        actionsPadding: const EdgeInsets.only(bottom: 12, right: 12, left: 12),
+                                        title: Column(
+                                          children: [
+                                            CircleAvatar(
+                                              backgroundColor: const Color(0xFF1976D2).withOpacity(0.1),
+                                              radius: 28,
+                                              child: const Icon(Icons.pets, color: Color(0xFF1976D2), size: 32),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            const Text(
+                                              'Create Pet Profile',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                                color: Color(0xFF1976D2),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                        content: const Text(
+                                          'You need to create a pet profile first to access pet healthcare services.',
+                                          style: TextStyle(fontSize: 16),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        actions: [
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                              children: [
+                                                Expanded(
+                                                  child: OutlinedButton(
+                                                    style: OutlinedButton.styleFrom(
+                                                      foregroundColor: const Color(0xFF1976D2),
+                                                      side: const BorderSide(color: Color(0xFF1976D2)),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                                    ),
+                                                    onPressed: () => Navigator.pop(context),
+                                                    child: const Text(
+                                                      'Cancel',
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.w800,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 16),
+                                                Expanded(
+                                                  child: ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: const Color(0xFF1976D2),
+                                                      foregroundColor: Colors.white,
+                                                      elevation: 2,
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                                    ),
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) => const CreateProfilePatientPet(),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: const Text(
+                                                      'Create',
+                                                      style: TextStyle(
+                                                        fontSize: 16,
+                                                        fontWeight: FontWeight.w800,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }
+                              }
+                            } catch (e, stackTrace) {
+                              print("Error checking pet profile: $e");
+                              print("Stack trace: $stackTrace");
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error checking pet profile: ${e.toString()}'),
+                                    backgroundColor: const Color(0xFFE17652),
+                                  ),
+                                );
+                              }
+                            }
+                          } else {
+                            print("No user found");
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Please sign in to access pet services'),
+                                  backgroundColor: Color(0xFFE17652),
+                                ),
+                              );
+                            }
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFFA726),
