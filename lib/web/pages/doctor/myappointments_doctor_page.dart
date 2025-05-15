@@ -79,145 +79,299 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Tab Bar
-        Container(
-          color: Colors.teal,
-          child: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            indicatorColor: Colors.white,
-            indicatorWeight: 3,
-            indicatorSize: TabBarIndicatorSize.label,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            labelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+    return Container(
+      color: const Color(0xFFF5F6FA),
+      child: Column(
+        children: [
+          // Header with Stats Cards
+          Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        title: 'Total Appointments',
+                        value: _allAppointments.length.toString(),
+                        icon: Icons.calendar_today,
+                        color: Colors.blue,
+                        gradient: const LinearGradient(
+                          colors: [Colors.blue, Colors.lightBlue],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        title: 'Pending',
+                        value: _pendingAppointments.length.toString(),
+                        icon: Icons.pending_actions,
+                        color: Colors.orange,
+                        gradient: const LinearGradient(
+                          colors: [Colors.orange, Colors.deepOrange],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        title: 'Confirmed',
+                        value: _confirmedAppointments.length.toString(),
+                        icon: Icons.check_circle_outline,
+                        color: Colors.green,
+                        gradient: const LinearGradient(
+                          colors: [Colors.green, Colors.lightGreen],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        title: 'Cancelled',
+                        value: _cancelledAppointments.length.toString(),
+                        icon: Icons.cancel_outlined,
+                        color: Colors.red,
+                        gradient: const LinearGradient(
+                          colors: [Colors.red, Colors.redAccent],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            unselectedLabelStyle: const TextStyle(fontSize: 14),
-            tabs: [
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.pending_actions, size: 20),
-                    const SizedBox(width: 8),
-                    const Text('Pending'),
-                    if (_pendingAppointments.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _pendingAppointments.length.toString(),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.check_circle_outline, size: 20),
-                    const SizedBox(width: 8),
-                    const Text('Confirmed'),
-                    if (_confirmedAppointments.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _confirmedAppointments.length.toString(),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.done_all, size: 20),
-                    const SizedBox(width: 8),
-                    const Text('Completed'),
-                    if (_completedAppointments.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _completedAppointments.length.toString(),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Tab(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.cancel_outlined, size: 20),
-                    const SizedBox(width: 8),
-                    const Text('Cancelled'),
-                    if (_cancelledAppointments.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.only(left: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _cancelledAppointments.length.toString(),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
           ),
-        ),
-        // Tab Content
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
+          // Tab Bar
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              indicatorColor: Colors.teal,
+              indicatorWeight: 3,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelColor: Colors.teal,
+              unselectedLabelColor: Colors.grey,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+              unselectedLabelStyle: const TextStyle(fontSize: 14),
+              tabs: [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.pending_actions, size: 20),
+                      const SizedBox(width: 8),
+                      const Text('Pending'),
+                      if (_pendingAppointments.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _pendingAppointments.length.toString(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.check_circle_outline, size: 20),
+                      const SizedBox(width: 8),
+                      const Text('Confirmed'),
+                      if (_confirmedAppointments.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _confirmedAppointments.length.toString(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.done_all, size: 20),
+                      const SizedBox(width: 8),
+                      const Text('Completed'),
+                      if (_completedAppointments.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _completedAppointments.length.toString(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.cancel_outlined, size: 20),
+                      const SizedBox(width: 8),
+                      const Text('Cancelled'),
+                      if (_cancelledAppointments.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(left: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _cancelledAppointments.length.toString(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Tab Content
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildAppointmentList(_pendingAppointments),
+                _buildAppointmentList(_confirmedAppointments),
+                _buildAppointmentList(_completedAppointments),
+                _buildAppointmentList(_cancelledAppointments),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+    required Gradient gradient,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildAppointmentList(_pendingAppointments),
-              _buildAppointmentList(_confirmedAppointments),
-              _buildAppointmentList(_completedAppointments),
-              _buildAppointmentList(_cancelledAppointments),
+              Icon(
+                icon,
+                color: Colors.white,
+                size: 32,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
