@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:safe_space_app/web/pages/patient/petpages/pet_patient_profile_page.dart';
 import 'package:safe_space_app/web/pages/patient/petpages/pet_patient_settings_page.dart';
 import 'package:safe_space_app/web/pages/patient/petpages/edit_pet_patient_profile_page.dart';
-import 'package:safe_space_app/web/pages/patient/petpages/petpatient_db.dart';
+import 'package:safe_space_app/models/petpatient_db.dart';
 
 class PetPatientDashboard extends StatefulWidget {
   const PetPatientDashboard({Key? key}) : super(key: key);
@@ -37,11 +37,20 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final profile = await PetPatientDB.getPetPatientProfile(user.uid);
+        final docRef = FirebaseFirestore.instance.collection('pets').doc(user.uid);
+        final docSnapshot = await docRef.get();
+        
+        if (docSnapshot.exists) {
           setState(() {
-          _patientData = profile;
+            _patientData = docSnapshot.data();
             _isLoading = false;
           });
+        } else {
+          setState(() {
+            _patientData = null;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -269,7 +278,7 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
             ),
             const SizedBox(height: 16),
             const Center(
-              child: Text('No recent activity'),
+              child: Text('No Recent Activity'),
             ),
           ],
         ),
