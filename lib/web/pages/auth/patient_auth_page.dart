@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:safe_space_app/services/auth_service.dart';
 import 'package:safe_space_app/models/users_db.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/human_patient_dashboard.dart';
-import 'package:safe_space_app/web/pages/pet/pet_dashboard.dart';
+import 'package:safe_space_app/web/pages/patient/petpages/pet_patient_dashboard.dart';
 import 'dart:developer' as developer;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -295,7 +295,7 @@ class _PatientAuthPageState extends State<PatientAuthPage> {
                         Navigator.pop(context);
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => const PetDashboard()),
+                          MaterialPageRoute(builder: (context) => const PetPatientDashboard()),
                         );
                       },
                     ),
@@ -490,69 +490,6 @@ class _PatientAuthPageState extends State<PatientAuthPage> {
                                 : 'Already have an account? Sign In',
                             style: const TextStyle(
                               color: Colors.teal,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Testing bypass buttons
-                        ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Bypassing authentication for human testing...'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const HumanPatientDashboard(),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            minimumSize: const Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            'TESTING: Bypass Auth (Human)',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Bypassing authentication for pet testing...'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PetDashboard(),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            minimumSize: const Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            'TESTING: Bypass Auth (Pet)',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),

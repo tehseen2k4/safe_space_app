@@ -169,13 +169,6 @@ class _DoctorAuthPageState extends State<DoctorAuthPage> {
     }
   }
 
-  void _navigateToTestDashboard() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const DoctorDashboard()),
-    );
-  }
-
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -338,27 +331,6 @@ class _DoctorAuthPageState extends State<DoctorAuthPage> {
                                 : 'Already have an account? Sign In',
                             style: const TextStyle(
                               color: Colors.teal,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Divider(),
-                        const SizedBox(height: 16),
-                        OutlinedButton(
-                          onPressed: _navigateToTestDashboard,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.green,
-                            side: const BorderSide(color: Colors.green),
-                            minimumSize: const Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            'Test Dashboard (No Auth Required)',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),

@@ -45,9 +45,9 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
       if (user == null) throw Exception('User not logged in');
 
       final querySnapshot = await FirebaseFirestore.instance
-          .collection('humanpatients')
+            .collection('humanpatients')
           .where('uid', isEqualTo: user!.uid)
-          .get();
+            .get();
 
       if (querySnapshot.docs.isEmpty) {
         throw Exception('Patient profile not found');
@@ -107,7 +107,7 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                           snapshot.data!['name'] ?? 'Patient',
                           style: const TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
                         );
@@ -120,42 +120,42 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
             ),
           ),
           const Divider(),
-          // Navigation Items
-          Expanded(
-            child: ListView(
+                // Navigation Items
+                Expanded(
+                  child: ListView(
               padding: EdgeInsets.zero,
-              children: [
-                _buildNavItem(
+                    children: [
+                      _buildNavItem(
                   icon: Icons.dashboard,
                   label: 'Dashboard',
                   isSelected: _selectedNavItem == 'home',
                   onTap: () => _updateSelectedItem('home'),
-                ),
-                _buildNavItem(
+                      ),
+                      _buildNavItem(
                   icon: Icons.person,
                   label: 'Profile',
                   isSelected: _selectedNavItem == 'profile',
                   onTap: () => _updateSelectedItem('profile'),
-                ),
-                _buildNavItem(
+                      ),
+                      _buildNavItem(
                   icon: Icons.calendar_today,
                   label: 'Appointments',
                   isSelected: _selectedNavItem == 'appointments',
                   onTap: () => _updateSelectedItem('appointments'),
-                ),
-                _buildNavItem(
+                      ),
+                      _buildNavItem(
                   icon: Icons.medical_services,
                   label: 'Find Doctors',
                   isSelected: _selectedNavItem == 'doctors',
                   onTap: () => _updateSelectedItem('doctors'),
-                ),
-                _buildNavItem(
+                      ),
+                      _buildNavItem(
                   icon: Icons.message,
                   label: 'Messages',
                   isSelected: _selectedNavItem == 'messages',
                   onTap: () => _updateSelectedItem('messages'),
-                ),
-                _buildNavItem(
+                      ),
+                      _buildNavItem(
                   icon: Icons.settings,
                   label: 'Settings',
                   isSelected: _selectedNavItem == 'settings',
@@ -165,13 +165,13 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
             ),
           ),
           // Collapse Button
-          IconButton(
+                      IconButton(
             icon: Icon(_isSidebarCollapsed ? Icons.chevron_right : Icons.chevron_left),
-            onPressed: () {
-              setState(() {
-                _isSidebarCollapsed = !_isSidebarCollapsed;
-              });
-            },
+                        onPressed: () {
+                          setState(() {
+                            _isSidebarCollapsed = !_isSidebarCollapsed;
+                          });
+                        },
           ),
         ],
       ),
@@ -186,9 +186,9 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
   }) {
     return ListTile(
       leading: Icon(
-        icon,
-        color: isSelected ? Colors.teal : Colors.grey[600],
-      ),
+            icon,
+            color: isSelected ? Colors.teal : Colors.grey[600],
+          ),
       title: _isSidebarCollapsed
           ? null
           : Text(
@@ -232,8 +232,8 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
 
           final patientData = snapshot.data!;
 
-          switch (_selectedNavItem) {
-            case 'home':
+    switch (_selectedNavItem) {
+      case 'home':
               return _buildHomeContent(patientData);
             case 'profile':
               return HumanPatientProfilePage(
@@ -247,15 +247,15 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                   _updateSelectedItem('profile');
                 },
               );
-            case 'appointments':
+      case 'appointments':
               return const Center(child: Text('Appointments Page - Coming Soon'));
-            case 'doctors':
+      case 'doctors':
               return const Center(child: Text('Find Doctors Page - Coming Soon'));
-            case 'messages':
+      case 'messages':
               return const Center(child: Text('Messages Page - Coming Soon'));
             case 'settings':
               return const HumanPatientSettingsPage();
-            default:
+      default:
               return _buildHomeContent(patientData);
           }
         },
@@ -291,21 +291,21 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                   child: const Icon(Icons.person, size: 40, color: Colors.teal),
                 ),
                 const SizedBox(width: 24),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                         'Welcome back, ${patientData['name'] ?? 'Patient'}!',
-                        style: const TextStyle(
+                  style: const TextStyle(
                           fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
                         'Here\'s your health overview',
-                        style: TextStyle(
+                  style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[600],
                         ),
@@ -351,28 +351,28 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
           const SizedBox(height: 24),
           // Recent Activity
           Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
+          ],
+        ),
+        child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
                   'Recent Activity',
-                  style: TextStyle(
+              style: TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
                 const SizedBox(height: 16),
                 const Center(
                   child: Text(
@@ -382,9 +382,9 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                       fontSize: 16,
                     ),
                   ),
-                ),
-              ],
             ),
+          ],
+        ),
           ),
         ],
       ),
@@ -417,11 +417,11 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
             icon,
             color: color,
             size: 32,
-          ),
-          const SizedBox(height: 16),
-          Text(
+              ),
+              const SizedBox(height: 16),
+                  Text(
             value,
-            style: TextStyle(
+                    style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: color,
@@ -448,33 +448,33 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
           _buildSidebar(),
           Expanded(
             child: Column(
-              children: [
+      children: [
                 // Header
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
                   child: Row(
-                    children: [
-                      Text(
+                            children: [
+                              Text(
                         _getPageTitle(),
-                        style: const TextStyle(
+                                style: const TextStyle(
                           fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.bold,
                         ),
                       ),
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.notifications),
-                        onPressed: () {
+                      onPressed: () {
                           // TODO: Implement notifications
                         },
                       ),
@@ -494,12 +494,12 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                 // Main Content
                 Expanded(
                   child: _buildMainContent(),
+                    ),
+                  ],
                 ),
-              ],
-            ),
           ),
         ],
-      ),
+        ),
     );
   }
 } 
