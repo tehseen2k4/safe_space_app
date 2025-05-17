@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:safe_space_app/services/auth_service.dart';
 import 'package:safe_space_app/models/users_db.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/human_patient_dashboard.dart';
-import 'package:safe_space_app/web/pages/pet/pet_dashboard.dart';
+import 'package:safe_space_app/web/pages/patient/petpages/pet_patient_dashboard.dart';
 import 'dart:developer' as developer;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -295,7 +295,7 @@ class _PatientAuthPageState extends State<PatientAuthPage> {
                         Navigator.pop(context);
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => const PetDashboard()),
+                          MaterialPageRoute(builder: (context) => const PetPatientDashboard()),
                         );
                       },
                     ),
