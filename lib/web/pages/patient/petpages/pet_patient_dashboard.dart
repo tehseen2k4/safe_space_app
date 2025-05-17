@@ -278,7 +278,7 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
             ),
             const SizedBox(height: 16),
             const Center(
-              child: Text('No recent activity'),
+              child: Text('No Recent Activity'),
             ),
           ],
         ),
