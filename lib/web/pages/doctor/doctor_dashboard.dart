@@ -9,6 +9,7 @@ import 'package:safe_space_app/web/pages/auth/auth_selection_page.dart';
 import 'package:safe_space_app/models/users_db.dart';
 import 'package:safe_space_app/web/pages/doctor/edit_doctor_profile_page.dart';
 import 'package:safe_space_app/web/pages/doctor/doctor_availability_screen.dart';
+import 'package:safe_space_app/web/pages/doctor/doctor_settings_page.dart';
 
 class DoctorDashboard extends StatefulWidget {
   const DoctorDashboard({Key? key}) : super(key: key);
@@ -254,7 +255,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> with SingleTickerProv
             case 'messages':
               return const Center(child: Text('Messages Page - Coming Soon'));
             case 'settings':
-              return const Center(child: Text('Settings Page - Coming Soon'));
+              return const DoctorSettingsPage();
             default:
               return _buildHomeContent(doctorData);
           }
