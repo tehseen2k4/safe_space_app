@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:safe_space_app/models/patients_db.dart';
-import 'package:safe_space_app/web/pages/patient/petpages/petpatient_db.dart';
+import 'package:safe_space_app/models/petpatient_db.dart';
 
 class PetPatientProfilePage extends StatefulWidget {
   final VoidCallback? onEditProfile;
@@ -31,11 +30,20 @@ class _PetPatientProfilePageState extends State<PetPatientProfilePage> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final profile = await PetPatientDB.getPetPatientProfile(user.uid);
-        setState(() {
-          _profileData = profile;
-          _isLoading = false;
-        });
+        final docRef = FirebaseFirestore.instance.collection('pets').doc(user.uid);
+        final docSnapshot = await docRef.get();
+        
+        if (docSnapshot.exists) {
+          setState(() {
+            _profileData = docSnapshot.data();
+            _isLoading = false;
+          });
+        } else {
+          setState(() {
+            _profileData = null;
+            _isLoading = false;
+          });
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
