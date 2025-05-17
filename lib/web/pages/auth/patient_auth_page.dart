@@ -284,7 +284,7 @@ class _PatientAuthPageState extends State<PatientAuthPage> {
                         Navigator.pop(context);
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (context) => const PatientDashboard()),
+                          MaterialPageRoute(builder: (context) => const HumanPatientDashboard()),
                         );
                       },
                     ),
@@ -506,7 +506,7 @@ class _PatientAuthPageState extends State<PatientAuthPage> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const PatientDashboard(),
+                                builder: (context) => const HumanPatientDashboard(),
                               ),
                             );
                           },
