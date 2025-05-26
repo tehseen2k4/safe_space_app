@@ -8,6 +8,7 @@ import 'package:safe_space_app/web/pages/patient/humanpages/human_patient_settin
 import 'package:safe_space_app/web/pages/patient/humanpages/edit_human_patient_profile_page.dart';
 import 'package:safe_space_app/web/pages/web_home_page.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/human_patient_chat_page.dart';
+import 'package:safe_space_app/web/pages/patient/humanpages/human_appointments_page.dart';
 
 class HumanPatientDashboard extends StatefulWidget {
   const HumanPatientDashboard({Key? key}) : super(key: key);
@@ -234,8 +235,8 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
 
           final patientData = snapshot.data!;
 
-    switch (_selectedNavItem) {
-      case 'home':
+          switch (_selectedNavItem) {
+            case 'home':
               return _buildHomeContent(patientData);
             case 'profile':
               return HumanPatientProfilePage(
@@ -249,15 +250,15 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                   _updateSelectedItem('profile');
                 },
               );
-      case 'appointments':
-              return const Center(child: Text('Appointments Page - Coming Soon'));
-      case 'doctors':
+            case 'appointments':
+              return const HumanAppointmentsPage();
+            case 'doctors':
               return const Center(child: Text('Find Doctors Page - Coming Soon'));
-      case 'messages':
+            case 'messages':
               return const HumanPatientChatPage();
             case 'settings':
               return const HumanPatientSettingsPage();
-      default:
+            default:
               return _buildHomeContent(patientData);
           }
         },
