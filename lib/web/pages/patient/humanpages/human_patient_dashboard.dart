@@ -10,6 +10,7 @@ import 'package:safe_space_app/web/pages/web_home_page.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/human_patient_chat_page.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/human_appointments_page.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/human_book_appointment_page.dart';
+import 'package:safe_space_app/web/pages/patient/humanpages/human_find_doctors_page.dart';
 
 class HumanPatientDashboard extends StatefulWidget {
   const HumanPatientDashboard({Key? key}) : super(key: key);
@@ -264,7 +265,9 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
             case 'appointments':
               return const HumanAppointmentsPage();
             case 'doctors':
-              return const Center(child: Text('Find Doctors Page - Coming Soon'));
+              return HumanFindDoctorsPage(
+                onBookAppointment: () => _updateSelectedItem('book_appointment'),
+              );
             case 'messages':
               return const HumanPatientChatPage();
             case 'settings':

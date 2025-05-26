@@ -9,6 +9,7 @@ import 'package:safe_space_app/models/petpatient_db.dart';
 import 'package:safe_space_app/web/pages/web_home_page.dart';
 import 'package:safe_space_app/web/pages/patient/petpages/pet_patient_chat_page.dart';
 import 'package:safe_space_app/web/pages/patient/petpages/pet_book_appointment_page.dart';
+import 'package:safe_space_app/web/pages/patient/petpages/pet_find_vets_page.dart';
 
 class PetPatientDashboard extends StatefulWidget {
   const PetPatientDashboard({Key? key}) : super(key: key);
@@ -249,7 +250,9 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
           ),
         'book_appointment' => const PetBookAppointmentPage(),
         'appointments' => const PetAppointmentsPage(),
-        'vets' => const Center(child: Text('Find Vets Page - Coming Soon')),
+        'vets' => PetFindVetsPage(
+            onBookAppointment: () => _updateSelectedItem('book_appointment'),
+          ),
         'messages' => const PetPatientChatPage(),
         'settings' => const PetPatientSettingsPage(),
         _ => _buildHomeContent(),
