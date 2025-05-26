@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'auth/auth_selection_page.dart';
+import 'dart:math';
+import 'auth/widgets/auth_background.dart';
 
 class WebHomePage extends StatefulWidget {
   const WebHomePage({Key? key}) : super(key: key);
@@ -47,28 +49,96 @@ class _WebHomePageState extends State<WebHomePage> with SingleTickerProviderStat
         controller: _scrollController,
         child: Column(
           children: [
-            // Hero Section with Parallax Effect
+            // Hero Section with Enhanced Teal Background
             Container(
               height: 700,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.teal.withOpacity(0.1),
-                    Colors.white,
-                  ],
-                ),
-              ),
               child: Stack(
                 children: [
-                  // Background Pattern
-                  Positioned.fill(
-                    child: Opacity(
-                      opacity: 0.1,
-                      child: CustomPaint(
-                        painter: PatternPainter(),
+                  // Custom background with enhanced teal gradient
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.teal.withOpacity(0.25),
+                          Colors.teal.withOpacity(0.15),
+                          Colors.teal.withOpacity(0.2),
+                        ],
                       ),
+                    ),
+                  ),
+                  // Medical icons with enhanced opacity
+                  Positioned(
+                    top: 50,
+                    right: 50,
+                    child: _buildDoodle(
+                      Icons.favorite,
+                      Colors.teal.withOpacity(0.15),
+                      size: 100,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 100,
+                    left: 50,
+                    child: _buildDoodle(
+                      Icons.medical_services,
+                      Colors.teal.withOpacity(0.15),
+                      size: 80,
+                    ),
+                  ),
+                  Positioned(
+                    top: 200,
+                    left: 100,
+                    child: _buildDoodle(
+                      Icons.health_and_safety,
+                      Colors.teal.withOpacity(0.15),
+                      size: 60,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 200,
+                    right: 100,
+                    child: _buildDoodle(
+                      Icons.person,
+                      Colors.teal.withOpacity(0.15),
+                      size: 70,
+                    ),
+                  ),
+                  Positioned(
+                    top: 150,
+                    right: 150,
+                    child: _buildDoodle(
+                      Icons.local_hospital,
+                      Colors.teal.withOpacity(0.15),
+                      size: 45,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 150,
+                    left: 150,
+                    child: _buildDoodle(
+                      Icons.medication,
+                      Colors.teal.withOpacity(0.15),
+                      size: 55,
+                    ),
+                  ),
+                  Positioned(
+                    top: 300,
+                    left: 200,
+                    child: _buildDoodle(
+                      Icons.medical_information,
+                      Colors.teal.withOpacity(0.15),
+                      size: 40,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 300,
+                    right: 200,
+                    child: _buildDoodle(
+                      Icons.healing,
+                      Colors.teal.withOpacity(0.15),
+                      size: 50,
                     ),
                   ),
                   // Content
@@ -948,24 +1018,15 @@ class _WebHomePageState extends State<WebHomePage> with SingleTickerProviderStat
       ),
     );
   }
-}
 
-class PatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.teal
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    const spacing = 30.0;
-    for (var i = 0; i < size.width; i += spacing.toInt()) {
-      for (var j = 0; j < size.height; j += spacing.toInt()) {
-        canvas.drawCircle(Offset(i.toDouble(), j.toDouble()), 1, paint);
-      }
-    }
+  Widget _buildDoodle(IconData icon, Color color, {required double size}) {
+    return Transform.rotate(
+      angle: 0.2,
+      child: Icon(
+        icon,
+        size: size,
+        color: color,
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 } 
