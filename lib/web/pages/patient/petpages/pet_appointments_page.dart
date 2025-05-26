@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:safe_space_app/models/humanappointment_db.dart';
 import 'package:safe_space_app/models/petappointment_db.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 
-class MyAppointmentsDoctorPage extends StatefulWidget {
-  const MyAppointmentsDoctorPage({Key? key}) : super(key: key);
+class PetAppointmentsPage extends StatefulWidget {
+  const PetAppointmentsPage({Key? key}) : super(key: key);
 
   @override
-  State<MyAppointmentsDoctorPage> createState() => _MyAppointmentsDoctorPageState();
+  State<PetAppointmentsPage> createState() => _PetAppointmentsPageState();
 }
 
-class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> with SingleTickerProviderStateMixin {
+class _PetAppointmentsPageState extends State<PetAppointmentsPage> with SingleTickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late TabController _tabController;
-  List<dynamic> _allAppointments = [];
-  List<dynamic> _pendingAppointments = [];
-  List<dynamic> _confirmedAppointments = [];
-  List<dynamic> _completedAppointments = [];
-  List<dynamic> _cancelledAppointments = [];
+  List<PetAppointmentDb> _allAppointments = [];
+  List<PetAppointmentDb> _pendingAppointments = [];
+  List<PetAppointmentDb> _confirmedAppointments = [];
+  List<PetAppointmentDb> _completedAppointments = [];
+  List<PetAppointmentDb> _cancelledAppointments = [];
   Set<String> _expandedCards = {};
-  final TextEditingController _notesController = TextEditingController();
 
   @override
   void initState() {
@@ -33,7 +30,6 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
   @override
   void dispose() {
     _tabController.dispose();
-    _notesController.dispose();
     super.dispose();
   }
 
@@ -42,35 +38,10 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
     if (user == null) return;
 
     try {
-      // Get doctor type from Firestore
-      final doctorDoc = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(user.uid)
-          .get();
-
-      if (!doctorDoc.exists) {
-        print("Doctor document not found");
-        return;
-      }
-
-      final doctorType = doctorDoc.data()?['doctorType'] as String?;
-      print("Doctor type: $doctorType"); // Debug print
-
-      if (doctorType == null) {
-        print("Doctor type not found");
-        return;
-      }
-
-      // Determine collection based on doctor type
-      final collectionName = doctorType.toLowerCase().trim() == 'human' ? 'appointments' : 'petappointments';
-      print("Using collection: $collectionName"); // Debug print
-
       final querySnapshot = await FirebaseFirestore.instance
-          .collection(collectionName)
-          .where('doctorUid', isEqualTo: user.uid)
+          .collection('petappointments')
+          .where('uid', isEqualTo: user.uid)
           .get();
-
-      print("Found ${querySnapshot.docs.length} appointments"); // Debug print
 
       if (querySnapshot.docs.isEmpty) {
         setState(() {
@@ -81,22 +52,9 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
       }
 
       setState(() {
-        _allAppointments = querySnapshot.docs.map((doc) {
-          final data = doc.data();
-          print("Creating appointment from data: ${data['typeofappointment']}"); // Debug print
-          // Create appointment based on doctor type
-          if (doctorType.toLowerCase() == 'human') {
-            print("Creating HumanAppointmentDb"); // Debug print
-            final appointment = HumanAppointmentDb.fromJson(data);
-            appointment.documentId = doc.id;
-            return appointment;
-          } else {
-            print("Creating PetAppointmentDb"); // Debug print
-            final appointment = PetAppointmentDb.fromJson(data);
-            appointment.documentId = doc.id;
-            return appointment;
-          }
-        }).toList();
+        _allAppointments = querySnapshot.docs
+            .map((doc) => PetAppointmentDb.fromJson(doc.data()))
+            .toList();
         _categorizeAppointments();
       });
     } catch (e) {
@@ -117,105 +75,6 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
     _cancelledAppointments = _allAppointments
         .where((appointment) => appointment.responseStatus == 'cancelled')
         .toList();
-  }
-
-  Future<void> _handleAppointmentResponse(dynamic appointment, String status) async {
-    try {
-      // Clear any existing notes when starting a new response
-      _notesController.clear();
-      
-      String response = status == 'confirmed' ? 'Appointment confirmed' : 'Appointment rejected';
-      
-      // Get the collection name based on appointment type
-      String collectionName = appointment is HumanAppointmentDb ? 'appointments' : 'petappointments';
-      
-      // Update the appointment in Firestore using the correct collection
-      await FirebaseFirestore.instance
-          .collection(collectionName)
-          .doc(appointment.documentId)
-          .update({
-        'doctorResponse': response,
-        'responseStatus': status,
-        'responseTimestamp': FieldValue.serverTimestamp(),
-        'doctorNotes': _notesController.text.isNotEmpty ? _notesController.text : '',
-      });
-
-      // Refresh the appointments list
-      await _fetchAppointments();
-      
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Appointment ${status.toLowerCase()} successfully'),
-            backgroundColor: status == 'confirmed' ? Colors.green : Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      print("Error updating appointment: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update appointment: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _markAppointmentAsCompleted(dynamic appointment) async {
-    try {
-      print("Appointment type: ${appointment.runtimeType}"); // Debug print for appointment type
-      
-      // Get the collection name based on appointment type
-      String collectionName;
-      if (appointment is HumanAppointmentDb) {
-        print("Detected as HumanAppointmentDb"); // Debug print
-        collectionName = 'appointments';
-      } else if (appointment is PetAppointmentDb) {
-        print("Detected as PetAppointmentDb"); // Debug print
-        collectionName = 'petappointments';
-      } else {
-        print("Unknown type: ${appointment.runtimeType}"); // Debug print
-        throw Exception('Unknown appointment type');
-      }
-      
-      print("Marking as completed in collection: $collectionName"); // Debug print
-      print("Document ID: ${appointment.documentId}"); // Debug print
-      
-      await FirebaseFirestore.instance
-          .collection(collectionName)
-          .doc(appointment.documentId)
-          .update({
-        'responseStatus': 'completed',
-        'responseTimestamp': FieldValue.serverTimestamp(),
-      });
-
-      // Refresh the appointments list
-      await _fetchAppointments();
-      
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Appointment marked as completed'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      print("Error marking appointment as completed: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update appointment: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 
   @override
@@ -516,14 +375,14 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
     );
   }
 
-  Widget _buildAppointmentList(List<dynamic> appointments) {
+  Widget _buildAppointmentList(List<PetAppointmentDb> appointments) {
     if (appointments.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.calendar_today,
+              Icons.pets,
               size: 64,
               color: Colors.grey[400],
             ),
@@ -553,7 +412,7 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
     );
   }
 
-  Widget _buildAppointmentCard(dynamic appointment) {
+  Widget _buildAppointmentCard(PetAppointmentDb appointment) {
     Color statusColor = _getStatusColor(appointment.responseStatus ?? 'pending');
     bool isExpanded = _expandedCards.contains(appointment.appointmentId);
     
@@ -576,8 +435,8 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
         child: Column(
           children: [
             InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () {
+              borderRadius: BorderRadius.circular(20),
+              onTap: () {
                 setState(() {
                   if (isExpanded) {
                     _expandedCards.remove(appointment.appointmentId);
@@ -585,31 +444,31 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
                     _expandedCards.add(appointment.appointmentId);
                   }
                 });
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Text(
-                        appointment.responseStatus?.toUpperCase() ?? 'PENDING',
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Text(
+                            appointment.responseStatus?.toUpperCase() ?? 'PENDING',
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         Row(
@@ -620,14 +479,14 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
                                 color: Colors.grey[600],
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      appointment.appointmentId,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
+                              ),
+                            ),
+                            Text(
+                              appointment.appointmentId,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
                             ),
                             const SizedBox(width: 8),
                             Container(
@@ -643,98 +502,98 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
                               ),
                             ),
                           ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: Colors.teal[100],
-                      child: Icon(
-                        Icons.person,
-                        color: Colors.teal,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            appointment.username,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Age: ${appointment.age} | ${appointment.gender}',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.watch_later,
-                      size: 18,
-                      color: Colors.teal,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      appointment.timeslot,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.description,
-                      size: 18,
-                      color: Colors.teal,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        appointment.reasonforvisit,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Urgency: ${appointment.urgencylevel}',
-                      style: TextStyle(
-                        color: _getUrgencyColor(appointment.urgencylevel),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: Colors.teal.withOpacity(0.1),
+                          child: const Icon(
+                            Icons.pets,
+                            color: Colors.teal,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                appointment.username,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Type: ${appointment.typeofappointment}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.watch_later,
+                          size: 18,
+                          color: Colors.teal,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          appointment.timeslot,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.description,
+                          size: 18,
+                          color: Colors.teal,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            appointment.reasonforvisit,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Urgency: ${appointment.urgencylevel}',
+                          style: TextStyle(
+                            color: _getUrgencyColor(appointment.urgencylevel),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -754,79 +613,33 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildDetailSection('Contact Information', [
+                    _buildDetailSection('Pet Information', [
                       _buildDetailRow('Email', appointment.email, Icons.email),
                       _buildDetailRow('Phone', appointment.phonenumber, Icons.phone),
+                      _buildDetailRow('Gender', appointment.gender, Icons.pets),
+                      _buildDetailRow('Age', appointment.age, Icons.calendar_today),
                     ]),
                     const SizedBox(height: 16),
                     _buildDetailSection('Appointment Details', [
                       _buildDetailRow('Type', appointment.typeofappointment, Icons.access_alarm),
                       _buildDetailRow('Doctor Preference', appointment.doctorpreference, Icons.favorite),
                     ]),
-                    const SizedBox(height: 16),
-                    _buildDetailSection('Notes', [
-                      TextField(
-                        controller: _notesController,
-                        decoration: InputDecoration(
-                          hintText: 'Add notes...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                        maxLines: 3,
-                      ),
-                    ]),
-                    const SizedBox(height: 16),
-                    if (appointment.responseStatus == 'pending')
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
+                    if ((appointment.responseStatus ?? 'pending') == 'rejected' && 
+                        (appointment.suggestedTimeslot ?? '').isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ElevatedButton(
-                            onPressed: () => _handleAppointmentResponse(appointment, 'confirmed'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                            ),
-                            child: const Text('Accept'),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed: () => _handleAppointmentResponse(appointment, 'cancelled'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                            ),
-                            child: const Text('Reject'),
-                          ),
-                        ],
-                      )
-                    else if (appointment.responseStatus == 'confirmed')
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () => _markAppointmentAsCompleted(appointment),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                            ),
-                            child: const Text('Mark as Completed'),
-                          ),
+                          const SizedBox(height: 16),
+                          _buildDetailSection('Suggested Alternative Time', [
+                            _buildDetailRow('New Time', appointment.suggestedTimeslot ?? '', Icons.access_time),
+                          ]),
                         ],
                       ),
                   ],
                 ),
-                ),
-              ],
-            ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -840,7 +653,7 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.teal[800],
+            color: Colors.teal,
           ),
         ),
         const SizedBox(height: 8),
@@ -903,4 +716,4 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
         return Colors.grey;
     }
   }
-}
+} 

@@ -37,6 +37,16 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
   List<String> _groomingNeeds = [];
   bool _isLoading = false;
 
+  // Predefined options for dropdowns and multi-select
+  final List<String> _petTypes = ['Dog', 'Cat', 'Bird', 'Other'];
+  final List<String> _sexOptions = ['Male', 'Female'];
+  final List<String> _neuterStatusOptions = ['Neutered/Spayed', 'Not Neutered/Spayed'];
+  final List<String> _trainingStatusOptions = ['None', 'Basic', 'Intermediate', 'Advanced'];
+  final List<String> _allergyOptions = ['None', 'Food', 'Medication', 'Environmental', 'Other'];
+  final List<String> _specialNeedsOptions = ['None', 'Mobility', 'Vision', 'Hearing', 'Behavioral', 'Other'];
+  final List<String> _dietaryOptions = ['Regular', 'Prescription', 'Raw', 'Vegetarian', 'Other'];
+  final List<String> _groomingOptions = ['Regular', 'Special', 'None'];
+
   @override
   void initState() {
     super.initState();
@@ -145,7 +155,20 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile saved successfully')),
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Text('Profile updated successfully!'),
+                ],
+              ),
+              backgroundColor: Colors.teal,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+            ),
           );
           widget.onSave?.call();
         }
@@ -165,6 +188,376 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
     }
   }
 
+  Widget _buildSection(String title, List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.teal,
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: children,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.teal,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          validator: validator,
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: Icon(icon, color: Colors.teal),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.teal, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String? value,
+    required List<String> items,
+    required void Function(String?) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.teal,
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: value,
+          decoration: InputDecoration(
+            prefixIcon: Icon(
+              _getIconForField(label),
+              color: Colors.teal,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.teal, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+          ),
+          items: items.map((item) => DropdownMenuItem(
+            value: item,
+            child: Text(item),
+          )).toList(),
+          onChanged: onChanged,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please select $label';
+            }
+            return null;
+          },
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+          dropdownColor: Colors.white,
+          icon: const Icon(
+            Icons.arrow_drop_down,
+            color: Colors.teal,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDatePicker({
+    required String label,
+    required DateTime value,
+    required Function(DateTime) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.teal,
+          ),
+        ),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: value,
+              firstDate: DateTime(2000),
+              lastDate: DateTime.now(),
+            );
+            if (date != null) {
+              onChanged(date);
+            }
+          },
+          child: InputDecorator(
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.calendar_today, color: Colors.teal),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.teal, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+            ),
+            child: Text(
+              '${value.day}/${value.month}/${value.year}',
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showMultiSelectDialog(
+    BuildContext context,
+    String title,
+    List<String> options,
+    List<String> selectedItems,
+    Function(List<String>) onSelectionChanged,
+  ) async {
+    List<String> tempSelectedItems = List.from(selectedItems);
+    
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(title),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: options.map((String option) {
+                    return CheckboxListTile(
+                      title: Text(option),
+                      value: tempSelectedItems.contains(option),
+                      onChanged: (bool? value) {
+                        setState(() {
+                          if (value == true) {
+                            tempSelectedItems.add(option);
+                          } else {
+                            tempSelectedItems.remove(option);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: const Text('Done'),
+                  onPressed: () {
+                    onSelectionChanged(tempSelectedItems);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMultiSelectField({
+    required String label,
+    required List<String> selectedItems,
+    required List<String> items,
+    required void Function(List<String>) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.teal,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _showMultiSelectDialog(
+            context,
+            label,
+            items,
+            selectedItems,
+            onChanged,
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    selectedItems.isEmpty
+                        ? 'Select $label'
+                        : selectedItems.join(', '),
+                    style: TextStyle(
+                      color: selectedItems.isEmpty ? Colors.grey[400] : Colors.black87,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.arrow_drop_down,
+                  color: Colors.teal,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  IconData _getIconForField(String label) {
+    switch (label.toLowerCase()) {
+      case 'type':
+        return Icons.pets;
+      case 'gender':
+        return Icons.pets;
+      case 'neuter status':
+        return Icons.medical_services_outlined;
+      case 'training status':
+        return Icons.school_outlined;
+      default:
+        return Icons.arrow_drop_down;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -174,26 +567,50 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
             const Text(
               'Edit Profile',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _saveProfile,
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Icon(Icons.save),
+                  label: Text(_isLoading ? 'Saving...' : 'Save Changes'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
+            // Basic Information
+            _buildSection(
+              'Basic Information',
+              [
+                _buildTextField(
                       controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Pet Name',
-                        border: OutlineInputBorder(),
-                      ),
+                  label: 'Pet Name',
+                  hint: 'Enter pet name',
+                  icon: Icons.pets,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your pet\'s name';
@@ -202,40 +619,46 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _speciesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Species',
-                        border: OutlineInputBorder(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDropdownField(
+                        label: 'Species',
+                        value: _speciesController.text.isEmpty ? null : _speciesController.text,
+                        items: _petTypes,
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _speciesController.text = value);
+                          }
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the species';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildTextField(
                       controller: _breedController,
-                      decoration: const InputDecoration(
-                        labelText: 'Breed',
-                        border: OutlineInputBorder(),
-                      ),
+                        label: 'Breed',
+                        hint: 'Enter breed',
+                        icon: Icons.pets,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter the breed';
                         }
                         return null;
                       },
+                      ),
+                    ),
+                  ],
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
                       controller: _ageController,
-                      decoration: const InputDecoration(
-                        labelText: 'Age (years)',
-                        border: OutlineInputBorder(),
-                      ),
+                        label: 'Age (years)',
+                        hint: 'Enter age',
+                        icon: Icons.cake_outlined,
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -247,13 +670,14 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildTextField(
                       controller: _weightController,
-                      decoration: const InputDecoration(
-                        labelText: 'Weight (kg)',
-                        border: OutlineInputBorder(),
-                      ),
+                        label: 'Weight (kg)',
+                        hint: 'Enter weight',
+                        icon: Icons.monitor_weight_outlined,
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -264,42 +688,76 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
                         }
                         return null;
                       },
+                      ),
+                    ),
+                  ],
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _sexController,
-                      decoration: const InputDecoration(
-                        labelText: 'Sex',
-                        border: OutlineInputBorder(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDropdownField(
+                        label: 'Sex',
+                        value: _sexController.text.isEmpty ? null : _sexController.text,
+                        items: _sexOptions,
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _sexController.text = value);
+                          }
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the sex';
-                        }
-                        return null;
-                      },
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildDropdownField(
+                        label: 'Neuter Status',
+                        value: _neuterStatusController.text.isEmpty ? null : _neuterStatusController.text,
+                        items: _neuterStatusOptions,
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() => _neuterStatusController.text = value);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _neuterStatusController,
-                      decoration: const InputDecoration(
-                        labelText: 'Neuter Status',
-                        border: OutlineInputBorder(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDatePicker(
+                        label: 'Date of Birth',
+                        value: _dateOfBirth,
+                        onChanged: (date) {
+                          setState(() => _dateOfBirth = date);
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the neuter status';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _ownerNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Owner Name',
-                        border: OutlineInputBorder(),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildDatePicker(
+                        label: 'Last Vaccination',
+                        value: _lastVaccination,
+                        onChanged: (date) {
+                          setState(() => _lastVaccination = date);
+                        },
                       ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Owner Information
+            _buildSection(
+              'Owner Information',
+              [
+                _buildTextField(
+                  controller: _ownerNameController,
+                  label: 'Owner Name',
+                  hint: 'Enter owner name',
+                  icon: Icons.person_outline,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter the owner name';
@@ -308,12 +766,14 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
                       controller: _ownerPhoneController,
-                      decoration: const InputDecoration(
-                        labelText: 'Owner Phone',
-                        border: OutlineInputBorder(),
-                      ),
+                        label: 'Owner Phone',
+                        hint: 'Enter phone number',
+                        icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -322,13 +782,14 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildTextField(
                       controller: _emergencyContactController,
-                      decoration: const InputDecoration(
-                        labelText: 'Emergency Contact',
-                        border: OutlineInputBorder(),
-                      ),
+                        label: 'Emergency Contact',
+                        hint: 'Enter emergency contact',
+                        icon: Icons.emergency_outlined,
                       keyboardType: TextInputType.phone,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -337,363 +798,73 @@ class _EditPetPatientProfilePageState extends State<EditPetPatientProfilePage> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _trainingStatusController,
-                      decoration: const InputDecoration(
-                        labelText: 'Training Status',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter the training status';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      title: const Text('Date of Birth'),
-                      subtitle: Text(_dateOfBirth.toString().split(' ')[0]),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: _dateOfBirth,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
-                        );
-                        if (date != null) {
-                          setState(() => _dateOfBirth = date);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      title: const Text('Last Vaccination'),
-                      subtitle: Text(_lastVaccination.toString().split(' ')[0]),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () async {
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: _lastVaccination,
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime.now(),
-                        );
-                        if (date != null) {
-                          setState(() => _lastVaccination = date);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Allergies',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add),
-                                  onPressed: () async {
-                                    final controller = TextEditingController();
-                                    final result = await showDialog<String>(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: const Text('Add Allergy'),
-                                        content: TextField(
-                                          controller: controller,
-                                          decoration: const InputDecoration(
-                                            labelText: 'Allergy',
-                                          ),
-                                          onSubmitted: (value) {
-                                            Navigator.pop(context, value);
-                                          },
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context, controller.text);
-                                            },
-                                            child: const Text('Add'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                    if (result != null && result.isNotEmpty) {
-                                      setState(() {
-                                        _allergies.add(result);
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                            Wrap(
-                              spacing: 8,
-                              children: _allergies.map((allergy) {
-                                return Chip(
-                                  label: Text(allergy),
-                                  onDeleted: () {
-                                    setState(() {
-                                      _allergies.remove(allergy);
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Special Needs',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add),
-                                  onPressed: () async {
-                                    final controller = TextEditingController();
-                                    final result = await showDialog<String>(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: const Text('Add Special Need'),
-                                        content: TextField(
-                                          controller: controller,
-                                          decoration: const InputDecoration(
-                                            labelText: 'Special Need',
-                                          ),
-                                          onSubmitted: (value) {
-                                            Navigator.pop(context, value);
-                                          },
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context, controller.text);
-                                            },
-                                            child: const Text('Add'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                    if (result != null && result.isNotEmpty) {
-                                      setState(() {
-                                        _specialNeeds.add(result);
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                            Wrap(
-                              spacing: 8,
-                              children: _specialNeeds.map((need) {
-                                return Chip(
-                                  label: Text(need),
-                                  onDeleted: () {
-                                    setState(() {
-                                      _specialNeeds.remove(need);
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Dietary Requirements',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add),
-                                  onPressed: () async {
-                                    final controller = TextEditingController();
-                                    final result = await showDialog<String>(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: const Text('Add Dietary Requirement'),
-                                        content: TextField(
-                                          controller: controller,
-                                          decoration: const InputDecoration(
-                                            labelText: 'Dietary Requirement',
-                                          ),
-                                          onSubmitted: (value) {
-                                            Navigator.pop(context, value);
-                                          },
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context, controller.text);
-                                            },
-                                            child: const Text('Add'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                    if (result != null && result.isNotEmpty) {
-                                      setState(() {
-                                        _dietaryRequirements.add(result);
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                            Wrap(
-                              spacing: 8,
-                              children: _dietaryRequirements.map((requirement) {
-                                return Chip(
-                                  label: Text(requirement),
-                                  onDeleted: () {
-                                    setState(() {
-                                      _dietaryRequirements.remove(requirement);
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Grooming Needs',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add),
-                                  onPressed: () async {
-                                    final controller = TextEditingController();
-                                    final result = await showDialog<String>(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: const Text('Add Grooming Need'),
-                                        content: TextField(
-                                          controller: controller,
-                                          decoration: const InputDecoration(
-                                            labelText: 'Grooming Need',
-                                          ),
-                                          onSubmitted: (value) {
-                                            Navigator.pop(context, value);
-                                          },
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context, controller.text);
-                                            },
-                                            child: const Text('Add'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                    if (result != null && result.isNotEmpty) {
-                                      setState(() {
-                                        _groomingNeeds.add(result);
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                            Wrap(
-                              spacing: 8,
-                              children: _groomingNeeds.map((need) {
-                                return Chip(
-                                  label: Text(need),
-                                  onDeleted: () {
-                                    setState(() {
-                                      _groomingNeeds.remove(need);
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _saveProfile,
-                        child: _isLoading
-                            ? const CircularProgressIndicator()
-                            : const Text('Save Changes'),
-                      ),
                     ),
                   ],
                 ),
-              ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Medical Information
+            _buildSection(
+              'Medical Information',
+              [
+                _buildMultiSelectField(
+                  label: 'Allergies',
+                  selectedItems: _allergies,
+                  items: _allergyOptions,
+                  onChanged: (items) {
+                    setState(() => _allergies = items);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                _buildMultiSelectField(
+                  label: 'Special Needs',
+                  selectedItems: _specialNeeds,
+                  items: _specialNeedsOptions,
+                  onChanged: (items) {
+                    setState(() => _specialNeeds = items);
+                                  },
+                                ),
+                              ],
+                            ),
+            const SizedBox(height: 24),
+            // Care Information
+            _buildSection(
+              'Care Information',
+              [
+                _buildDropdownField(
+                  label: 'Training Status',
+                  value: _trainingStatusController.text.isEmpty ? null : _trainingStatusController.text,
+                  items: _trainingStatusOptions,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _trainingStatusController.text = value);
+                    }
+                  },
+                    ),
+                    const SizedBox(height: 16),
+                _buildDropdownField(
+                  label: 'Dietary Requirements',
+                  value: _dietaryRequirements.isEmpty ? null : _dietaryRequirements.first,
+                  items: _dietaryOptions,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _dietaryRequirements = [value]);
+                    }
+                  },
+                    ),
+                    const SizedBox(height: 16),
+                _buildDropdownField(
+                  label: 'Grooming Needs',
+                  value: _groomingNeeds.isEmpty ? null : _groomingNeeds.first,
+                  items: _groomingOptions,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _groomingNeeds = [value]);
+                                    }
+                                  },
+                                ),
+                              ],
             ),
           ],
         ),

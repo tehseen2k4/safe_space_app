@@ -6,6 +6,7 @@ import 'package:safe_space_app/web/pages/patient/humanpages/human_patient_profil
 import 'package:safe_space_app/web/pages/auth/auth_selection_page.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/human_patient_settings_page.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/edit_human_patient_profile_page.dart';
+import 'package:safe_space_app/web/pages/web_home_page.dart';
 
 class HumanPatientDashboard extends StatefulWidget {
   const HumanPatientDashboard({Key? key}) : super(key: key);
@@ -482,9 +483,76 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                       IconButton(
                         icon: const Icon(Icons.logout),
                         onPressed: () async {
-                          await FirebaseAuth.instance.signOut();
-                          if (mounted) {
-                            Navigator.of(context).pushReplacementNamed('/login');
+                          // Show confirmation dialog
+                          final bool? confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                title: Row(
+                                  children: [
+                                    Icon(Icons.logout, color: Colors.teal),
+                                    const SizedBox(width: 8),
+                                    const Text('Confirm Logout'),
+                                  ],
+                                ),
+                                content: const Text(
+                                  'Are you sure you want to log out?',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: Text(
+                                      'Cancel',
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.teal,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Logout',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+
+                          if (confirm == true && mounted) {
+                            try {
+                              await FirebaseAuth.instance.signOut();
+                              if (mounted) {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(
+                                    builder: (context) => const WebHomePage(),
+                                  ),
+                                  (route) => false,
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Error signing out: $e'),
+                                    backgroundColor: Colors.red,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
                           }
                         },
                       ),

@@ -62,7 +62,37 @@ class _PetPatientProfilePageState extends State<PetPatientProfilePage> {
     }
 
     if (_profileData == null) {
-      return const Center(child: Text('No profile data found'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Profile not found',
+              style: TextStyle(fontSize: 20, color: Colors.grey),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Navigate to create profile page
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Create Profile',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return SingleChildScrollView(
@@ -70,26 +100,26 @@ class _PetPatientProfilePageState extends State<PetPatientProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Profile',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+          // Header
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 24),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            child: Row(
               children: [
                 CircleAvatar(
                   radius: 40,
-                        backgroundColor: Colors.grey[200],
-                        child: const Icon(Icons.pets, size: 40, color: Colors.grey),
+                  backgroundColor: Colors.teal[100],
+                  child: const Icon(Icons.pets, size: 40, color: Colors.teal),
                 ),
                 const SizedBox(width: 24),
                 Expanded(
@@ -97,7 +127,7 @@ class _PetPatientProfilePageState extends State<PetPatientProfilePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                              _profileData!['name'] ?? 'Pet Name',
+                        _profileData!['name'] ?? 'Not Set',
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -105,72 +135,138 @@ class _PetPatientProfilePageState extends State<PetPatientProfilePage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                              _profileData!['species'] ?? 'Species',
+                        _profileData!['type'] ?? 'Not Set',
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[600],
                         ),
                       ),
-                          ],
+                      const SizedBox(height: 4),
+                      Text(
+                        _profileData!['email'] ?? 'Not Set',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 ElevatedButton.icon(
-                        onPressed: widget.onEditProfile,
+                  onPressed: widget.onEditProfile,
                   icon: const Icon(Icons.edit),
                   label: const Text('Edit Profile'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ],
             ),
-                  const SizedBox(height: 32),
-                  _buildInfoSection(
-                    title: 'Pet Information',
-                    items: [
-                      _buildInfoItem('Species', _profileData!['species'] ?? 'Not specified'),
-                      _buildInfoItem('Breed', _profileData!['breed'] ?? 'Not specified'),
-                      _buildInfoItem('Age', '${_profileData!['age'] ?? 'Not specified'} years'),
-                      _buildInfoItem('Weight', '${_profileData!['weight'] ?? 'Not specified'} kg'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+          ),
+          const SizedBox(height: 24),
+          // Basic Information
+          _buildSection(
+            'Basic Information',
+            [
+              _buildInfoRow('Species', _profileData!['type'] ?? 'Not Set'),
+              _buildInfoRow('Breed', _profileData!['breed'] ?? 'Not Set'),
+              _buildInfoRow('Age', '${_profileData!['age'] ?? 'Not Set'} years'),
+              _buildInfoRow('Gender', _profileData!['sex'] ?? 'Not Set'),
+              _buildInfoRow('Date of Birth', _profileData!['dateOfBirth'] != null 
+                ? (_profileData!['dateOfBirth'] as Timestamp).toDate().toString().split(' ')[0]
+                : 'Not Set'),
+              _buildInfoRow('Weight', '${_profileData!['weight'] ?? 'Not Set'} kg'),
+              _buildInfoRow('Neuter Status', _profileData!['neuterStatus'] ?? 'Not Set'),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Owner Information
+          _buildSection(
+            'Owner Information',
+            [
+              _buildInfoRow('Owner Name', _profileData!['ownerName'] ?? 'Not Set'),
+              _buildInfoRow('Owner Phone', _profileData!['ownerPhone'] ?? 'Not Set'),
+              _buildInfoRow('Emergency Contact', _profileData!['emergencyContact'] ?? 'Not Set'),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Medical Information
+          _buildSection(
+            'Medical Information',
+            [
+              _buildInfoRow('Allergies', (_profileData!['allergies'] as List?)?.join(', ') ?? 'None'),
+              _buildInfoRow('Special Needs', (_profileData!['specialNeeds'] as List?)?.join(', ') ?? 'None'),
+              _buildInfoRow('Last Vaccination', _profileData!['lastVaccination'] != null 
+                ? (_profileData!['lastVaccination'] as Timestamp).toDate().toString().split(' ')[0]
+                : 'Not Set'),
+              _buildInfoRow('Dietary Requirements', (_profileData!['dietaryRequirements'] as List?)?.join(', ') ?? 'None'),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Care Information
+          _buildSection(
+            'Care Information',
+            [
+              _buildInfoRow('Grooming Needs', (_profileData!['groomingNeeds'] as List?)?.join(', ') ?? 'None'),
+              _buildInfoRow('Training Status', _profileData!['trainingStatus'] ?? 'Not Set'),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoSection({
-    required String title,
-    required List<Widget> items,
-  }) {
-    return Column(
+  Widget _buildSection(String title, List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-        Text(
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
               title,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: Colors.teal,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        ...items,
+          const Divider(height: 1),
+          ...children,
         ],
+      ),
     );
   }
 
-  Widget _buildInfoItem(String label, String value) {
+  Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 150,
             child: Text(
               label,
               style: TextStyle(
+                fontSize: 14,
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
@@ -180,6 +276,7 @@ class _PetPatientProfilePageState extends State<PetPatientProfilePage> {
             child: Text(
               value,
               style: const TextStyle(
+                fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
             ),

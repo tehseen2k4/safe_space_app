@@ -21,6 +21,7 @@ class PetAppointmentDb {
   DateTime? responseTimestamp;
   String? doctorNotes;
   String? suggestedTimeslot;
+  String? documentId;  // Add this field to store Firestore document ID
 
   PetAppointmentDb({
     required this.appointmentId,
@@ -43,6 +44,7 @@ class PetAppointmentDb {
     this.responseTimestamp,
     this.doctorNotes,
     this.suggestedTimeslot,
+    this.documentId,  // Add to constructor
   });
 
   factory PetAppointmentDb.fromJson(Map<String, Object?> json) {
@@ -68,7 +70,8 @@ class PetAppointmentDb {
             ? (json['responseTimestamp'] as Timestamp).toDate()
             : null,
         doctorNotes: json['doctorNotes'] as String? ?? '',
-        suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '');
+        suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '',
+        documentId: json['documentId'] as String? ?? '');
   }
 
   Map<String, Object?> toJson() {
@@ -95,6 +98,7 @@ class PetAppointmentDb {
           : null,
       'doctorNotes': doctorNotes,
       'suggestedTimeslot': suggestedTimeslot,
+      'documentId': documentId,
     };
   }
 
@@ -107,6 +111,32 @@ class PetAppointmentDb {
       print("Appointment saved successfully to Firestore.");
     } catch (e) {
       print("Failed to save appointment: $e");
+    }
+  }
+
+  /// Function to update appointment response
+  Future<void> updateAppointmentResponse({
+    required String response,
+    required String status,
+    String? notes,
+    String? suggestedTime,
+  }) async {
+    try {
+      final collection = FirebaseFirestore.instance.collection('petappointments');
+      final docRef = collection.doc(appointmentId);
+      
+      await docRef.update({
+        'doctorResponse': response,
+        'responseStatus': status,
+        'responseTimestamp': FieldValue.serverTimestamp(),
+        if (notes != null) 'doctorNotes': notes,
+        if (suggestedTime != null) 'suggestedTimeslot': suggestedTime,
+      });
+      
+      print("Appointment response updated successfully");
+    } catch (e) {
+      print("Failed to update appointment response: $e");
+      throw e;
     }
   }
 }

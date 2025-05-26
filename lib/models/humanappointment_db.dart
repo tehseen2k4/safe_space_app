@@ -21,6 +21,7 @@ class HumanAppointmentDb {
   DateTime? responseTimestamp;
   String? doctorNotes;
   String? suggestedTimeslot;
+  String? documentId;
 
   HumanAppointmentDb({
     required this.appointmentId,
@@ -43,6 +44,7 @@ class HumanAppointmentDb {
     this.responseTimestamp,
     this.doctorNotes,
     this.suggestedTimeslot,
+    this.documentId,
   });
 
   factory HumanAppointmentDb.fromJson(Map<String, Object?> json) {
@@ -68,7 +70,8 @@ class HumanAppointmentDb {
             ? (json['responseTimestamp'] as Timestamp).toDate()
             : null,
         doctorNotes: json['doctorNotes'] as String? ?? '',
-        suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '');
+        suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '',
+        documentId: json['documentId'] as String? ?? '');
   }
 
   Map<String, Object?> toJson() {
@@ -95,19 +98,46 @@ class HumanAppointmentDb {
           : null,
       'doctorNotes': doctorNotes,
       'suggestedTimeslot': suggestedTimeslot,
+      'documentId': documentId,
     };
   }
 
   /// Function to save the appointment to Firestore
   Future<void> saveToFirestore() async {
     final collection =
-        FirebaseFirestore.instance.collection('humanappointments');
+        FirebaseFirestore.instance.collection('appointments');
 
     try {
       await collection.doc(appointmentId).set(toJson());
       print("Appointment saved successfully to Firestore.");
     } catch (e) {
       print("Failed to save appointment: $e");
+    }
+  }
+
+  /// Function to update appointment response
+  Future<void> updateAppointmentResponse({
+    required String response,
+    required String status,
+    String? notes,
+    String? suggestedTime,
+  }) async {
+    try {
+      final collection = FirebaseFirestore.instance.collection('appointments');
+      final docRef = collection.doc(appointmentId);
+      
+      await docRef.update({
+        'doctorResponse': response,
+        'responseStatus': status,
+        'responseTimestamp': FieldValue.serverTimestamp(),
+        if (notes != null) 'doctorNotes': notes,
+        if (suggestedTime != null) 'suggestedTimeslot': suggestedTime,
+      });
+      
+      print("Appointment response updated successfully");
+    } catch (e) {
+      print("Failed to update appointment response: $e");
+      throw e;
     }
   }
 }
