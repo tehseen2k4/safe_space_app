@@ -5,42 +5,26 @@ import 'package:safe_space_app/services/chat_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-class DoctorChatPage extends StatefulWidget {
-  const DoctorChatPage({Key? key}) : super(key: key);
+class HumanPatientChatPage extends StatefulWidget {
+  const HumanPatientChatPage({Key? key}) : super(key: key);
 
   @override
-  State<DoctorChatPage> createState() => _DoctorChatPageState();
+  State<HumanPatientChatPage> createState() => _HumanPatientChatPageState();
 }
 
-class _DoctorChatPageState extends State<DoctorChatPage> {
+class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
   final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
   final User? _currentUser = FirebaseAuth.instance.currentUser;
   String? _selectedChatId;
-  String? _selectedPatientId;
-  String? _doctorType;
+  String? _selectedDoctorId;
   bool _isLoading = true;
   bool _showConversation = false;
 
   @override
   void initState() {
     super.initState();
-    _loadDoctorType();
-  }
-
-  Future<void> _loadDoctorType() async {
-    if (_currentUser != null) {
-      final doc = await FirebaseFirestore.instance
-          .collection('doctors')
-          .doc(_currentUser!.uid)
-          .get();
-      if (doc.exists) {
-        setState(() {
-          _doctorType = doc.data()?['doctorType'] as String?;
-          _isLoading = false;
-        });
-      }
-    }
+    _isLoading = false;
   }
 
   @override
@@ -51,21 +35,248 @@ class _DoctorChatPageState extends State<DoctorChatPage> {
 
   Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty ||
-        _selectedPatientId == null ||
+        _selectedDoctorId == null ||
         _currentUser == null) return;
 
-    print('[DoctorChatPage] Sending message to patient: $_selectedPatientId');
-    print('[DoctorChatPage] Doctor type: $_doctorType');
+    print('[HumanPatientChatPage] Sending message to doctor: $_selectedDoctorId');
 
     await _chatService.sendMessageToChat(
       senderId: _currentUser!.uid,
-      receiverId: _selectedPatientId!,
+      receiverId: _selectedDoctorId!,
       content: _messageController.text.trim(),
-      senderType: 'doctor',
-      receiverType: _doctorType?.toLowerCase() == 'human' ? 'patient' : 'petpatient',
+      senderType: 'patient',
+      receiverType: 'doctor',
     );
 
     _messageController.clear();
+  }
+
+  Future<void> _showNewChatDialog() async {
+    if (_currentUser == null) {
+      print('[HumanPatientChatPage] Cannot show dialog: User is null');
+      return;
+    }
+
+    try {
+      // Get all human doctors
+      final doctorsSnapshot = await FirebaseFirestore.instance
+          .collection('doctors')
+          .where('doctorType', isEqualTo: 'human')
+          .get();
+
+      // Get existing chats to filter out doctors who already have chats
+      final existingChats = await FirebaseFirestore.instance
+          .collection('chats')
+          .where('participants', arrayContains: _currentUser!.uid)
+          .get();
+
+      final existingDoctorIds = existingChats.docs
+          .map((doc) => (doc.data()['participants'] as List)
+              .firstWhere((id) => id != _currentUser!.uid))
+          .toSet();
+
+      // Filter out doctors who already have chats
+      final availableDoctors = doctorsSnapshot.docs
+          .where((doc) => !existingDoctorIds.contains(doc.id))
+          .toList();
+
+      if (!mounted) return;
+
+      if (availableDoctors.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No available doctors to chat with'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: 400,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.teal[50],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.person_add, color: Colors.teal[700]),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'New Chat',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal[700],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Select a doctor to start chatting',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  height: 300,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(8),
+                    itemCount: availableDoctors.length,
+                    itemBuilder: (context, index) {
+                      final doctor = availableDoctors[index];
+                      return Card(
+                        elevation: 0,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: Colors.grey[200]!),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          leading: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Colors.teal[100],
+                            child: const Icon(
+                              Icons.medical_services,
+                              color: Colors.teal,
+                              size: 28,
+                            ),
+                          ),
+                          title: Text(
+                            doctor['name'] ?? 'Unknown',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Doctor',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await _createNewChat(doctor.id);
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } catch (e) {
+      print('[HumanPatientChatPage] Error fetching doctors: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading doctors: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _createNewChat(String doctorId) async {
+    if (_currentUser == null) {
+      print('[HumanPatientChatPage] Cannot create chat: User is null');
+      return;
+    }
+
+    print('[HumanPatientChatPage] Creating new chat with doctor: $doctorId');
+
+    try {
+      final chatId = _chatService.getChatId(_currentUser!.uid, doctorId);
+      
+      // Check if chat already exists
+      final existingChat = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .get();
+
+      if (existingChat.exists) {
+        print('[HumanPatientChatPage] Chat already exists: $chatId');
+        setState(() {
+          _selectedChatId = chatId;
+          _selectedDoctorId = doctorId;
+          _showConversation = true;
+        });
+        return;
+      }
+
+      // Create chat metadata
+      await FirebaseFirestore.instance.collection('chats').doc(chatId).set({
+        'participants': [_currentUser!.uid, doctorId],
+        'participantTypes': ['patient', 'doctor'],
+        'createdAt': FieldValue.serverTimestamp(),
+        'doctorType': 'human',
+      });
+
+      print('[HumanPatientChatPage] Successfully created chat: $chatId');
+
+      setState(() {
+        _selectedChatId = chatId;
+        _selectedDoctorId = doctorId;
+        _showConversation = true;
+      });
+    } catch (e) {
+      print('[HumanPatientChatPage] Error creating chat: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating chat: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildChatList() {
@@ -101,7 +312,7 @@ class _DoctorChatPageState extends State<DoctorChatPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Start a conversation with a patient',
+                      'Start a conversation with a doctor',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[500],
@@ -110,11 +321,6 @@ class _DoctorChatPageState extends State<DoctorChatPage> {
                   ],
                 ),
               );
-            }
-
-            print('[DoctorChatPage] Loading chat list. Doctor type: $_doctorType');
-            for (var chat in chats) {
-              print('[DoctorChatPage] Chat data: ${chat.toString()}');
             }
 
             return ListView.builder(
@@ -132,7 +338,7 @@ class _DoctorChatPageState extends State<DoctorChatPage> {
                     onTap: () {
                       setState(() {
                         _selectedChatId = chat['chatId'];
-                        _selectedPatientId = chat['otherParticipantId'];
+                        _selectedDoctorId = chat['otherParticipantId'];
                         _showConversation = true;
                       });
                       _chatService.markMessagesAsRead(
@@ -148,10 +354,8 @@ class _DoctorChatPageState extends State<DoctorChatPage> {
                           CircleAvatar(
                             radius: 28,
                             backgroundColor: Colors.teal[100],
-                            child: Icon(
-                              _doctorType?.toLowerCase() == 'human'
-                                  ? Icons.person
-                                  : Icons.pets,
+                            child: const Icon(
+                              Icons.medical_services,
                               color: Colors.teal,
                               size: 32,
                             ),
@@ -163,17 +367,16 @@ class _DoctorChatPageState extends State<DoctorChatPage> {
                               children: [
                                 FutureBuilder<DocumentSnapshot>(
                                   future: FirebaseFirestore.instance
-                                      .collection(_doctorType?.toLowerCase() == 'human' ? 'humanpatients' : 'pets')
+                                      .collection('doctors')
                                       .doc(chat['otherParticipantId'])
                                       .get(),
                                   builder: (context, snapshot) {
                                     if (snapshot.hasData && snapshot.data!.exists) {
-                                      final patientData = snapshot.data!.data() as Map<String, dynamic>;
                                       return Row(
                                         children: [
                                           Expanded(
                                             child: Text(
-                                              patientData['name'] ?? 'Unknown',
+                                              snapshot.data!['name'] ?? 'Unknown',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16,
@@ -268,261 +471,6 @@ class _DoctorChatPageState extends State<DoctorChatPage> {
     );
   }
 
-  Future<void> _showNewChatDialog() async {
-    if (_currentUser == null || _doctorType == null) {
-      print('[DoctorChatPage] Cannot show dialog: User or doctor type is null');
-      return;
-    }
-
-    print('[DoctorChatPage] Showing new chat dialog for doctor type: $_doctorType');
-    
-    // Validate doctor type
-    if (_doctorType?.toLowerCase() != 'human' && _doctorType?.toLowerCase() != 'veterinary') {
-      print('[DoctorChatPage] Invalid doctor type: $_doctorType');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid doctor type'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final collection = _doctorType?.toLowerCase() == 'human' ? 'humanpatients' : 'pets';
-    print('[DoctorChatPage] Fetching patients from collection: $collection');
-
-    try {
-      // First get all existing chats to filter out patients who already have chats
-      final existingChats = await FirebaseFirestore.instance
-          .collection('chats')
-          .where('participants', arrayContains: _currentUser!.uid)
-          .get();
-
-      final existingPatientIds = existingChats.docs
-          .map((doc) => (doc.data()['participants'] as List)
-              .firstWhere((id) => id != _currentUser!.uid))
-          .toSet();
-
-      // Get all patients
-      final patientsSnapshot = await FirebaseFirestore.instance
-          .collection(collection)
-          .get();
-
-      // Filter out patients who already have chats
-      final availablePatients = patientsSnapshot.docs
-          .where((doc) => !existingPatientIds.contains(doc.id))
-          .toList();
-
-      if (!mounted) return;
-
-      if (availablePatients.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('No available ${_doctorType?.toLowerCase() == 'human' ? 'patients' : 'pet owners'} to chat with'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
-
-      showDialog(
-        context: context,
-        builder: (context) => Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            width: 400,
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.teal[50],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(Icons.person_add, color: Colors.teal[700]),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'New Chat',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.teal[700],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Select a ${_doctorType?.toLowerCase() == 'human' ? 'patient' : 'pet owner'} to start chatting',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  height: 300,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(8),
-                    itemCount: availablePatients.length,
-                    itemBuilder: (context, index) {
-                      final patient = availablePatients[index];
-                      return Card(
-                        elevation: 0,
-                        margin: const EdgeInsets.only(bottom: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(color: Colors.grey[200]!),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          leading: CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.teal[100],
-                            child: Icon(
-                              _doctorType?.toLowerCase() == 'human'
-                                  ? Icons.person
-                                  : Icons.pets,
-                              color: Colors.teal,
-                              size: 28,
-                            ),
-                          ),
-                          title: Text(
-                            patient['name'] ?? 'Unknown',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          subtitle: _doctorType?.toLowerCase() == 'human'
-                              ? Text(
-                                  'Patient',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 14,
-                                  ),
-                                )
-                              : Text(
-                                  'Pet Owner',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 14,
-                                  ),
-                                ),
-                          onTap: () async {
-                            Navigator.pop(context);
-                            await _createNewChat(patient.id);
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } catch (e) {
-      print('[DoctorChatPage] Error fetching patients: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading patients: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _createNewChat(String patientId) async {
-    if (_currentUser == null || _doctorType == null) {
-      print('[DoctorChatPage] Cannot create chat: User or doctor type is null');
-      return;
-    }
-
-    print('[DoctorChatPage] Creating new chat with patient: $patientId');
-    print('[DoctorChatPage] Doctor type: $_doctorType');
-
-    try {
-      final chatId = _chatService.getChatId(_currentUser!.uid, patientId);
-      
-      // Check if chat already exists
-      final existingChat = await FirebaseFirestore.instance
-          .collection('chats')
-          .doc(chatId)
-          .get();
-
-      if (existingChat.exists) {
-        print('[DoctorChatPage] Chat already exists: $chatId');
-        setState(() {
-          _selectedChatId = chatId;
-          _selectedPatientId = patientId;
-          _showConversation = true;
-        });
-        return;
-      }
-
-      // Create chat metadata
-      await FirebaseFirestore.instance.collection('chats').doc(chatId).set({
-        'participants': [_currentUser!.uid, patientId],
-        'participantTypes': ['doctor', _doctorType?.toLowerCase() == 'human' ? 'patient' : 'petpatient'],
-        'createdAt': FieldValue.serverTimestamp(),
-        'doctorType': _doctorType?.toLowerCase(),
-      });
-
-      print('[DoctorChatPage] Successfully created chat: $chatId');
-
-      setState(() {
-        _selectedChatId = chatId;
-        _selectedPatientId = patientId;
-        _showConversation = true;
-      });
-    } catch (e) {
-      print('[DoctorChatPage] Error creating chat: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error creating chat: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
   Widget _buildConversationView() {
     if (_selectedChatId == null) {
       return const Center(
@@ -558,24 +506,20 @@ class _DoctorChatPageState extends State<DoctorChatPage> {
               ),
               FutureBuilder<DocumentSnapshot>(
                 future: FirebaseFirestore.instance
-                    .collection(_doctorType?.toLowerCase() == 'human'
-                        ? 'humanpatients'
-                        : 'pets')
-                    .doc(_selectedPatientId)
+                    .collection('doctors')
+                    .doc(_selectedDoctorId)
                     .get(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData && snapshot.data!.exists) {
-                    final patientData = snapshot.data!.data() as Map<String, dynamic>;
+                    final doctorData = snapshot.data!.data() as Map<String, dynamic>;
                     return Expanded(
                       child: Row(
                         children: [
                           CircleAvatar(
                             radius: 20,
                             backgroundColor: Colors.teal[100],
-                            child: Icon(
-                              _doctorType?.toLowerCase() == 'human'
-                                  ? Icons.person
-                                  : Icons.pets,
+                            child: const Icon(
+                              Icons.medical_services,
                               color: Colors.teal,
                             ),
                           ),
@@ -585,28 +529,19 @@ class _DoctorChatPageState extends State<DoctorChatPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  patientData['name'] ?? 'Unknown',
+                                  doctorData['name'] ?? 'Unknown',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
                                   ),
                                 ),
-                                if (_doctorType?.toLowerCase() == 'human')
-                                  Text(
-                                    'Patient',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                    ),
-                                  )
-                                else
-                                  Text(
-                                    'Pet Owner',
-                                    style: TextStyle(
-                                      color: Colors.grey[600],
-                                      fontSize: 12,
-                                    ),
+                                Text(
+                                  'Doctor',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
                                   ),
+                                ),
                               ],
                             ),
                           ),
