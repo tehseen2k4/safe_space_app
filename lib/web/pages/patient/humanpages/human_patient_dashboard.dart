@@ -9,6 +9,7 @@ import 'package:safe_space_app/web/pages/patient/humanpages/edit_human_patient_p
 import 'package:safe_space_app/web/pages/web_home_page.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/human_patient_chat_page.dart';
 import 'package:safe_space_app/web/pages/patient/humanpages/human_appointments_page.dart';
+import 'package:safe_space_app/web/pages/patient/humanpages/human_book_appointment_page.dart';
 
 class HumanPatientDashboard extends StatefulWidget {
   const HumanPatientDashboard({Key? key}) : super(key: key);
@@ -71,6 +72,8 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
         return 'Profile';
       case 'edit_profile':
         return 'Edit Profile';
+      case 'book_appointment':
+        return 'Book an Appointment';
       case 'appointments':
         return 'My Appointments';
       case 'doctors':
@@ -140,6 +143,12 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                   isSelected: _selectedNavItem == 'profile',
                   onTap: () => _updateSelectedItem('profile'),
                       ),
+                      _buildNavItem(
+                  icon: Icons.add_circle_outline,
+                  label: 'Book an Appointment',
+                  isSelected: _selectedNavItem == 'book_appointment',
+                  onTap: () => _updateSelectedItem('book_appointment'),
+                ),
                       _buildNavItem(
                   icon: Icons.calendar_today,
                   label: 'Appointments',
@@ -250,6 +259,8 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                   _updateSelectedItem('profile');
                 },
               );
+            case 'book_appointment':
+              return const HumanBookAppointmentPage();
             case 'appointments':
               return const HumanAppointmentsPage();
             case 'doctors':

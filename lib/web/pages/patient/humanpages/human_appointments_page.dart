@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:safe_space_app/models/humanappointment_db.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:developer' as developer;
 
 class HumanAppointmentsPage extends StatefulWidget {
   const HumanAppointmentsPage({Key? key}) : super(key: key);
@@ -38,10 +39,13 @@ class _HumanAppointmentsPageState extends State<HumanAppointmentsPage> with Sing
     if (user == null) return;
 
     try {
+      developer.log('Fetching appointments for user: ${user.uid}', name: 'HumanAppointments');
       final querySnapshot = await FirebaseFirestore.instance
-          .collection('humanappointments')
+          .collection('appointments')
           .where('uid', isEqualTo: user.uid)
           .get();
+
+      developer.log('Found ${querySnapshot.docs.length} appointments', name: 'HumanAppointments');
 
       if (querySnapshot.docs.isEmpty) {
         setState(() {
@@ -53,11 +57,22 @@ class _HumanAppointmentsPageState extends State<HumanAppointmentsPage> with Sing
 
       setState(() {
         _allAppointments = querySnapshot.docs
-            .map((doc) => HumanAppointmentDb.fromJson(doc.data()))
+            .map((doc) {
+              final data = doc.data();
+              developer.log('Appointment data: $data', name: 'HumanAppointments');
+              return HumanAppointmentDb.fromJson(data);
+            })
             .toList();
         _categorizeAppointments();
       });
+      
+      developer.log('Categorized appointments:', name: 'HumanAppointments');
+      developer.log('Pending: ${_pendingAppointments.length}', name: 'HumanAppointments');
+      developer.log('Confirmed: ${_confirmedAppointments.length}', name: 'HumanAppointments');
+      developer.log('Completed: ${_completedAppointments.length}', name: 'HumanAppointments');
+      developer.log('Cancelled: ${_cancelledAppointments.length}', name: 'HumanAppointments');
     } catch (e) {
+      developer.log('Error fetching appointments: $e', name: 'HumanAppointments', error: e);
       print("Error fetching appointments: $e");
     }
   }

@@ -8,6 +8,7 @@ import 'package:safe_space_app/web/pages/patient/petpages/pet_appointments_page.
 import 'package:safe_space_app/models/petpatient_db.dart';
 import 'package:safe_space_app/web/pages/web_home_page.dart';
 import 'package:safe_space_app/web/pages/patient/petpages/pet_patient_chat_page.dart';
+import 'package:safe_space_app/web/pages/patient/petpages/pet_book_appointment_page.dart';
 
 class PetPatientDashboard extends StatefulWidget {
   const PetPatientDashboard({Key? key}) : super(key: key);
@@ -82,6 +83,8 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
         return 'Profile';
       case 'edit_profile':
         return 'Edit Profile';
+      case 'book_appointment':
+        return 'Book an Appointment';
       case 'appointments':
         return 'My Appointments';
       case 'vets':
@@ -149,6 +152,12 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
                   label: 'Profile',
                   isSelected: _selectedNavItem == 'profile',
                   onTap: () => _updateSelectedItem('profile'),
+                ),
+                _buildNavItem(
+                  icon: Icons.add_circle_outline,
+                  label: 'Book an Appointment',
+                  isSelected: _selectedNavItem == 'book_appointment',
+                  onTap: () => _updateSelectedItem('book_appointment'),
                 ),
                 _buildNavItem(
                   icon: Icons.calendar_today,
@@ -238,6 +247,7 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
         'edit_profile' => EditPetPatientProfilePage(
             onSave: () => _updateSelectedItem('profile'),
           ),
+        'book_appointment' => const PetBookAppointmentPage(),
         'appointments' => const PetAppointmentsPage(),
         'vets' => const Center(child: Text('Find Vets Page - Coming Soon')),
         'messages' => const PetPatientChatPage(),
