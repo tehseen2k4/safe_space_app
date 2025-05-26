@@ -11,6 +11,7 @@ import 'package:safe_space_app/web/pages/doctor/edit_doctor_profile_page.dart';
 import 'package:safe_space_app/web/pages/doctor/doctor_availability_screen.dart';
 import 'package:safe_space_app/web/pages/doctor/doctor_settings_page.dart';
 import 'package:safe_space_app/web/pages/web_home_page.dart';
+import 'package:safe_space_app/web/pages/doctor/doctor_chat_page.dart';
 
 class DoctorDashboard extends StatefulWidget {
   const DoctorDashboard({Key? key}) : super(key: key);
@@ -254,7 +255,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> with SingleTickerProv
             case 'appointments':
               return const MyAppointmentsDoctorPage();
             case 'messages':
-              return const Center(child: Text('Messages Page - Coming Soon'));
+              return const DoctorChatPage();
             case 'settings':
               return const DoctorSettingsPage();
             default:
