@@ -182,11 +182,10 @@ class ChatService {
       print('[ChatService] Retrieved ${snapshot.docs.length} chats for user: $userId');
       return snapshot.docs.map((doc) {
         final data = doc.data();
-        final otherParticipantId = (data['participants'] as List)
-            .firstWhere((id) => id != userId, orElse: () => '');
-        final otherParticipantType = (data['participantTypes'] as List)
-            .firstWhere((type) => type != data['participantTypes'][0],
-                orElse: () => '');
+        final participants = List<String>.from(data['participants'] ?? []);
+        final participantTypes = List<String>.from(data['participantTypes'] ?? []);
+        final otherParticipantId = participants.firstWhere((id) => id != userId, orElse: () => '');
+        final otherParticipantType = participantTypes[participants.indexOf(otherParticipantId)];
         print('[ChatService] Chat ${doc.id}: Other participant: $otherParticipantId ($otherParticipantType)');
         return {
           'chatId': doc.id,
@@ -194,6 +193,9 @@ class ChatService {
           'lastMessageTime': data['lastMessageTime'],
           'otherParticipantId': otherParticipantId,
           'otherParticipantType': otherParticipantType,
+          'participants': participants,
+          'participantTypes': participantTypes,
+          'doctorType': data['doctorType'],
         };
       }).toList();
     });

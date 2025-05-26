@@ -5,14 +5,14 @@ import 'package:safe_space_app/services/chat_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-class HumanPatientChatPage extends StatefulWidget {
-  const HumanPatientChatPage({Key? key}) : super(key: key);
+class PetPatientChatPage extends StatefulWidget {
+  const PetPatientChatPage({Key? key}) : super(key: key);
 
   @override
-  State<HumanPatientChatPage> createState() => _HumanPatientChatPageState();
+  State<PetPatientChatPage> createState() => _PetPatientChatPageState();
 }
 
-class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
+class _PetPatientChatPageState extends State<PetPatientChatPage> {
   final ChatService _chatService = ChatService();
   final TextEditingController _messageController = TextEditingController();
   final User? _currentUser = FirebaseAuth.instance.currentUser;
@@ -33,38 +33,18 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
     super.dispose();
   }
 
-  bool _isSameDay(DateTime date1, DateTime date2) {
-    return date1.year == date2.year &&
-        date1.month == date2.month &&
-        date1.day == date2.day;
-  }
-
-  String _formatMessageDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final messageDate = DateTime(date.year, date.month, date.day);
-
-    if (messageDate == today) {
-      return 'Today';
-    } else if (messageDate == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday';
-    } else {
-      return DateFormat('MMM d, yyyy').format(date);
-    }
-  }
-
   Future<void> _sendMessage() async {
     if (_messageController.text.trim().isEmpty ||
         _selectedDoctorId == null ||
         _currentUser == null) return;
 
-    print('[HumanPatientChatPage] Sending message to doctor: $_selectedDoctorId');
+    print('[PetPatientChatPage] Sending message to doctor: $_selectedDoctorId');
 
     await _chatService.sendMessageToChat(
       senderId: _currentUser!.uid,
       receiverId: _selectedDoctorId!,
       content: _messageController.text.trim(),
-      senderType: 'patient',
+      senderType: 'petpatient',
       receiverType: 'doctor',
     );
 
@@ -73,15 +53,15 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
 
   Future<void> _showNewChatDialog() async {
     if (_currentUser == null) {
-      print('[HumanPatientChatPage] Cannot show dialog: User is null');
+      print('[PetPatientChatPage] Cannot show dialog: User is null');
       return;
     }
 
     try {
-      // Get all human doctors
+      // Get all veterinary doctors
       final doctorsSnapshot = await FirebaseFirestore.instance
           .collection('doctors')
-          .where('doctorType', isEqualTo: 'human')
+          .where('doctorType', isEqualTo: 'veterinary')
           .get();
 
       // Get existing chats to filter out doctors who already have chats
@@ -105,7 +85,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
       if (availableDoctors.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No available doctors to chat with'),
+            content: Text('No available veterinary doctors to chat with'),
             backgroundColor: Colors.orange,
           ),
         );
@@ -148,7 +128,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Select a doctor to start chatting',
+                  'Select a veterinary doctor to start chatting',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 14,
@@ -195,7 +175,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
                             ),
                           ),
                           subtitle: Text(
-                            'Doctor',
+                            'Veterinary Doctor',
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 14,
@@ -232,7 +212,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
         ),
       );
     } catch (e) {
-      print('[HumanPatientChatPage] Error fetching doctors: $e');
+      print('[PetPatientChatPage] Error fetching doctors: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -246,11 +226,11 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
 
   Future<void> _createNewChat(String doctorId) async {
     if (_currentUser == null) {
-      print('[HumanPatientChatPage] Cannot create chat: User is null');
+      print('[PetPatientChatPage] Cannot create chat: User is null');
       return;
     }
 
-    print('[HumanPatientChatPage] Creating new chat with doctor: $doctorId');
+    print('[PetPatientChatPage] Creating new chat with doctor: $doctorId');
 
     try {
       final chatId = _chatService.getChatId(_currentUser!.uid, doctorId);
@@ -262,7 +242,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
           .get();
 
       if (existingChat.exists) {
-        print('[HumanPatientChatPage] Chat already exists: $chatId');
+        print('[PetPatientChatPage] Chat already exists: $chatId');
         setState(() {
           _selectedChatId = chatId;
           _selectedDoctorId = doctorId;
@@ -274,12 +254,12 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
       // Create chat metadata
       await FirebaseFirestore.instance.collection('chats').doc(chatId).set({
         'participants': [_currentUser!.uid, doctorId],
-        'participantTypes': ['patient', 'doctor'],
+        'participantTypes': ['petpatient', 'doctor'],
         'createdAt': FieldValue.serverTimestamp(),
-        'doctorType': 'human',
+        'doctorType': 'veterinary',
       });
 
-      print('[HumanPatientChatPage] Successfully created chat: $chatId');
+      print('[PetPatientChatPage] Successfully created chat: $chatId');
 
       setState(() {
         _selectedChatId = chatId;
@@ -287,7 +267,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
         _showConversation = true;
       });
     } catch (e) {
-      print('[HumanPatientChatPage] Error creating chat: $e');
+      print('[PetPatientChatPage] Error creating chat: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -306,13 +286,13 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
       children: [
         StreamBuilder<List<Map<String, dynamic>>>(
           stream: _chatService.getUserChats(_currentUser!.uid).map((chats) {
-            print('[HumanPatientChatPage] Total chats before filtering: ${chats.length}');
-            // Filter chats to only show human patient chats with human doctors
+            print('[PetPatientChatPage] Total chats before filtering: ${chats.length}');
+            // Filter chats to only show pet patient chats with veterinary doctors
             final filteredChats = chats.where((chat) {
               final participants = List<String>.from(chat['participants'] ?? []);
               final participantTypes = List<String>.from(chat['participantTypes'] ?? []);
               
-              print('[HumanPatientChatPage] Chat data:');
+              print('[PetPatientChatPage] Chat data:');
               print('- Participants: $participants');
               print('- Participant Types: $participantTypes');
               print('- Current User: ${_currentUser!.uid}');
@@ -320,7 +300,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
               // Find the current user's type
               final currentUserIndex = participants.indexOf(_currentUser!.uid);
               if (currentUserIndex == -1) {
-                print('[HumanPatientChatPage] Invalid chat: current user not found in participants');
+                print('[PetPatientChatPage] Invalid chat: current user not found in participants');
                 return false;
               }
               
@@ -330,12 +310,12 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
               print('- Current User Type: $currentUserType');
               print('- Other Participant Type: $otherParticipantType');
               
-              // Check if this is a human patient chat
-              final isValid = currentUserType == 'patient' && otherParticipantType == 'doctor';
+              // Check if this is a pet patient chat
+              final isValid = currentUserType == 'petpatient' && otherParticipantType == 'doctor';
               print('- Is Valid: $isValid');
               return isValid;
             }).toList();
-            print('[HumanPatientChatPage] Filtered chats: ${filteredChats.length}');
+            print('[PetPatientChatPage] Filtered chats: ${filteredChats.length}');
             return filteredChats;
           }),
           builder: (context, snapshot) {
@@ -364,7 +344,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Start a conversation with a doctor',
+                      'Start a conversation with a veterinary doctor',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[500],
@@ -588,7 +568,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
                                   ),
                                 ),
                                 Text(
-                                  'Doctor',
+                                  'Veterinary Doctor',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -774,6 +754,26 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
         ),
       ],
     );
+  }
+
+  bool _isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
+  }
+
+  String _formatMessageDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDate = DateTime(date.year, date.month, date.day);
+
+    if (messageDate == today) {
+      return 'Today';
+    } else if (messageDate == today.subtract(const Duration(days: 1))) {
+      return 'Yesterday';
+    } else {
+      return DateFormat('MMM d, yyyy').format(date);
+    }
   }
 
   @override
