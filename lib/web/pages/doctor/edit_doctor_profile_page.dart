@@ -827,9 +827,15 @@ class _EditDoctorProfilePageState extends State<EditDoctorProfilePage> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile saved successfully!')),
+            const SnackBar(
+              content: Text('Profile saved successfully!'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+            ),
           );
-          Navigator.pop(context);
         }
       } catch (e) {
         print('Error saving profile: $e');
@@ -838,6 +844,10 @@ class _EditDoctorProfilePageState extends State<EditDoctorProfilePage> {
             SnackBar(
               content: Text('Failed to save profile: $e'),
               backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
             ),
           );
         }
