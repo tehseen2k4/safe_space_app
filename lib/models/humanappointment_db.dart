@@ -19,7 +19,7 @@ class HumanAppointmentDb {
   final String? responseStatus;
   final String? suggestedTimeslot;
   final String slotId;
-  String? responseTimestamp;
+  Timestamp? responseTimestamp;
   String? doctorResponse;
   String? doctorNotes;
   String? documentId;
@@ -69,7 +69,7 @@ class HumanAppointmentDb {
       responseStatus: json['responseStatus'] as String?,
       suggestedTimeslot: json['suggestedTimeslot'] as String?,
       slotId: json['slotId'] as String? ?? '',
-      responseTimestamp: json['responseTimestamp'] as String?,
+      responseTimestamp: json['responseTimestamp'] as Timestamp?,
       doctorResponse: json['doctorResponse'] as String?,
       doctorNotes: json['doctorNotes'] as String?,
       documentId: json['documentId'] as String?,

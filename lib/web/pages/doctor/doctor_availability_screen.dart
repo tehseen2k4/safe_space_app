@@ -147,6 +147,79 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                     color: Colors.teal,
                   ),
                 ),
+                const SizedBox(height: 24),
+          // Stats Section
+          FutureBuilder<Map<String, dynamic>?>(
+            future: _fetchSlots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Row(
+                  children: [
+                    Expanded(child: _buildStatCard('Total Slots', '...', Icons.access_time, Colors.blue)),
+                    const SizedBox(width: 24),
+                    Expanded(child: _buildStatCard('Booked', '...', Icons.event_busy, Colors.red)),
+                    const SizedBox(width: 24),
+                    Expanded(child: _buildStatCard('Available', '...', Icons.event_available, Colors.green)),
+                  ],
+                );
+              }
+
+              if (!snapshot.hasData || snapshot.data == null) {
+                return Row(
+                  children: [
+                    Expanded(child: _buildStatCard('Total Slots', '0', Icons.access_time, Colors.blue)),
+                    const SizedBox(width: 24),
+                    Expanded(child: _buildStatCard('Booked', '0', Icons.event_busy, Colors.red)),
+                    const SizedBox(width: 24),
+                    Expanded(child: _buildStatCard('Available', '0', Icons.event_available, Colors.green)),
+                  ],
+                );
+              }
+
+              final slots = snapshot.data!['slots'] as Map<String, dynamic>;
+              int totalSlots = 0;
+              int bookedSlots = 0;
+
+              slots.forEach((dateKey, slotList) {
+                final daySlots = slotList as List<dynamic>;
+                totalSlots += daySlots.length;
+                bookedSlots += daySlots.where((slot) => slot['status'] == 'booked').length;
+              });
+
+              int availableSlots = totalSlots - bookedSlots;
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      'Total Slots',
+                      totalSlots.toString(),
+                      Icons.access_time,
+                      Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildStatCard(
+                      'Booked',
+                      bookedSlots.toString(),
+                      Icons.event_busy,
+                      Colors.red,
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    child: _buildStatCard(
+                      'Available',
+                      availableSlots.toString(),
+                      Icons.event_available,
+                      Colors.green,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
                 const SizedBox(height: 20),
                 FutureBuilder<Map<String, dynamic>?>(
                   future: _fetchSlots(),
@@ -256,79 +329,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          // Stats Section
-          FutureBuilder<Map<String, dynamic>?>(
-            future: _fetchSlots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Row(
-                  children: [
-                    Expanded(child: _buildStatCard('Total Slots', '...', Icons.access_time, Colors.blue)),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildStatCard('Booked', '...', Icons.event_busy, Colors.red)),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildStatCard('Available', '...', Icons.event_available, Colors.green)),
-                  ],
-                );
-              }
-
-              if (!snapshot.hasData || snapshot.data == null) {
-                return Row(
-                  children: [
-                    Expanded(child: _buildStatCard('Total Slots', '0', Icons.access_time, Colors.blue)),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildStatCard('Booked', '0', Icons.event_busy, Colors.red)),
-                    const SizedBox(width: 24),
-                    Expanded(child: _buildStatCard('Available', '0', Icons.event_available, Colors.green)),
-                  ],
-                );
-              }
-
-              final slots = snapshot.data!['slots'] as Map<String, dynamic>;
-              int totalSlots = 0;
-              int bookedSlots = 0;
-
-              slots.forEach((dateKey, slotList) {
-                final daySlots = slotList as List<dynamic>;
-                totalSlots += daySlots.length;
-                bookedSlots += daySlots.where((slot) => slot['status'] == 'booked').length;
-              });
-
-              int availableSlots = totalSlots - bookedSlots;
-
-              return Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      'Total Slots',
-                      totalSlots.toString(),
-                      Icons.access_time,
-                      Colors.blue,
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: _buildStatCard(
-                      'Booked',
-                      bookedSlots.toString(),
-                      Icons.event_busy,
-                      Colors.red,
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: _buildStatCard(
-                      'Available',
-                      availableSlots.toString(),
-                      Icons.event_available,
-                      Colors.green,
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+          
           const SizedBox(height: 24),
           // Daily Schedule
           FutureBuilder<Map<String, dynamic>?>(

@@ -42,6 +42,8 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
     if (user == null) return;
 
     try {
+      print("\n=== Fetching Appointments ==="); // Debug print
+      
       // Get doctor type from Firestore
       final doctorDoc = await FirebaseFirestore.instance
           .collection('doctors')
@@ -75,32 +77,47 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
       if (querySnapshot.docs.isEmpty) {
         setState(() {
           _allAppointments = [];
-          _categorizeAppointments();
+          _pendingAppointments = [];
+          _confirmedAppointments = [];
+          _completedAppointments = [];
+          _cancelledAppointments = [];
         });
         return;
       }
 
+      final appointments = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        print("Creating appointment from data: ${data['typeofappointment']}"); // Debug print
+        // Create appointment based on doctor type
+        if (doctorType.toLowerCase() == 'human') {
+          print("Creating HumanAppointmentDb"); // Debug print
+          return HumanAppointmentDb.fromJson(data);
+        } else {
+          print("Creating PetAppointmentDb"); // Debug print
+          return PetAppointmentDb.fromJson(data);
+        }
+      }).toList();
+
+      print("Created ${appointments.length} appointment objects"); // Debug print
+
       setState(() {
-        _allAppointments = querySnapshot.docs.map((doc) {
-          final data = doc.data();
-          print("Creating appointment from data: ${data['typeofappointment']}"); // Debug print
-          // Create appointment based on doctor type
-          if (doctorType.toLowerCase() == 'human') {
-            print("Creating HumanAppointmentDb"); // Debug print
-            return HumanAppointmentDb.fromJson(data);
-          } else {
-            print("Creating PetAppointmentDb"); // Debug print
-            return PetAppointmentDb.fromJson(data);
-          }
-        }).toList();
+        _allAppointments = appointments;
         _categorizeAppointments();
       });
+
+      print("Appointments categorized:"); // Debug print
+      print("Pending: ${_pendingAppointments.length}");
+      print("Confirmed: ${_confirmedAppointments.length}");
+      print("Completed: ${_completedAppointments.length}");
+      print("Cancelled: ${_cancelledAppointments.length}");
+      print("=== Fetch Complete ===\n");
     } catch (e) {
       print("Error fetching appointments: $e");
     }
   }
 
   void _categorizeAppointments() {
+    print("\n=== Categorizing Appointments ==="); // Debug print
     _pendingAppointments = _allAppointments
         .where((appointment) => appointment.responseStatus == null || appointment.responseStatus == 'pending')
         .toList();
@@ -113,28 +130,138 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
     _cancelledAppointments = _allAppointments
         .where((appointment) => appointment.responseStatus == 'cancelled')
         .toList();
+    
+    print("Categorization complete:"); // Debug print
+    print("Pending: ${_pendingAppointments.length}");
+    print("Confirmed: ${_confirmedAppointments.length}");
+    print("Completed: ${_completedAppointments.length}");
+    print("Cancelled: ${_cancelledAppointments.length}");
+    print("=== Categorization Complete ===\n");
   }
 
   Future<void> _handleAppointmentResponse(dynamic appointment, String status) async {
     try {
-      // Clear any existing notes when starting a new response
-      _notesController.clear();
+      print("Handling appointment response: $status"); // Debug print
+      print("Appointment ID: ${appointment.appointmentId}"); // Debug print
       
+      // Show dialog to get notes
+      String? notes = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          final TextEditingController notesController = TextEditingController();
+          return AlertDialog(
+            title: Text(status == 'confirmed' ? 'Accept Appointment' : 'Reject Appointment'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  status == 'confirmed' 
+                    ? 'Please add any notes for the patient (optional)'
+                    : 'Please provide a reason for rejection (required)',
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: notesController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter notes...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (status == 'cancelled' && notesController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please provide a reason for rejection'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.of(context).pop(notesController.text.trim());
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: status == 'confirmed' ? Colors.green : Colors.red,
+                ),
+                child: Text(status == 'confirmed' ? 'Accept' : 'Reject'),
+              ),
+            ],
+          );
+        },
+      );
+
+      // If dialog was cancelled, return
+      if (notes == null) return;
+
       String response = status == 'confirmed' ? 'Appointment confirmed' : 'Appointment rejected';
       
       // Get the collection name based on appointment type
       String collectionName = appointment is HumanAppointmentDb ? 'appointments' : 'petappointments';
+      print("Using collection: $collectionName"); // Debug print
       
-      // Update the appointment in Firestore using the correct collection
-      await FirebaseFirestore.instance
-          .collection(collectionName)
-          .doc(appointment.documentId)
-          .update({
+      // Create update data
+      Map<String, dynamic> updateData = {
         'doctorResponse': response,
         'responseStatus': status,
         'responseTimestamp': FieldValue.serverTimestamp(),
-        'doctorNotes': _notesController.text.isNotEmpty ? _notesController.text : '',
-      });
+        'doctorNotes': notes,
+      };
+      
+      print("Update data: $updateData"); // Debug print
+
+      // Update the appointment in Firestore
+      await FirebaseFirestore.instance
+          .collection(collectionName)
+          .doc(appointment.appointmentId)
+          .update(updateData);
+
+      print("Appointment updated in Firestore"); // Debug print
+
+      // If appointment is cancelled, update the slot status to available
+      if (status == 'cancelled') {
+        try {
+          final docRef = FirebaseFirestore.instance.collection('slots').doc(appointment.doctorUid);
+          final docSnapshot = await docRef.get();
+
+          if (docSnapshot.exists) {
+            final data = docSnapshot.data()!;
+            final slots = data['slots'] as Map<String, dynamic>;
+            
+            // Find the slot in all dates
+            for (var dateKey in slots.keys) {
+              final daySlots = slots[dateKey] as List<dynamic>;
+              final slotIndex = daySlots.indexWhere((slot) => slot['slotId'] == appointment.slotId);
+              
+              if (slotIndex != -1) {
+                // Update the slot status to available
+                daySlots[slotIndex]['status'] = 'available';
+                daySlots[slotIndex]['booked'] = false;
+                daySlots[slotIndex]['bookedBy'] = null;
+                daySlots[slotIndex]['bookedAt'] = null;
+                
+                // Update Firestore
+                await docRef.update({
+                  'slots.$dateKey': daySlots,
+                });
+                print("Slot freed successfully"); // Debug print
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          print("Error updating slot status: $e");
+        }
+      }
 
       // Refresh the appointments list
       await _fetchAppointments();
@@ -179,15 +306,50 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
       }
       
       print("Marking as completed in collection: $collectionName"); // Debug print
-      print("Document ID: ${appointment.documentId}"); // Debug print
+      print("Document ID: ${appointment.appointmentId}"); // Debug print
       
+      // Update appointment status to completed
       await FirebaseFirestore.instance
           .collection(collectionName)
-          .doc(appointment.documentId)
+          .doc(appointment.appointmentId)
           .update({
         'responseStatus': 'completed',
         'responseTimestamp': FieldValue.serverTimestamp(),
       });
+
+      // Free the slot when appointment is completed
+      try {
+        final docRef = FirebaseFirestore.instance.collection('slots').doc(appointment.doctorUid);
+        final docSnapshot = await docRef.get();
+
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data()!;
+          final slots = data['slots'] as Map<String, dynamic>;
+          
+          // Find the slot in all dates
+          for (var dateKey in slots.keys) {
+            final daySlots = slots[dateKey] as List<dynamic>;
+            final slotIndex = daySlots.indexWhere((slot) => slot['slotId'] == appointment.slotId);
+            
+            if (slotIndex != -1) {
+              // Update the slot status to available
+              daySlots[slotIndex]['status'] = 'available';
+              daySlots[slotIndex]['booked'] = false;
+              daySlots[slotIndex]['bookedBy'] = null;
+              daySlots[slotIndex]['bookedAt'] = null;
+              
+              // Update Firestore
+              await docRef.update({
+                'slots.$dateKey': daySlots,
+              });
+              print("Slot freed successfully for completed appointment");
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        print("Error updating slot status for completed appointment: $e");
+      }
 
       // Refresh the appointments list
       await _fetchAppointments();
@@ -759,23 +921,28 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
                       _buildDetailRow('Type', appointment.typeofappointment, Icons.access_alarm),
                       _buildDetailRow('Doctor Preference', appointment.doctorpreference, Icons.favorite),
                     ]),
-                    const SizedBox(height: 16),
-                    _buildDetailSection('Notes', [
-                      TextField(
-                        controller: _notesController,
-                        decoration: InputDecoration(
-                          hintText: 'Add notes...',
-                          border: OutlineInputBorder(
+                    if (appointment.doctorNotes != null) ...[
+                      const SizedBox(height: 16),
+                      _buildDetailSection('Doctor\'s Notes', [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
                           ),
-                          filled: true,
-                          fillColor: Colors.white,
+                          child: Text(
+                            appointment.doctorNotes!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
                         ),
-                        maxLines: 3,
-                      ),
-                    ]),
+                      ]),
+                    ],
                     const SizedBox(height: 16),
-                    if (appointment.responseStatus == 'pending')
+                    if (appointment.responseStatus == null || appointment.responseStatus == 'pending')
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [

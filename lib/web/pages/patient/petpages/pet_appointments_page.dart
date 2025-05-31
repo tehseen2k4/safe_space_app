@@ -624,7 +624,27 @@ class _PetAppointmentsPageState extends State<PetAppointmentsPage> with SingleTi
                       _buildDetailRow('Type', appointment.typeofappointment, Icons.access_alarm),
                       _buildDetailRow('Doctor Preference', appointment.doctorpreference, Icons.favorite),
                     ]),
-                    if ((appointment.responseStatus ?? 'pending') == 'rejected' && 
+                    if (appointment.doctorNotes != null) ...[
+                      const SizedBox(height: 16),
+                      _buildDetailSection('Doctor\'s Notes', [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Text(
+                            appointment.doctorNotes!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ]),
+                    ],
+                    if ((appointment.responseStatus ?? 'pending') == 'cancelled' && 
                         (appointment.suggestedTimeslot ?? '').isNotEmpty)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

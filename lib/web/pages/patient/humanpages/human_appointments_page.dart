@@ -646,7 +646,27 @@ class _HumanAppointmentsPageState extends State<HumanAppointmentsPage> with Sing
                       _buildDetailRow('Type', appointment.typeofappointment, Icons.access_alarm),
                       _buildDetailRow('Doctor Preference', appointment.doctorpreference, Icons.favorite),
                     ]),
-                    if (appointment.responseStatus == 'rejected' && 
+                    if (appointment.doctorNotes != null) ...[
+                      const SizedBox(height: 16),
+                      _buildDetailSection('Doctor\'s Notes', [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Text(
+                            appointment.doctorNotes!,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ]),
+                    ],
+                    if (appointment.responseStatus == 'cancelled' && 
                         appointment.suggestedTimeslot != null &&
                         appointment.suggestedTimeslot!.isNotEmpty)
                       Column(
