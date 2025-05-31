@@ -94,81 +94,97 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
       color: Colors.white,
       child: Column(
         children: [
-          // Profile Section
+          // Safe-Space Logo and Name
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            width: double.infinity,
+            color: Colors.teal,
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: _isSidebarCollapsed ? 20 : 40,
-                  backgroundColor: Colors.teal[100],
-                  child: const Icon(Icons.person, color: Colors.teal),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.teal,
+                        Colors.teal.withOpacity(0.8),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.teal.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.health_and_safety,
+                    color: Colors.white,
+                    size: 32,
+                  ),
                 ),
                 if (!_isSidebarCollapsed) ...[
-                  const SizedBox(height: 16),
-                  FutureBuilder<Map<String, dynamic>>(
-                    future: _fetchPatientData(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return Text(
-                          snapshot.data!['name'] ?? 'Patient',
-                          style: const TextStyle(
-                            fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        );
-                      }
-                      return const Text('Loading...');
-                    },
+                  const SizedBox(height: 8),
+                  const Text(
+                    'SAFE-SPACE',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
                   ),
                 ],
               ],
             ),
           ),
-          const Divider(),
-                // Navigation Items
-                Expanded(
-                  child: ListView(
+          const Divider(height: 1),
+          // Navigation Items
+          Expanded(
+            child: ListView(
               padding: EdgeInsets.zero,
-                    children: [
-                      _buildNavItem(
+              children: [
+                _buildNavItem(
                   icon: Icons.dashboard,
                   label: 'Dashboard',
                   isSelected: _selectedNavItem == 'home',
                   onTap: () => _updateSelectedItem('home'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.person,
                   label: 'Profile',
                   isSelected: _selectedNavItem == 'profile',
                   onTap: () => _updateSelectedItem('profile'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.add_circle_outline,
                   label: 'Book an Appointment',
                   isSelected: _selectedNavItem == 'book_appointment',
                   onTap: () => _updateSelectedItem('book_appointment'),
                 ),
-                      _buildNavItem(
+                _buildNavItem(
                   icon: Icons.calendar_today,
                   label: 'Appointments',
                   isSelected: _selectedNavItem == 'appointments',
                   onTap: () => _updateSelectedItem('appointments'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.medical_services,
                   label: 'Find Doctors',
                   isSelected: _selectedNavItem == 'doctors',
                   onTap: () => _updateSelectedItem('doctors'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.message,
                   label: 'Messages',
                   isSelected: _selectedNavItem == 'messages',
                   onTap: () => _updateSelectedItem('messages'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.settings,
                   label: 'Settings',
                   isSelected: _selectedNavItem == 'settings',
@@ -178,13 +194,13 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
             ),
           ),
           // Collapse Button
-                      IconButton(
+          IconButton(
             icon: Icon(_isSidebarCollapsed ? Icons.chevron_right : Icons.chevron_left),
-                        onPressed: () {
-                          setState(() {
-                            _isSidebarCollapsed = !_isSidebarCollapsed;
-                          });
-                        },
+            onPressed: () {
+              setState(() {
+                _isSidebarCollapsed = !_isSidebarCollapsed;
+              });
+            },
           ),
         ],
       ),
@@ -199,9 +215,9 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
   }) {
     return ListTile(
       leading: Icon(
-            icon,
-            color: isSelected ? Colors.teal : Colors.grey[600],
-          ),
+        icon,
+        color: isSelected ? Colors.teal : Colors.grey[600],
+      ),
       title: _isSidebarCollapsed
           ? null
           : Text(
@@ -290,11 +306,11 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.teal,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.teal.withOpacity(0.2),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),
@@ -304,27 +320,28 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: Colors.teal[100],
+                  backgroundColor: Colors.white,
                   child: const Icon(Icons.person, size: 40, color: Colors.teal),
                 ),
                 const SizedBox(width: 24),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
                         'Welcome back, ${patientData['name'] ?? 'Patient'}!',
-                  style: const TextStyle(
+                        style: const TextStyle(
                           fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
                         'Here\'s your health overview',
-                  style: TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[600],
+                          color: Colors.white70,
                         ),
                       ),
                     ],
@@ -368,28 +385,28 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
           const SizedBox(height: 24),
           // Recent Activity
           Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
                   'Recent Activity',
-              style: TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 const Center(
                   child: Text(
@@ -399,9 +416,9 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                       fontSize: 16,
                     ),
                   ),
+                ),
+              ],
             ),
-          ],
-        ),
           ),
         ],
       ),
@@ -434,11 +451,11 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
             icon,
             color: color,
             size: 32,
-              ),
-              const SizedBox(height: 16),
-                  Text(
+          ),
+          const SizedBox(height: 16),
+          Text(
             value,
-                    style: TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: color,
@@ -465,33 +482,33 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
           _buildSidebar(),
           Expanded(
             child: Column(
-      children: [
+              children: [
                 // Header
                 Container(
                   padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
                   child: Row(
-                            children: [
-                              Text(
+                    children: [
+                      Text(
                         _getPageTitle(),
-                                style: const TextStyle(
+                        style: const TextStyle(
                           fontSize: 24,
-                                  fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.notifications),
-                      onPressed: () {
+                        onPressed: () {
                           // TODO: Implement notifications
                         },
                       ),
@@ -578,12 +595,12 @@ class _HumanPatientDashboardState extends State<HumanPatientDashboard> with Sing
                 // Main Content
                 Expanded(
                   child: _buildMainContent(),
-                    ),
-                  ],
                 ),
+              ],
+            ),
           ),
         ],
-        ),
+      ),
     );
   }
 } 

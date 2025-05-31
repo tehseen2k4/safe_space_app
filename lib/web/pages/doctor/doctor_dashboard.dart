@@ -94,75 +94,91 @@ class _DoctorDashboardState extends State<DoctorDashboard> with SingleTickerProv
       color: Colors.white,
       child: Column(
         children: [
-          // Profile Section
+          // Safe-Space Logo and Name
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            width: double.infinity,
+            color: Colors.teal,
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: _isSidebarCollapsed ? 20 : 40,
-                  backgroundColor: Colors.teal[100],
-                  child: const Icon(Icons.person, color: Colors.teal),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.teal,
+                        Colors.teal.withOpacity(0.8),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.teal.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                if (!_isSidebarCollapsed) ...[
-                  const SizedBox(height: 16),
-                  FutureBuilder<Map<String, dynamic>>(
-                    future: _fetchDoctorData(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return Text(
-                          snapshot.data!['name'] ?? 'Doctor',
-                          style: const TextStyle(
-                            fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        );
-                      }
-                      return const Text('Loading...');
-                    },
-                            ),
-                ],
-              ],
+                  child: const Icon(
+                    Icons.health_and_safety,
+                    color: Colors.white,
+                    size: 32,
                   ),
                 ),
-          const Divider(),
-                // Navigation Items
-                Expanded(
-                  child: ListView(
+                if (!_isSidebarCollapsed) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'SAFE-SPACE',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Navigation Items
+          Expanded(
+            child: ListView(
               padding: EdgeInsets.zero,
-                    children: [
-                      _buildNavItem(
+              children: [
+                _buildNavItem(
                   icon: Icons.dashboard,
                   label: 'Dashboard',
                   isSelected: _selectedNavItem == 'home',
                   onTap: () => _updateSelectedItem('home'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.person,
                   label: 'Profile',
                   isSelected: _selectedNavItem == 'profile',
                   onTap: () => _updateSelectedItem('profile'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.access_time,
                   label: 'Availability',
                   isSelected: _selectedNavItem == 'availability',
                   onTap: () => _updateSelectedItem('availability'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.calendar_today,
                   label: 'Appointments',
                   isSelected: _selectedNavItem == 'appointments',
                   onTap: () => _updateSelectedItem('appointments'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.message,
                   label: 'Messages',
                   isSelected: _selectedNavItem == 'messages',
                   onTap: () => _updateSelectedItem('messages'),
-                      ),
-                      _buildNavItem(
+                ),
+                _buildNavItem(
                   icon: Icons.settings,
                   label: 'Settings',
                   isSelected: _selectedNavItem == 'settings',
@@ -276,11 +292,11 @@ class _DoctorDashboardState extends State<DoctorDashboard> with SingleTickerProv
                 Container(
             padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Colors.teal,
               borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
+                        color: Colors.teal.withOpacity(0.2),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -290,7 +306,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> with SingleTickerProv
                     children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: Colors.teal[100],
+                  backgroundColor: Colors.white,
                   child: const Icon(Icons.person, size: 40, color: Colors.teal),
                       ),
                 const SizedBox(width: 24),
@@ -303,14 +319,15 @@ class _DoctorDashboardState extends State<DoctorDashboard> with SingleTickerProv
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      const Text(
                         'Here\'s what\'s happening today',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[600],
+                          color: Colors.white70,
                         ),
                       ),
                     ],
@@ -459,7 +476,7 @@ class _DoctorDashboardState extends State<DoctorDashboard> with SingleTickerProv
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.teal.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),

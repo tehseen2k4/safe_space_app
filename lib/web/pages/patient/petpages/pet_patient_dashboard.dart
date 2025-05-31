@@ -106,38 +106,53 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            width: double.infinity,
+            color: Colors.teal,
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: _isSidebarCollapsed ? 20 : 40,
-                  backgroundColor: Colors.teal[100],
-                  child: const Icon(Icons.pets, color: Colors.teal),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.teal,
+                        Colors.teal.withOpacity(0.8),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.teal.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.health_and_safety,
+                    color: Colors.white,
+                    size: 32,
+                  ),
                 ),
                 if (!_isSidebarCollapsed) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    _patientData?['name'] ?? 'Pet Name',
-                    style: const TextStyle(
+                  const SizedBox(height: 8),
+                  const Text(
+                    'SAFE-SPACE',
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _patientData?['species'] ?? 'Species',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
                   ),
                 ],
               ],
             ),
           ),
-          const Divider(),
+          const Divider(height: 1),
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
@@ -269,11 +284,11 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.teal,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.teal.withOpacity(0.2),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),
@@ -283,7 +298,7 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: Colors.teal[100],
+                  backgroundColor: Colors.white,
                   child: const Icon(Icons.pets, size: 40, color: Colors.teal),
                 ),
                 const SizedBox(width: 24),
@@ -296,14 +311,15 @@ class _PetPatientDashboardState extends State<PetPatientDashboard> with SingleTi
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      const Text(
                         'Here\'s your health overview',
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[600],
+                          color: Colors.white70,
                         ),
                       ),
                     ],
