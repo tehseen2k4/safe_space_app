@@ -15,6 +15,7 @@ class PetAppointmentDb {
   String uid;
   String age;
   String timeslot; // New field for selected timeslot
+  String slotId; // Add slotId field
   bool status;
   String? doctorResponse;
   String? responseStatus;
@@ -38,6 +39,7 @@ class PetAppointmentDb {
     required this.uid,
     required this.timeslot,
     required this.age,
+    required this.slotId, // Add slotId parameter
     required this.status,
     this.doctorResponse,
     this.responseStatus,
@@ -63,6 +65,7 @@ class PetAppointmentDb {
         uid: json['uid'] as String,
         age: json['age'] as String,
         timeslot: (json['timeslot'] as String),
+        slotId: json['slotId'] as String, // Add slotId from json
         status: json['status'] as bool,
         doctorResponse: json['doctorResponse'] as String? ?? '',
         responseStatus: json['responseStatus'] as String? ?? 'pending',
@@ -90,6 +93,7 @@ class PetAppointmentDb {
       'uid': uid,
       'age': age,
       'timeslot': timeslot,
+      'slotId': slotId, // Add slotId to json
       'status': status,
       'doctorResponse': doctorResponse,
       'responseStatus': responseStatus,

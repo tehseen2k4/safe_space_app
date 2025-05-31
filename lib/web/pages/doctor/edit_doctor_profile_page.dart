@@ -838,19 +838,19 @@ class _EditDoctorProfilePageState extends State<EditDoctorProfilePage> {
             
             // Save slots to Firestore
             await dbService.saveSlotsToFirestore();
-            
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
                   content: Text('Profile and availability slots saved successfully!'),
-                  backgroundColor: Colors.green,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
-                ),
-              );
-            }
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+            ),
+          );
+        }
           } else {
             print('No available days selected for slot generation');
             if (mounted) {

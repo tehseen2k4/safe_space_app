@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:safe_space_app/models/petappointment_db.dart';
 import 'package:safe_space_app/models/petpatient_db.dart';
+import 'package:safe_space_app/models/appoinment_db_service.dart';
 import 'dart:math';
 import '../bookappointment.dart';
 
@@ -271,11 +272,26 @@ class _BookAppointmentPetPageState extends State<BookAppointmentPetPage> with Si
                               appointmentId: generateAppointmentId(),
                               doctorpreference: doctorName!,
                               status: false,
+                              slotId: '', // Initialize with empty string, will be updated by DatabaseService
                             );
 
-                            await _firestore
-                                .collection('petappointments')
-                                .add(appointmentData.toJson());
+                            // Initialize DatabaseService
+                            final dbService = DatabaseService(
+                              uid: selectedDoctorUid!,
+                              startTime: '09:00 AM',
+                              endTime: '05:00 PM',
+                              availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                            );
+
+                            // Update slot status and create appointment in one transaction
+                            await dbService.updateSlotAndCreateAppointment(
+                              doctorId: selectedDoctorUid!,
+                              date: DateTime.parse(selectedDateAndTime.split(' at ')[0]),
+                              time: selectedDateAndTime.split(' at ')[1],
+                              patientId: user.uid,
+                              appointmentData: appointmentData.toJson(),
+                              appointmentType: 'pet',
+                            );
 
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

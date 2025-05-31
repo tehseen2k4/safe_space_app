@@ -15,9 +15,14 @@ class DoctorAvailabilityScreen extends StatefulWidget {
 class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
   final User? user = FirebaseAuth.instance.currentUser;
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
+  DateTime _focusedDay = DateTime(2025, 6, 1); // Set initial focus to June 2025
   DateTime? _selectedDay;
   Map<DateTime, Map<String, List<dynamic>>> _events = {};
+
+  // Helper function to normalize dates for comparison
+  DateTime _normalizeDate(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
 
   Future<Map<String, dynamic>?> _fetchSlots() async {
     try {
@@ -40,17 +45,17 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
 
   void _processSlots(Map<String, dynamic> slots) {
     _events.clear();
+    print('Processing slots: $slots');
     slots.forEach((dateKey, slotList) {
       try {
-        // Skip if the dateKey is not a valid date format
         if (!dateKey.contains('-')) {
           print('Skipping invalid date key: $dateKey');
           return;
         }
 
-        final date = DateTime.parse(dateKey);
+        final date = _normalizeDate(DateTime.parse(dateKey));
+        print('Processing date: $dateKey -> Normalized: $date');
         
-        // Process slots to separate booked and available
         final List<dynamic> bookedSlots = [];
         final List<dynamic> availableSlots = [];
         
@@ -62,7 +67,8 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
           }
         }
         
-        // Store both types of slots
+        print('Booked slots: ${bookedSlots.length}, Available slots: ${availableSlots.length}');
+        
         _events[date] = {
           'booked': bookedSlots,
           'available': availableSlots,
@@ -71,6 +77,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
         print('Error processing date for $dateKey: $e');
       }
     });
+    print('Final events map: $_events');
   }
 
   @override
@@ -172,7 +179,9 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                         });
                       },
                       eventLoader: (day) {
-                        final events = _events[day];
+                        final normalizedDay = _normalizeDate(day);
+                        final events = _events[normalizedDay];
+                        print('Loading events for day: $day -> Normalized: $normalizedDay, Events: $events');
                         if (events == null) return [];
                         return [
                           ...events['booked'] ?? [],
@@ -180,7 +189,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                         ];
                       },
                       calendarStyle: const CalendarStyle(
-                        markersMaxCount: 1,
+                        markersMaxCount: 3,
                         markerDecoration: BoxDecoration(
                           color: Colors.teal,
                           shape: BoxShape.circle,
@@ -196,21 +205,26 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                       ),
                       calendarBuilders: CalendarBuilders(
                         markerBuilder: (context, date, events) {
+                          final normalizedDate = _normalizeDate(date);
+                          print('Building marker for date: $date -> Normalized: $normalizedDate, Events: $events');
+                          
                           if (events.isEmpty) return null;
                           
-                          final dayEvents = _events[date];
+                          final dayEvents = _events[normalizedDate];
+                          print('Day events for $normalizedDate: $dayEvents');
                           if (dayEvents == null) return null;
                           
                           final bookedCount = dayEvents['booked']?.length ?? 0;
                           final availableCount = dayEvents['available']?.length ?? 0;
                           
-                          // If there are no available slots, show red marker
+                          print('Booked: $bookedCount, Available: $availableCount');
+                          
                           if (availableCount == 0 && bookedCount > 0) {
                             return Positioned(
                               bottom: 1,
                               child: Container(
-                                width: 8,
-                                height: 8,
+                                width: 12,
+                                height: 12,
                                 decoration: const BoxDecoration(
                                   color: Colors.red,
                                   shape: BoxShape.circle,
@@ -219,13 +233,12 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                             );
                           }
                           
-                          // If there are available slots, show green marker
                           if (availableCount > 0) {
                             return Positioned(
                               bottom: 1,
                               child: Container(
-                                width: 8,
-                                height: 8,
+                                width: 12,
+                                height: 12,
                                 decoration: const BoxDecoration(
                                   color: Colors.green,
                                   shape: BoxShape.circle,

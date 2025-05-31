@@ -1,103 +1,104 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HumanAppointmentDb {
-  String appointmentId;
-  String doctorUid;
-  String patientUid;
-  String username;
-  String email;
-  String gender;
-  String phonenumber;
-  String reasonforvisit;
-  String typeofappointment;
-  String doctorpreference;
-  String urgencylevel;
-  String uid;
-  String age;
-  String timeslot;
-  bool? status;
+  final String appointmentId;
+  final String uid;
+  final String patientUid;
+  final String doctorUid;
+  final String username;
+  final String age;
+  final String gender;
+  final String email;
+  final String reasonforvisit;
+  final String typeofappointment;
+  final String urgencylevel;
+  final String phonenumber;
+  final String timeslot;
+  final String doctorpreference;
+  final bool status;
+  final String? responseStatus;
+  final String? suggestedTimeslot;
+  final String slotId;
+  String? responseTimestamp;
   String? doctorResponse;
-  String? responseStatus;
-  DateTime? responseTimestamp;
   String? doctorNotes;
-  String? suggestedTimeslot;
   String? documentId;
 
   HumanAppointmentDb({
     required this.appointmentId,
-    required this.doctorUid,
+    required this.uid,
     required this.patientUid,
+    required this.doctorUid,
     required this.username,
-    required this.email,
+    required this.age,
     required this.gender,
-    required this.phonenumber,
+    required this.email,
     required this.reasonforvisit,
     required this.typeofappointment,
-    required this.doctorpreference,
     required this.urgencylevel,
-    required this.uid,
+    required this.phonenumber,
     required this.timeslot,
-    required this.age,
+    required this.doctorpreference,
     required this.status,
-    this.doctorResponse,
     this.responseStatus,
-    this.responseTimestamp,
-    this.doctorNotes,
     this.suggestedTimeslot,
+    required this.slotId,
+    this.responseTimestamp,
+    this.doctorResponse,
+    this.doctorNotes,
     this.documentId,
   });
 
-  factory HumanAppointmentDb.fromJson(Map<String, Object?> json) {
+  factory HumanAppointmentDb.fromJson(Map<String, dynamic> json) {
     return HumanAppointmentDb(
-        appointmentId: json['appointmentId'] as String,
-        doctorUid: json['doctorUid'] as String,
-        patientUid: json['patientUid'] as String,
-        username: json['username'] as String,
-        email: json['email'] as String,
-        gender: json['gender'] as String,
-        phonenumber: json['phonenumber'] as String,
-        reasonforvisit: json['reasonforvisit'] as String,
-        typeofappointment: json['typeofappointment'] as String,
-        doctorpreference: json['doctorpreference'] as String,
-        urgencylevel: json['urgencylevel'] as String,
-        uid: json['uid'] as String,
-        age: json['age'] as String,
-        timeslot: (json['timeslot'] as String),
-        status: json['status'] == null ? false : json['status'] as bool,
-        doctorResponse: json['doctorResponse'] as String? ?? '',
-        responseStatus: json['responseStatus'] as String? ?? 'pending',
-        responseTimestamp: json['responseTimestamp'] != null 
-            ? (json['responseTimestamp'] as Timestamp).toDate()
-            : null,
-        doctorNotes: json['doctorNotes'] as String? ?? '',
-        suggestedTimeslot: json['suggestedTimeslot'] as String? ?? '',
-        documentId: json['documentId'] as String? ?? '');
+      appointmentId: json['appointmentId'] as String? ?? '',
+      uid: json['uid'] as String? ?? '',
+      patientUid: json['patientUid'] as String? ?? '',
+      doctorUid: json['doctorUid'] as String? ?? '',
+      username: json['username'] as String? ?? '',
+      age: json['age'] as String? ?? '',
+      gender: json['gender'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      reasonforvisit: json['reasonforvisit'] as String? ?? '',
+      typeofappointment: json['typeofappointment'] as String? ?? '',
+      urgencylevel: json['urgencylevel'] as String? ?? '',
+      phonenumber: json['phonenumber'] as String? ?? '',
+      timeslot: json['timeslot'] as String? ?? '',
+      doctorpreference: json['doctorpreference'] as String? ?? '',
+      status: json['status'] as bool? ?? false,
+      responseStatus: json['responseStatus'] as String?,
+      suggestedTimeslot: json['suggestedTimeslot'] as String?,
+      slotId: json['slotId'] as String? ?? '',
+      responseTimestamp: json['responseTimestamp'] as String?,
+      doctorResponse: json['doctorResponse'] as String?,
+      doctorNotes: json['doctorNotes'] as String?,
+      documentId: json['documentId'] as String?,
+    );
   }
 
-  Map<String, Object?> toJson() {
+  Map<String, dynamic> toJson() {
     return {
       'appointmentId': appointmentId,
-      'doctorUid': doctorUid,
+      'uid': uid,
       'patientUid': patientUid,
+      'doctorUid': doctorUid,
       'username': username,
-      'email': email,
+      'age': age,
       'gender': gender,
-      'phonenumber': phonenumber,
+      'email': email,
       'reasonforvisit': reasonforvisit,
       'typeofappointment': typeofappointment,
-      'doctorpreference': doctorpreference,
       'urgencylevel': urgencylevel,
-      'uid': uid,
-      'age': age,
+      'phonenumber': phonenumber,
       'timeslot': timeslot,
+      'doctorpreference': doctorpreference,
       'status': status,
-      'doctorResponse': doctorResponse,
       'responseStatus': responseStatus,
-      'responseTimestamp': responseTimestamp != null 
-          ? Timestamp.fromDate(responseTimestamp!)
-          : null,
+      'responseTimestamp': responseTimestamp,
+      'doctorResponse': doctorResponse,
       'doctorNotes': doctorNotes,
       'suggestedTimeslot': suggestedTimeslot,
+      'slotId': slotId,
       'documentId': documentId,
     };
   }

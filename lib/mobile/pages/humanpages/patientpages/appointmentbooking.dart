@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:safe_space_app/models/patients_db.dart';
 import 'package:safe_space_app/mobile/pages/bookappointment.dart';
 import 'package:safe_space_app/models/humanappointment_db.dart';
+import 'package:safe_space_app/models/appoinment_db_service.dart';
 
 class BookAppointmentPage extends StatefulWidget {
   const BookAppointmentPage({super.key});
@@ -219,11 +220,26 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
                               appointmentId: generateAppointmentId(),
                               doctorpreference: doctorName!,
                               status: false,
+                              slotId: '', // Initialize with empty string, will be updated by DatabaseService
                             );
 
-                            await _firestore
-                                .collection('appointments')
-                                .add(appointmentData.toJson());
+                            // Initialize DatabaseService
+                            final dbService = DatabaseService(
+                              uid: selectedDoctorUid!,
+                              startTime: '09:00 AM',
+                              endTime: '05:00 PM',
+                              availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                            );
+
+                            // Update slot status and create appointment in one transaction
+                            await dbService.updateSlotAndCreateAppointment(
+                              doctorId: selectedDoctorUid!,
+                              date: DateTime.parse(selectedDateAndTime.split(' at ')[0]),
+                              time: selectedDateAndTime.split(' at ')[1],
+                              patientId: user.uid,
+                              appointmentData: appointmentData.toJson(),
+                              appointmentType: 'human',
+                            );
 
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Appointment Booked!')),

@@ -60,8 +60,15 @@ class _HumanAppointmentsPageState extends State<HumanAppointmentsPage> with Sing
             .map((doc) {
               final data = doc.data();
               developer.log('Appointment data: $data', name: 'HumanAppointments');
-              return HumanAppointmentDb.fromJson(data);
+              try {
+                return HumanAppointmentDb.fromJson(data);
+              } catch (e) {
+                developer.log('Error parsing appointment data: $e', name: 'HumanAppointments', error: e);
+                return null;
+              }
             })
+            .where((appointment) => appointment != null)
+            .cast<HumanAppointmentDb>()
             .toList();
         _categorizeAppointments();
       });
@@ -79,7 +86,7 @@ class _HumanAppointmentsPageState extends State<HumanAppointmentsPage> with Sing
 
   void _categorizeAppointments() {
     _pendingAppointments = _allAppointments
-        .where((appointment) => appointment.responseStatus == 'pending')
+        .where((appointment) => appointment.responseStatus == null || appointment.responseStatus == 'pending')
         .toList();
     _confirmedAppointments = _allAppointments
         .where((appointment) => appointment.responseStatus == 'confirmed')
@@ -478,7 +485,7 @@ class _HumanAppointmentsPageState extends State<HumanAppointmentsPage> with Sing
                             borderRadius: BorderRadius.circular(24),
                           ),
                           child: Text(
-                            appointment.responseStatus?.toUpperCase() ?? 'PENDING',
+                            (appointment.responseStatus ?? 'pending').toUpperCase(),
                             style: TextStyle(
                               color: statusColor,
                               fontSize: 12,
@@ -639,14 +646,15 @@ class _HumanAppointmentsPageState extends State<HumanAppointmentsPage> with Sing
                       _buildDetailRow('Type', appointment.typeofappointment, Icons.access_alarm),
                       _buildDetailRow('Doctor Preference', appointment.doctorpreference, Icons.favorite),
                     ]),
-                    if ((appointment.responseStatus ?? 'pending') == 'rejected' && 
-                        (appointment.suggestedTimeslot ?? '').isNotEmpty)
+                    if (appointment.responseStatus == 'rejected' && 
+                        appointment.suggestedTimeslot != null &&
+                        appointment.suggestedTimeslot!.isNotEmpty)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 16),
                           _buildDetailSection('Suggested Alternative Time', [
-                            _buildDetailRow('New Time', appointment.suggestedTimeslot ?? '', Icons.access_time),
+                            _buildDetailRow('New Time', appointment.suggestedTimeslot!, Icons.access_time),
                           ]),
                         ],
                       ),

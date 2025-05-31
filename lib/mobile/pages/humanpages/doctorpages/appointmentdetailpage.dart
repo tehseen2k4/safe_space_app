@@ -16,13 +16,19 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   late TextEditingController _notesController;
   late TextEditingController _suggestedTimeController;
   late HumanAppointmentDb _appointment;
+  String? _currentResponseStatus;
+  String? _currentDoctorNotes;
+  String? _currentSuggestedTime;
 
   @override
   void initState() {
     super.initState();
     _appointment = widget.appointment;
-    _notesController = TextEditingController(text: _appointment.doctorNotes ?? '');
-    _suggestedTimeController = TextEditingController(text: _appointment.suggestedTimeslot ?? '');
+    _currentResponseStatus = _appointment.responseStatus;
+    _currentDoctorNotes = _appointment.doctorNotes;
+    _currentSuggestedTime = _appointment.suggestedTimeslot;
+    _notesController = TextEditingController(text: _currentDoctorNotes ?? '');
+    _suggestedTimeController = TextEditingController(text: _currentSuggestedTime ?? '');
   }
 
   @override
@@ -35,7 +41,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   Future<void> _updateAppointmentStatus(String status) async {
     try {
       await FirebaseFirestore.instance
-          .collection('humanappointments')
+          .collection('appointments')
           .doc(_appointment.appointmentId)
           .update({
         'responseStatus': status,
@@ -45,10 +51,9 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
       });
 
       setState(() {
-        _appointment.responseStatus = status;
-        _appointment.responseTimestamp = DateTime.now();
-        _appointment.doctorNotes = _notesController.text;
-        _appointment.suggestedTimeslot = _suggestedTimeController.text;
+        _currentResponseStatus = status;
+        _currentDoctorNotes = _notesController.text;
+        _currentSuggestedTime = _suggestedTimeController.text;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -204,8 +209,8 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                 ),
               ),
 
-              if ((_appointment.responseStatus ?? 'pending') == 'rejected' && 
-                  (_appointment.suggestedTimeslot ?? '').isNotEmpty)
+              if ((_currentResponseStatus ?? 'pending') == 'rejected' && 
+                  (_currentSuggestedTime ?? '').isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -223,7 +228,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                             const Icon(Icons.access_time, color: Colors.teal, size: 24),
                             const SizedBox(width: 12),
                             Text(
-                              _appointment.suggestedTimeslot ?? '',
+                              _currentSuggestedTime ?? '',
                               style: const TextStyle(fontSize: 16),
                             ),
                           ],
@@ -233,7 +238,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
                   ],
                 ),
 
-              if ((_appointment.responseStatus ?? 'pending') == 'pending')
+              if ((_currentResponseStatus ?? 'pending') == 'pending')
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24.0),
                   child: Row(
@@ -285,7 +290,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Status: ${(_appointment.responseStatus ?? 'pending').toUpperCase()}',
+            'Status: ${(_currentResponseStatus ?? 'pending').toUpperCase()}',
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -385,7 +390,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   }
 
   Color _getStatusColor() {
-    switch ((_appointment.responseStatus ?? 'pending').toLowerCase()) {
+    switch ((_currentResponseStatus ?? 'pending').toLowerCase()) {
       case 'accepted':
         return Colors.green;
       case 'rejected':
@@ -396,7 +401,7 @@ class _AppointmentDetailsPageState extends State<AppointmentDetailsPage> {
   }
 
   IconData _getStatusIcon() {
-    switch ((_appointment.responseStatus ?? 'pending').toLowerCase()) {
+    switch ((_currentResponseStatus ?? 'pending').toLowerCase()) {
       case 'accepted':
         return Icons.check_circle;
       case 'rejected':

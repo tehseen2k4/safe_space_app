@@ -104,10 +104,12 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
             slots.forEach((dateKey, daySlots) {
               final List<dynamic> slotsList = daySlots as List<dynamic>;
               for (var slot in slotsList) {
-                if (slot['status'] == 'available') {
+                // Only add slots that are available and not booked
+                if (slot['status'] == 'available' && slot['booked'] == false) {
                   _availableSlots.add({
                     'date': dateKey,
                     'time': slot['time'],
+                    'timeDisplay': slot['timeDisplay'],
                   });
                 }
               }
@@ -156,6 +158,10 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
       }
       developer.log('Current user: ${user.uid}', name: 'HumanBookAppointment');
 
+      // Format the time to match the database format (HH:mm)
+      final timeStr = _selectedTime!.split(' ')[0]; // Get just the time part without AM/PM
+      developer.log('Formatted time for database: $timeStr', name: 'HumanBookAppointment');
+
       developer.log('Fetching patient data for user: ${user.uid}', name: 'HumanBookAppointment');
       final patientDoc = await _firestore
           .collection('humanpatients')
@@ -191,52 +197,44 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
       final appointmentId = generateAppointmentId();
       developer.log('Generated appointment ID: $appointmentId', name: 'HumanBookAppointment');
 
-      // Create appointment
-      final appointment = HumanAppointmentDb(
-        appointmentId: appointmentId,
-        doctorUid: _selectedDoctor!,
-        patientUid: user.uid,
-        username: patientData['name'],
-        email: patientData['email'],
-        gender: patientData['sex'],
-        phonenumber: _phoneNumberController.text,
-        reasonforvisit: _reasonController.text,
-        typeofappointment: _typeController.text,
-        doctorpreference: doctorName!,
-        urgencylevel: _urgencyController.text,
-        uid: user.uid,
-        age: patientData['age'].toString(),
-        timeslot: '${DateFormat('EEEE, MMMM d').format(_selectedDate!)} at ${_selectedTime!.split(' ')[0]}',
-        status: false,
-      );
+      // Create appointment data
+      final appointmentData = {
+        'appointmentId': appointmentId,
+        'doctorUid': _selectedDoctor!,
+        'patientUid': user.uid,
+        'username': patientData['name'],
+        'email': patientData['email'],
+        'gender': patientData['sex'],
+        'phonenumber': _phoneNumberController.text,
+        'reasonforvisit': _reasonController.text,
+        'typeofappointment': _typeController.text,
+        'doctorpreference': doctorName!,
+        'urgencylevel': _urgencyController.text,
+        'uid': user.uid,
+        'age': patientData['age'].toString(),
+        'timeslot': '${DateFormat('EEEE, MMMM d').format(_selectedDate!)} at ${_selectedTime!.split(' ')[0]}',
+        'status': false,
+      };
 
-      developer.log('Appointment object created with data:', name: 'HumanBookAppointment');
-      developer.log('Appointment ID: ${appointment.appointmentId}', name: 'HumanBookAppointment');
-      developer.log('Doctor UID: ${appointment.doctorUid}', name: 'HumanBookAppointment');
-      developer.log('Patient UID: ${appointment.patientUid}', name: 'HumanBookAppointment');
-      developer.log('Time Slot: ${appointment.timeslot}', name: 'HumanBookAppointment');
-
-      developer.log('Saving appointment to Firestore...', name: 'HumanBookAppointment');
-      await appointment.saveToFirestore();
-      developer.log('Appointment saved successfully', name: 'HumanBookAppointment');
-
-      // Update slot status
+      // Initialize DatabaseService
       final dbService = DatabaseService(
         uid: _selectedDoctor!,
         startTime: '09:00 AM',
         endTime: '05:00 PM',
         availableDays: _availableDays,
       );
-      developer.log('Updating slot status for date: $_selectedDate, time: $_selectedTime', 
-        name: 'HumanBookAppointment');
-      await dbService.updateSlotStatus(
-        _selectedDoctor!,
-        _selectedDate!,
-        _selectedTime!,
-        'booked',
-        bookedBy: user.uid,
+
+      // Update slot status and create appointment in one transaction
+      await dbService.updateSlotAndCreateAppointment(
+        doctorId: _selectedDoctor!,
+        date: _selectedDate!,
+        time: timeStr,
+        patientId: user.uid,
+        appointmentData: appointmentData,
+        appointmentType: 'human',
       );
-      developer.log('Slot status updated successfully', name: 'HumanBookAppointment');
+
+      developer.log('Appointment booked successfully', name: 'HumanBookAppointment');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -372,9 +370,20 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
       groupedSlots[date]!.add(slot);
     }
 
-    return groupedSlots.entries.map((entry) {
-      final date = DateTime.parse(entry.key);
-      final slots = entry.value;
+    // Sort the dates chronologically
+    final sortedDates = groupedSlots.keys.toList()
+      ..sort((a, b) => DateTime.parse(a).compareTo(DateTime.parse(b)));
+
+    return sortedDates.map((dateKey) {
+      final date = DateTime.parse(dateKey);
+      final slots = groupedSlots[dateKey]!;
+      
+      // Sort slots by time
+      slots.sort((a, b) {
+        final timeA = a['time'] as String;
+        final timeB = b['time'] as String;
+        return timeA.compareTo(timeB);
+      });
       
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,

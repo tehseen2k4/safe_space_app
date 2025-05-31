@@ -191,52 +191,48 @@ class _PetBookAppointmentPageState extends State<PetBookAppointmentPage> {
       final appointmentId = generateAppointmentId();
       developer.log('Generated appointment ID: $appointmentId', name: 'PetBookAppointment');
 
-      // Create appointment
-      final appointment = PetAppointmentDb(
-        appointmentId: appointmentId,
-        doctorUid: _selectedVet!,
-        patientUid: user.uid,
-        username: patientData['name'],
-        email: patientData['email'],
-        gender: patientData['sex'],
-        phonenumber: _phoneNumberController.text,
-        reasonforvisit: _reasonController.text,
-        typeofappointment: _typeController.text,
-        doctorpreference: vetName!,
-        urgencylevel: _urgencyController.text,
-        uid: user.uid,
-        age: patientData['age'].toString(),
-        timeslot: '${DateFormat('EEEE, MMMM d').format(_selectedDate!)} at ${_selectedTime!.split(' ')[0]}',
-        status: false,
-      );
+      // Format the time to match the database format (HH:mm)
+      final timeStr = _selectedTime!.split(' ')[0]; // Get just the time part without AM/PM
+      developer.log('Formatted time for database: $timeStr', name: 'PetBookAppointment');
 
-      developer.log('Appointment object created with data:', name: 'PetBookAppointment');
-      developer.log('Appointment ID: ${appointment.appointmentId}', name: 'PetBookAppointment');
-      developer.log('Vet UID: ${appointment.doctorUid}', name: 'PetBookAppointment');
-      developer.log('Pet UID: ${appointment.patientUid}', name: 'PetBookAppointment');
-      developer.log('Time Slot: ${appointment.timeslot}', name: 'PetBookAppointment');
+      // Create appointment data
+      final appointmentData = {
+        'appointmentId': appointmentId,
+        'doctorUid': _selectedVet!,
+        'patientUid': user.uid,
+        'username': patientData['name'],
+        'email': patientData['email'],
+        'gender': patientData['sex'],
+        'phonenumber': _phoneNumberController.text,
+        'reasonforvisit': _reasonController.text,
+        'typeofappointment': _typeController.text,
+        'doctorpreference': vetName!,
+        'urgencylevel': _urgencyController.text,
+        'uid': user.uid,
+        'age': patientData['age'].toString(),
+        'timeslot': '${DateFormat('EEEE, MMMM d').format(_selectedDate!)} at ${_selectedTime!.split(' ')[0]}',
+        'status': false,
+      };
 
-      developer.log('Saving appointment to Firestore...', name: 'PetBookAppointment');
-      await appointment.saveToFirestore();
-      developer.log('Appointment saved successfully', name: 'PetBookAppointment');
-
-      // Update slot status
+      // Initialize DatabaseService
       final dbService = DatabaseService(
         uid: _selectedVet!,
         startTime: '09:00 AM',
         endTime: '05:00 PM',
         availableDays: _availableDays,
       );
-      developer.log('Updating slot status for date: $_selectedDate, time: $_selectedTime', 
-        name: 'PetBookAppointment');
-      await dbService.updateSlotStatus(
-        _selectedVet!,
-        _selectedDate!,
-        _selectedTime!,
-        'booked',
-        bookedBy: user.uid,
+
+      // Update slot status and create appointment in one transaction
+      await dbService.updateSlotAndCreateAppointment(
+        doctorId: _selectedVet!,
+        date: _selectedDate!,
+        time: timeStr,
+        patientId: user.uid,
+        appointmentData: appointmentData,
+        appointmentType: 'pet',
       );
-      developer.log('Slot status updated successfully', name: 'PetBookAppointment');
+
+      developer.log('Appointment booked successfully', name: 'PetBookAppointment');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

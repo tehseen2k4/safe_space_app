@@ -87,14 +87,10 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
           // Create appointment based on doctor type
           if (doctorType.toLowerCase() == 'human') {
             print("Creating HumanAppointmentDb"); // Debug print
-            final appointment = HumanAppointmentDb.fromJson(data);
-            appointment.documentId = doc.id;
-            return appointment;
+            return HumanAppointmentDb.fromJson(data);
           } else {
             print("Creating PetAppointmentDb"); // Debug print
-            final appointment = PetAppointmentDb.fromJson(data);
-            appointment.documentId = doc.id;
-            return appointment;
+            return PetAppointmentDb.fromJson(data);
           }
         }).toList();
         _categorizeAppointments();
@@ -106,7 +102,7 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
 
   void _categorizeAppointments() {
     _pendingAppointments = _allAppointments
-        .where((appointment) => appointment.responseStatus == 'pending')
+        .where((appointment) => appointment.responseStatus == null || appointment.responseStatus == 'pending')
         .toList();
     _confirmedAppointments = _allAppointments
         .where((appointment) => appointment.responseStatus == 'confirmed')
@@ -576,8 +572,8 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
         child: Column(
           children: [
             InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: () {
+              borderRadius: BorderRadius.circular(20),
+              onTap: () {
                 setState(() {
                   if (isExpanded) {
                     _expandedCards.remove(appointment.appointmentId);
@@ -585,31 +581,31 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
                     _expandedCards.add(appointment.appointmentId);
                   }
                 });
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Text(
-                        appointment.responseStatus?.toUpperCase() ?? 'PENDING',
-                        style: TextStyle(
-                          color: statusColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Text(
+                            (appointment.responseStatus ?? 'pending').toUpperCase(),
+                            style: TextStyle(
+                              color: statusColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         Row(
@@ -620,14 +616,14 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
                                 color: Colors.grey[600],
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      appointment.appointmentId,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
+                              ),
+                            ),
+                            Text(
+                              appointment.appointmentId,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
                             ),
                             const SizedBox(width: 8),
                             Container(
@@ -643,98 +639,98 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
                               ),
                             ),
                           ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: Colors.teal[100],
-                      child: Icon(
-                        Icons.person,
-                        color: Colors.teal,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            appointment.username,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Age: ${appointment.age} | ${appointment.gender}',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.watch_later,
-                      size: 18,
-                      color: Colors.teal,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      appointment.timeslot,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.description,
-                      size: 18,
-                      color: Colors.teal,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        appointment.reasonforvisit,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Urgency: ${appointment.urgencylevel}',
-                      style: TextStyle(
-                        color: _getUrgencyColor(appointment.urgencylevel),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: Colors.teal[100],
+                          child: Icon(
+                            appointment is PetAppointmentDb ? Icons.pets : Icons.person,
+                            color: Colors.teal,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                appointment.username,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Age: ${appointment.age} | ${appointment.gender}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.watch_later,
+                          size: 18,
+                          color: Colors.teal,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          appointment.timeslot,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.description,
+                          size: 18,
+                          color: Colors.teal,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            appointment.reasonforvisit,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Urgency: ${appointment.urgencylevel}',
+                          style: TextStyle(
+                            color: _getUrgencyColor(appointment.urgencylevel),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -824,9 +820,9 @@ class _MyAppointmentsDoctorPageState extends State<MyAppointmentsDoctorPage> wit
                       ),
                   ],
                 ),
-                ),
-              ],
-            ),
+              ),
+          ],
+        ),
       ),
     );
   }

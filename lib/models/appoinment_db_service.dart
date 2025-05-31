@@ -68,7 +68,11 @@ class DatabaseService {
     DateTime current = start;
 
     while (current.isBefore(end)) {
+      // Generate a unique slot ID using date and time
+      final slotId = '${DateFormat('yyyyMMdd').format(date)}_${DateFormat('HHmm').format(current)}';
+      
       final slot = {
+        'slotId': slotId, // Add unique slot ID
         'date': DateFormat('yyyy-MM-dd').format(date),
         'time': DateFormat('HH:mm').format(current),
         'timeDisplay': DateFormat('hh:mm a').format(current),
@@ -241,36 +245,210 @@ class DatabaseService {
     {String? bookedBy}
   ) async {
     try {
+      print('\n=== Updating Slot Status ===');
+      print('Doctor ID: $doctorId');
+      print('Date: $date');
+      print('Time: $time');
+      print('Status: $status');
+      print('Booked By: $bookedBy');
+
       final docRef = FirebaseFirestore.instance.collection('slots').doc(doctorId);
       final docSnapshot = await docRef.get();
 
       if (docSnapshot.exists) {
         final data = docSnapshot.data()!;
         final slots = data['slots'] as Map<String, dynamic>;
-        final dateKey = date.toIso8601String();
+        final dateKey = DateFormat('yyyy-MM-dd').format(date);
+        
+        print('Looking for date key: $dateKey');
+        print('Available dates: ${slots.keys.toList()}');
         
         if (slots.containsKey(dateKey)) {
           final daySlots = slots[dateKey] as List<dynamic>;
+          print('Found ${daySlots.length} slots for this date');
+          
+          // First check if the slot is already booked
+          final existingSlot = daySlots.firstWhere(
+            (slot) => slot['time'] == time,
+            orElse: () => null,
+          );
+
+          if (existingSlot != null && existingSlot['status'] == 'booked') {
+            print('Slot is already booked');
+            throw Exception('This slot is already booked. Please select another time.');
+          }
+          
           final updatedSlots = daySlots.map((slot) {
+            print('Checking slot: ${slot['time']} against requested time: $time');
             if (slot['time'] == time) {
+              print('Found matching slot, updating status to: $status');
               return {
                 ...slot,
                 'status': status,
                 'booked': status == 'booked',
                 'bookedBy': bookedBy,
-                'bookedAt': status == 'booked' ? FieldValue.serverTimestamp() : null,
+                'bookedAt': status == 'booked' ? DateTime.now().toIso8601String() : null,
+                'slotId': slot['slotId'], // Preserve the slot ID
               };
             }
             return slot;
           }).toList();
 
+          print('Updating Firestore with new slots data');
           await docRef.update({
             'slots.$dateKey': updatedSlots,
           });
+          print('Slot status updated successfully');
+        } else {
+          print('No slots found for date: $dateKey');
+          throw Exception('No slots available for this date');
         }
+      } else {
+        print('No slots document found for doctor: $doctorId');
+        throw Exception('No slots found for this doctor');
       }
+      print('=== Slot Status Update Complete ===\n');
     } catch (e) {
       print('Error updating slot status: $e');
+      throw e;
+    }
+  }
+
+  /// Get slot details by ID
+  Future<Map<String, dynamic>?> getSlotById(String doctorId, String slotId) async {
+    try {
+      final docRef = FirebaseFirestore.instance.collection('slots').doc(doctorId);
+      final docSnapshot = await docRef.get();
+
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data()!;
+        final slots = data['slots'] as Map<String, dynamic>;
+        
+        // Search through all dates for the slot
+        for (var dateKey in slots.keys) {
+          final daySlots = slots[dateKey] as List<dynamic>;
+          final slot = daySlots.firstWhere(
+            (slot) => slot['slotId'] == slotId,
+            orElse: () => null,
+          );
+          
+          if (slot != null) {
+            return {
+              ...slot,
+              'date': dateKey,
+            };
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error getting slot by ID: $e');
+      return null;
+    }
+  }
+
+  /// Get appointment details for a slot
+  Future<Map<String, dynamic>?> getAppointmentForSlot(String slotId) async {
+    try {
+      final appointmentsRef = FirebaseFirestore.instance.collection('appointments');
+      final querySnapshot = await appointmentsRef
+          .where('slotId', isEqualTo: slotId)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first.data();
+      }
+      return null;
+    } catch (e) {
+      print('Error getting appointment for slot: $e');
+      return null;
+    }
+  }
+
+  /// Check if a slot has an existing appointment
+  Future<bool> isSlotBooked(String slotId) async {
+    try {
+      final appointmentsRef = FirebaseFirestore.instance.collection('appointments');
+      final querySnapshot = await appointmentsRef
+          .where('slotId', isEqualTo: slotId)
+          .get();
+
+      return querySnapshot.docs.isNotEmpty;
+    } catch (e) {
+      print('Error checking if slot is booked: $e');
+      return false;
+    }
+  }
+
+  /// Update slot status and create appointment link
+  Future<void> updateSlotAndCreateAppointment({
+    required String doctorId,
+    required DateTime date,
+    required String time,
+    required String patientId,
+    required Map<String, dynamic> appointmentData,
+    required String appointmentType, // Add appointment type parameter
+  }) async {
+    try {
+      print('\n=== Updating Slot and Creating Appointment ===');
+      print('Appointment Type: $appointmentType');
+      
+      // First, get the slot details to get the slotId
+      final docRef = FirebaseFirestore.instance.collection('slots').doc(doctorId);
+      final docSnapshot = await docRef.get();
+      
+      if (!docSnapshot.exists) {
+        throw Exception('No slots found for this doctor');
+      }
+
+      final data = docSnapshot.data()!;
+      final slots = data['slots'] as Map<String, dynamic>;
+      final dateKey = DateFormat('yyyy-MM-dd').format(date);
+      
+      if (!slots.containsKey(dateKey)) {
+        throw Exception('No slots available for this date');
+      }
+
+      final daySlots = slots[dateKey] as List<dynamic>;
+      final slot = daySlots.firstWhere(
+        (slot) => slot['time'] == time,
+        orElse: () => null,
+      );
+
+      if (slot == null) {
+        throw Exception('Slot not found');
+      }
+
+      if (slot['status'] == 'booked') {
+        throw Exception('This slot is already booked');
+      }
+
+      final slotId = slot['slotId'];
+
+      // Update slot status
+      await updateSlotStatus(
+        doctorId,
+        date,
+        time,
+        'booked',
+        bookedBy: patientId,
+      );
+
+      // Determine the correct collection based on appointment type
+      final String collectionName = appointmentType == 'human' ? 'appointments' : 'petappointments';
+      print('Using collection: $collectionName');
+
+      // Create appointment with slotId
+      final appointmentRef = FirebaseFirestore.instance.collection(collectionName);
+      await appointmentRef.doc(appointmentData['appointmentId']).set({
+        ...appointmentData,
+        'slotId': slotId,
+      });
+
+      print('Slot updated and appointment created successfully');
+      print('=== Update Complete ===\n');
+    } catch (e) {
+      print('Error updating slot and creating appointment: $e');
       throw e;
     }
   }
