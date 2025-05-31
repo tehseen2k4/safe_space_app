@@ -797,6 +797,7 @@ class _DoctorAuthPageState extends State<DoctorAuthPage> {
                                       'availableDays': selectedDays.entries.where((e) => e.value).map((e) => e.key).toList(),
                                       'startTime': startTime?.format(context) ?? '',
                                       'endTime': endTime?.format(context) ?? '',
+                                      'maxDaysInAdvance': 30,
                                     });
 
                                     if (startTime != null && endTime != null) {
@@ -807,15 +808,54 @@ class _DoctorAuthPageState extends State<DoctorAuthPage> {
                                           startTime: startTime!.format(context),
                                           endTime: endTime!.format(context),
                                           availableDays: selectedDaysList,
+                                          maxDaysInAdvance: 30,
                                         );
+                                        
+                                        // Save slots to Firestore
                                         await dbService.saveSlotsToFirestore();
+                                        
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Profile and availability slots created successfully!'),
+                                              backgroundColor: Colors.green,
+                                              behavior: SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.all(Radius.circular(10)),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      } else {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Profile created, but no available days selected for slot generation.'),
+                                              backgroundColor: Colors.orange,
+                                              behavior: SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.all(Radius.circular(10)),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    } else {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Profile created, but working hours not set for slot generation.'),
+                                            backgroundColor: Colors.orange,
+                                            behavior: SnackBarBehavior.floating,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.all(Radius.circular(10)),
+                                            ),
+                                          ),
+                                        );
                                       }
                                     }
 
                                     if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Profile completed successfully!')),
-                                      );
                                       Navigator.pop(context);
                                     }
                                   } catch (e) {

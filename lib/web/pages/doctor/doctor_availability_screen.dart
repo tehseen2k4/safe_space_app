@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:safe_space_app/models/appoinment_db_service.dart';
 import 'package:intl/intl.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class DoctorAvailabilityScreen extends StatefulWidget {
   const DoctorAvailabilityScreen({Key? key}) : super(key: key);
@@ -13,6 +14,10 @@ class DoctorAvailabilityScreen extends StatefulWidget {
 
 class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
   final User? user = FirebaseAuth.instance.currentUser;
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+  Map<DateTime, Map<String, List<dynamic>>> _events = {};
 
   Future<Map<String, dynamic>?> _fetchSlots() async {
     try {
@@ -31,6 +36,41 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
       print('Error fetching slots: $e');
       return null;
     }
+  }
+
+  void _processSlots(Map<String, dynamic> slots) {
+    _events.clear();
+    slots.forEach((dateKey, slotList) {
+      try {
+        // Skip if the dateKey is not a valid date format
+        if (!dateKey.contains('-')) {
+          print('Skipping invalid date key: $dateKey');
+          return;
+        }
+
+        final date = DateTime.parse(dateKey);
+        
+        // Process slots to separate booked and available
+        final List<dynamic> bookedSlots = [];
+        final List<dynamic> availableSlots = [];
+        
+        for (var slot in slotList) {
+          if (slot['status'] == 'booked') {
+            bookedSlots.add(slot);
+          } else if (slot['status'] == 'available') {
+            availableSlots.add(slot);
+          }
+        }
+        
+        // Store both types of slots
+        _events[date] = {
+          'booked': bookedSlots,
+          'available': availableSlots,
+        };
+      } catch (e) {
+        print('Error processing date for $dateKey: $e');
+      }
+    });
   }
 
   @override
@@ -75,6 +115,135 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
             ),
           ),
           const SizedBox(height: 24),
+          // Calendar Section
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Monthly Schedule',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                FutureBuilder<Map<String, dynamic>?>(
+                  future: _fetchSlots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasData && snapshot.data != null) {
+                      _processSlots(snapshot.data!['slots']);
+                    }
+
+                    return TableCalendar(
+                      firstDay: DateTime.utc(2024, 1, 1),
+                      lastDay: DateTime.utc(2025, 12, 31),
+                      focusedDay: _focusedDay,
+                      calendarFormat: _calendarFormat,
+                      selectedDayPredicate: (day) {
+                        return isSameDay(_selectedDay, day);
+                      },
+                      onDaySelected: (selectedDay, focusedDay) {
+                        setState(() {
+                          _selectedDay = selectedDay;
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                      onFormatChanged: (format) {
+                        setState(() {
+                          _calendarFormat = format;
+                        });
+                      },
+                      eventLoader: (day) {
+                        final events = _events[day];
+                        if (events == null) return [];
+                        return [
+                          ...events['booked'] ?? [],
+                          ...events['available'] ?? [],
+                        ];
+                      },
+                      calendarStyle: const CalendarStyle(
+                        markersMaxCount: 1,
+                        markerDecoration: BoxDecoration(
+                          color: Colors.teal,
+                          shape: BoxShape.circle,
+                        ),
+                        todayDecoration: BoxDecoration(
+                          color: Colors.teal,
+                          shape: BoxShape.circle,
+                        ),
+                        selectedDecoration: BoxDecoration(
+                          color: Colors.tealAccent,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      calendarBuilders: CalendarBuilders(
+                        markerBuilder: (context, date, events) {
+                          if (events.isEmpty) return null;
+                          
+                          final dayEvents = _events[date];
+                          if (dayEvents == null) return null;
+                          
+                          final bookedCount = dayEvents['booked']?.length ?? 0;
+                          final availableCount = dayEvents['available']?.length ?? 0;
+                          
+                          // If there are no available slots, show red marker
+                          if (availableCount == 0 && bookedCount > 0) {
+                            return Positioned(
+                              bottom: 1,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            );
+                          }
+                          
+                          // If there are available slots, show green marker
+                          if (availableCount > 0) {
+                            return Positioned(
+                              bottom: 1,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            );
+                          }
+                          
+                          return null;
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
           // Stats Section
           FutureBuilder<Map<String, dynamic>?>(
             future: _fetchSlots(),
@@ -107,10 +276,10 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
               int totalSlots = 0;
               int bookedSlots = 0;
 
-              slots.forEach((day, slotList) {
+              slots.forEach((dateKey, slotList) {
                 final daySlots = slotList as List<dynamic>;
                 totalSlots += daySlots.length;
-                bookedSlots += daySlots.where((slot) => slot['booked'] == true).length;
+                bookedSlots += daySlots.where((slot) => slot['status'] == 'booked').length;
               });
 
               int availableSlots = totalSlots - bookedSlots;
@@ -148,7 +317,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
             },
           ),
           const SizedBox(height: 24),
-          // Weekly Schedule
+          // Daily Schedule
           FutureBuilder<Map<String, dynamic>?>(
             future: _fetchSlots(),
             builder: (context, snapshot) {
@@ -161,11 +330,22 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
               }
 
               final slots = snapshot.data!['slots'] as Map<String, dynamic>;
+
+              // Sort entries by date and convert to list
+              final sortedEntries = slots.entries
+                .where((entry) => entry.key.contains('-'))
+                .toList()
+                ..sort((a, b) {
+                  final dateA = DateTime.parse(a.key);
+                  final dateB = DateTime.parse(b.key);
+                  return dateA.compareTo(dateB);
+                });
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Weekly Schedule',
+                    'Daily Schedule',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -173,9 +353,18 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  ...slots.entries.map((entry) {
-                    final day = entry.key;
+                  ...sortedEntries.map((entry) {
+                    final dateKey = entry.key;
+                    final date = DateTime.parse(dateKey);
                     final slotList = entry.value as List<dynamic>;
+                    
+                    // Sort slots by time
+                    final sortedSlots = List<dynamic>.from(slotList)
+                      ..sort((a, b) {
+                        final timeA = a['time'] as String;
+                        final timeB = b['time'] as String;
+                        return timeA.compareTo(timeB);
+                      });
                     
                     return Container(
                       margin: const EdgeInsets.only(bottom: 15),
@@ -192,7 +381,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                       ),
                       child: ExpansionTile(
                         title: Text(
-                          day,
+                          DateFormat('EEEE, MMMM d').format(date),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -203,9 +392,15 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                           Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
-                              children: slotList.map((slot) {
-                                final time = DateTime.parse(slot['time']);
-                                final isBooked = slot['booked'] ?? false;
+                              children: sortedSlots.map((slot) {
+                                // Parse the time string properly
+                                final timeStr = slot['time'] as String;
+                                final timeParts = timeStr.split(':');
+                                final hour = int.parse(timeParts[0]);
+                                final minute = int.parse(timeParts[1]);
+                                final time = DateTime(2000, 1, 1, hour, minute);
+                                
+                                final isBooked = slot['status'] == 'booked';
                                 
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 10),
@@ -229,7 +424,7 @@ class _DoctorAvailabilityScreenState extends State<DoctorAvailabilityScreen> {
                                           ),
                                           const SizedBox(width: 10),
                                           Text(
-                                            DateFormat('hh:mm a').format(time),
+                                            slot['timeDisplay'] ?? DateFormat('hh:mm a').format(time),
                                             style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w500,

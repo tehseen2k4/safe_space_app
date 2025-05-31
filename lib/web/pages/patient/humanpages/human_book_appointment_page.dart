@@ -9,6 +9,7 @@ import 'package:safe_space_app/web/pages/patient/humanpages/human_appointments_p
 import 'package:uuid/uuid.dart';
 import 'dart:developer' as developer;
 import 'dart:math';
+import 'package:intl/intl.dart';
 
 class HumanBookAppointmentPage extends StatefulWidget {
   const HumanBookAppointmentPage({Key? key}) : super(key: key);
@@ -23,7 +24,7 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
   final _firestore = FirebaseFirestore.instance;
   bool _isLoading = false;
   String? _selectedDoctor;
-  String? _selectedDay;
+  DateTime? _selectedDate;
   String? _selectedTime;
   String _selectedDateAndTime = "None";
   List<String> _availableDays = [];
@@ -100,12 +101,12 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
           _availableSlots = [];
           if (slotsData['slots'] != null) {
             final slots = slotsData['slots'] as Map<String, dynamic>;
-            slots.forEach((day, daySlots) {
+            slots.forEach((dateKey, daySlots) {
               final List<dynamic> slotsList = daySlots as List<dynamic>;
               for (var slot in slotsList) {
-                if (slot['booked'] == false) {
+                if (slot['status'] == 'available') {
                   _availableSlots.add({
-                    'day': day,
+                    'date': dateKey,
                     'time': slot['time'],
                   });
                 }
@@ -128,18 +129,18 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
     developer.log('Starting appointment submission...', name: 'HumanBookAppointment');
     developer.log('Form validation state: ${_formKey.currentState?.validate()}', name: 'HumanBookAppointment');
     developer.log('Selected doctor: $_selectedDoctor', name: 'HumanBookAppointment');
-    developer.log('Selected day: $_selectedDay', name: 'HumanBookAppointment');
+    developer.log('Selected date: $_selectedDate', name: 'HumanBookAppointment');
     developer.log('Selected time: $_selectedTime', name: 'HumanBookAppointment');
     
     if (!_formKey.currentState!.validate()) {
       developer.log('Form validation failed', name: 'HumanBookAppointment');
       return;
     }
-    if (_selectedDoctor == null || _selectedDay == null || _selectedTime == null) {
-      developer.log('Missing required fields: doctor=$_selectedDoctor, day=$_selectedDay, time=$_selectedTime', 
+    if (_selectedDoctor == null || _selectedDate == null || _selectedTime == null) {
+      developer.log('Missing required fields: doctor=$_selectedDoctor, date=$_selectedDate, time=$_selectedTime', 
         name: 'HumanBookAppointment');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a doctor, day, and time')),
+        const SnackBar(content: Text('Please select a doctor, date, and time')),
       );
       return;
     }
@@ -205,7 +206,7 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
         urgencylevel: _urgencyController.text,
         uid: user.uid,
         age: patientData['age'].toString(),
-        timeslot: '$_selectedDay at $_selectedTime',
+        timeslot: '${DateFormat('EEEE, MMMM d').format(_selectedDate!)} at ${_selectedTime!.split(' ')[0]}',
         status: false,
       );
 
@@ -226,9 +227,15 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
         endTime: '05:00 PM',
         availableDays: _availableDays,
       );
-      developer.log('Updating slot status for day: $_selectedDay, time: $_selectedTime', 
+      developer.log('Updating slot status for date: $_selectedDate, time: $_selectedTime', 
         name: 'HumanBookAppointment');
-      await dbService.updateSlotStatus(_selectedDoctor!, _selectedDay!, _selectedTime!, true);
+      await dbService.updateSlotStatus(
+        _selectedDoctor!,
+        _selectedDate!,
+        _selectedTime!,
+        'booked',
+        bookedBy: user.uid,
+      );
       developer.log('Slot status updated successfully', name: 'HumanBookAppointment');
 
       if (mounted) {
@@ -241,7 +248,7 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
         _formKey.currentState?.reset();
         setState(() {
           _selectedDoctor = null;
-          _selectedDay = null;
+          _selectedDate = null;
           _selectedTime = null;
           _selectedDateAndTime = "None";
           _reasonController.clear();
@@ -328,7 +335,7 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
                 ],
               ),
               const SizedBox(height: 20),
-              if (_availableDays.isEmpty)
+              if (_availableSlots.isEmpty)
                 const Center(
                   child: Padding(
                     padding: EdgeInsets.all(20),
@@ -343,63 +350,7 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _availableDays.map((day) {
-                        final daySlots = _availableSlots
-                            .where((slot) => slot['day'] == day)
-                            .toList();
-                        
-                        developer.log('Processing day: $day with ${daySlots.length} slots', name: 'HumanBookAppointment');
-                        
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                day,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF009688),
-                                ),
-                              ),
-                            ),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: daySlots.map((slot) {
-                                final timeStr = slot['time'] as String;
-                                final timeOnly = timeStr.split(' ')[0];
-                                developer.log('Creating slot button for time: $timeOnly', name: 'HumanBookAppointment');
-                                
-                                return ElevatedButton(
-                                  onPressed: () {
-                                    developer.log('Slot selected - Day: $day, Time: $timeOnly', name: 'HumanBookAppointment');
-                                    setState(() {
-                                      _selectedDay = day;
-                                      _selectedTime = timeStr;
-                                      _selectedDateAndTime = '${_selectedDay} at $timeOnly';
-                                    });
-                                    developer.log('Updated selected date and time: $_selectedDateAndTime', name: 'HumanBookAppointment');
-                                    Navigator.pop(context);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF009688),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    timeOnly,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        );
-                      }).toList(),
+                      children: _groupSlotsByDate(),
                     ),
                   ),
                 ),
@@ -408,6 +359,75 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
         ),
       ),
     );
+  }
+
+  List<Widget> _groupSlotsByDate() {
+    final groupedSlots = <String, List<Map<String, dynamic>>>{};
+    
+    for (var slot in _availableSlots) {
+      final date = slot['date'] as String;
+      if (!groupedSlots.containsKey(date)) {
+        groupedSlots[date] = [];
+      }
+      groupedSlots[date]!.add(slot);
+    }
+
+    return groupedSlots.entries.map((entry) {
+      final date = DateTime.parse(entry.key);
+      final slots = entry.value;
+      
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              DateFormat('EEEE, MMMM d').format(date),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF009688),
+              ),
+            ),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: slots.map((slot) {
+              final timeStr = slot['time'] as String;
+              final timeOnly = timeStr.split(' ')[0];
+              developer.log('Creating slot button for time: $timeOnly', name: 'HumanBookAppointment');
+              
+              return ElevatedButton(
+                onPressed: () {
+                  developer.log('Slot selected - Date: ${date.toIso8601String()}, Time: $timeOnly', 
+                    name: 'HumanBookAppointment');
+                  setState(() {
+                    _selectedDate = date;
+                    _selectedTime = timeStr;
+                    _selectedDateAndTime = '${DateFormat('EEEE, MMMM d').format(date)} at $timeOnly';
+                  });
+                  developer.log('Updated selected date and time: $_selectedDateAndTime', 
+                    name: 'HumanBookAppointment');
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF009688),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  timeOnly,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+        ],
+      );
+    }).toList();
   }
 
   @override
@@ -685,7 +705,7 @@ class _HumanBookAppointmentPageState extends State<HumanBookAppointmentPage> {
                 onChanged: (value) {
                   setState(() {
                     _selectedDoctor = value;
-                    _selectedDay = null;
+                    _selectedDate = null;
                     _selectedTime = null;
                   });
                   if (value != null) {

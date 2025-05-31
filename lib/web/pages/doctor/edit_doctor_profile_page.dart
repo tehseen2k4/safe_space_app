@@ -790,6 +790,15 @@ class _EditDoctorProfilePageState extends State<EditDoctorProfilePage> {
   Future<void> _saveProfile() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
+        print('\n=== Starting Profile Save ===');
+        print('Selected Days: ${_selectedDays.entries.where((e) => e.value).map((e) => e.key).toList()}');
+        print('Start Time: ${_startTime?.format(context)}');
+        print('End Time: ${_endTime?.format(context)}');
+
+        // First save the doctor's profile
+        final selectedDaysList = _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList();
+        print('Selected Days List: $selectedDaysList');
+
         await FirebaseFirestore.instance.collection('doctors').doc(user!.uid).set({
           'uid': user!.uid,
           'name': _nameController.text,
@@ -807,36 +816,72 @@ class _EditDoctorProfilePageState extends State<EditDoctorProfilePage> {
           'fees': double.tryParse(_feesController.text) ?? 0.0,
           'doctorType': _doctorTypeController.text,
           'experience': _experienceController.text,
-          'availableDays': _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList(),
+          'availableDays': selectedDaysList,
           'startTime': _startTime?.format(context) ?? '',
           'endTime': _endTime?.format(context) ?? '',
+          'maxDaysInAdvance': 30,
         });
 
+        print('Profile saved successfully');
+
+        // Then generate and save slots if working hours are set
         if (_startTime != null && _endTime != null) {
-          final selectedDays = _selectedDays.entries.where((e) => e.value).map((e) => e.key).toList();
-          if (selectedDays.isNotEmpty) {
+          if (selectedDaysList.isNotEmpty) {
+            print('\nGenerating slots...');
             final dbService = DatabaseService(
               uid: user!.uid,
               startTime: _startTime!.format(context),
               endTime: _endTime!.format(context),
-              availableDays: selectedDays,
+              availableDays: selectedDaysList,
+              maxDaysInAdvance: 30,
             );
+            
+            // Save slots to Firestore
             await dbService.saveSlotsToFirestore();
+            
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Profile and availability slots saved successfully!'),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                ),
+              );
+            }
+          } else {
+            print('No available days selected for slot generation');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Profile saved, but no available days selected for slot generation.'),
+                  backgroundColor: Colors.orange,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                ),
+              );
+            }
+          }
+        } else {
+          print('Working hours not set for slot generation');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Profile saved, but working hours not set for slot generation.'),
+                backgroundColor: Colors.orange,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+              ),
+            );
           }
         }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile saved successfully!'),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-            ),
-          );
-        }
+        print('=== Profile Save Complete ===\n');
       } catch (e) {
         print('Error saving profile: $e');
         if (mounted) {
