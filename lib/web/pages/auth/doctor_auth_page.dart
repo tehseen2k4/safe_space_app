@@ -1329,6 +1329,7 @@ class _DoctorAuthPageState extends State<DoctorAuthPage> {
                                 ),
                               ),
                               obscureText: true,
+                              onFieldSubmitted: (_) => _login(),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Please enter your password';

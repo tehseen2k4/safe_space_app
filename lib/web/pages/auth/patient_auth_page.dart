@@ -1787,6 +1787,7 @@ class _PatientAuthPageState extends State<PatientAuthPage> {
                                 ),
                               ),
                               obscureText: true,
+                              onFieldSubmitted: (_) => _login(),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Please enter your password';

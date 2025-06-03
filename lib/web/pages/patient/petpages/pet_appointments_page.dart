@@ -412,6 +412,63 @@ class _PetAppointmentsPageState extends State<PetAppointmentsPage> with SingleTi
     );
   }
 
+  Future<void> _deleteAppointment(String appointmentId) async {
+    try {
+      // Show confirmation dialog
+      final bool? confirm = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Delete Appointment'),
+            content: const Text('Are you sure you want to delete this appointment? This action cannot be undone.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+                child: const Text('Delete'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirm == true) {
+        // Delete the appointment document
+        await FirebaseFirestore.instance
+            .collection('petappointments')
+            .doc(appointmentId)
+            .delete();
+
+        // Refresh the appointments list
+        await _fetchAppointments();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Appointment deleted successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting appointment: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildAppointmentCard(PetAppointmentDb appointment) {
     Color statusColor = _getStatusColor(appointment.responseStatus ?? 'pending');
     bool isExpanded = _expandedCards.contains(appointment.appointmentId);
@@ -539,6 +596,11 @@ class _PetAppointmentsPageState extends State<PetAppointmentsPage> with SingleTi
                               ),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          onPressed: () => _deleteAppointment(appointment.appointmentId),
+                          tooltip: 'Delete Appointment',
                         ),
                       ],
                     ),

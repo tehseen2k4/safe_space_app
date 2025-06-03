@@ -81,7 +81,7 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
       // Get all human doctors
       final doctorsSnapshot = await FirebaseFirestore.instance
           .collection('doctors')
-          .where('doctorType', isEqualTo: 'human')
+          .where('doctorType', isEqualTo: 'Human')
           .get();
 
       // Get existing chats to filter out doctors who already have chats
@@ -194,12 +194,24 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
                               fontSize: 16,
                             ),
                           ),
-                          subtitle: Text(
-                            'Doctor',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                            ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                doctor['specialization'] ?? 'General',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Text(
+                                'Experience: ${doctor['experience'] ?? 'Not specified'}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
                           onTap: () async {
                             Navigator.pop(context);
@@ -292,6 +304,72 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error creating chat: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteChat(String chatId) async {
+    try {
+      // Show confirmation dialog
+      final shouldDelete = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Delete Chat'),
+          content: const Text('Are you sure you want to delete this chat? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldDelete != true) return;
+
+      // Delete the chat document
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .delete();
+
+      // Delete all messages in the chat
+      final messagesSnapshot = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .get();
+
+      final batch = FirebaseFirestore.instance.batch();
+      for (var doc in messagesSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Chat deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('[HumanPatientChatPage] Error deleting chat: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error deleting chat: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -399,110 +477,140 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
                       );
                     },
                     borderRadius: BorderRadius.circular(12),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 28,
-                            backgroundColor: Colors.teal[100],
-                            child: const Icon(
-                              Icons.medical_services,
-                              color: Colors.teal,
-                              size: 32,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                FutureBuilder<DocumentSnapshot>(
-                                  future: FirebaseFirestore.instance
-                                      .collection('doctors')
-                                      .doc(chat['otherParticipantId'])
-                                      .get(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData && snapshot.data!.exists) {
-                                      return Row(
-                                        children: [
-                                          Expanded(
-                                            child: Text(
-                                              snapshot.data!['name'] ?? 'Unknown',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          Text(
-                                            chat['lastMessageTime'] != null
-                                                ? DateFormat('HH:mm').format(
-                                                    (chat['lastMessageTime'] as Timestamp).toDate())
-                                                : '',
-                                            style: TextStyle(
-                                              color: Colors.grey[500],
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    }
-                                    return const Text('Loading...');
-                                  },
+                    child: Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 28,
+                                backgroundColor: Colors.teal[100],
+                                child: const Icon(
+                                  Icons.medical_services,
+                                  color: Colors.teal,
+                                  size: 32,
                                 ),
-                                const SizedBox(height: 4),
-                                Row(
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(
-                                      child: Text(
-                                        chat['lastMessage'] ?? 'No messages yet',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    StreamBuilder<int>(
-                                      stream: _chatService.getUnreadMessageCount(
-                                        chat['chatId'],
-                                        _currentUser!.uid,
-                                      ),
+                                    FutureBuilder<DocumentSnapshot>(
+                                      future: FirebaseFirestore.instance
+                                          .collection('doctors')
+                                          .doc(chat['otherParticipantId'])
+                                          .get(),
                                       builder: (context, snapshot) {
-                                        if (snapshot.hasData && snapshot.data! > 0) {
-                                          return Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.teal,
-                                              borderRadius: BorderRadius.circular(12),
-                                            ),
-                                            child: Text(
-                                              snapshot.data.toString(),
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
+                                        if (snapshot.hasData && snapshot.data!.exists) {
+                                          final doctorData = snapshot.data!.data() as Map<String, dynamic>;
+                                          return Row(
+                                            children: [
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      doctorData['name'] ?? 'Unknown',
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 16,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                    Text(
+                                                      doctorData['specialization'] ?? 'General',
+                                                      style: TextStyle(
+                                                        color: Colors.grey[600],
+                                                        fontSize: 14,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            ),
+                                              Text(
+                                                chat['lastMessageTime'] != null
+                                                    ? DateFormat('HH:mm').format(
+                                                        (chat['lastMessageTime'] as Timestamp).toDate())
+                                                    : '',
+                                                style: TextStyle(
+                                                  color: Colors.grey[500],
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
                                           );
                                         }
-                                        return const SizedBox.shrink();
+                                        return const Text('Loading...');
                                       },
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            chat['lastMessage'] ?? 'No messages yet',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        StreamBuilder<int>(
+                                          stream: _chatService.getUnreadMessageCount(
+                                            chat['chatId'],
+                                            _currentUser!.uid,
+                                          ),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData && snapshot.data! > 0) {
+                                              return Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.teal,
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                                child: Text(
+                                                  snapshot.data.toString(),
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                            return const SizedBox.shrink();
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                            onPressed: () => _deleteChat(chat['chatId']),
+                            tooltip: 'Delete chat',
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -588,7 +696,14 @@ class _HumanPatientChatPageState extends State<HumanPatientChatPage> {
                                   ),
                                 ),
                                 Text(
-                                  'Doctor',
+                                  doctorData['specialization'] ?? 'General',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Text(
+                                  'Experience: ${doctorData['experience'] ?? 'Not specified'}',
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
